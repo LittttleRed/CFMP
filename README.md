@@ -1,39 +1,74 @@
-# 校园跳蚤市场-CFMP
+# 模块
 
-#### 介绍
-{**以下是 Gitee 平台说明，您可以替换此简介**
-Gitee 是 OSCHINA 推出的基于 Git 的代码托管平台（同时支持 SVN）。专为开发者提供稳定、高效、安全的云端软件开发协作平台
-无论是个人、团队、或是企业，都能够用 Gitee 实现代码托管、项目管理、协作开发。企业项目请看 [https://gitee.com/enterprises](https://gitee.com/enterprises)}
-
-#### 软件架构
-软件架构说明
-
-
-#### 安装教程
-
-1.  xxxx
-2.  xxxx
-3.  xxxx
-
-#### 使用说明
-
-1.  xxxx
-2.  xxxx
-3.  xxxx
-
-#### 参与贡献
-
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+## 用户模块
+### 1.注册登录验证
+### 2.个人信息展示编辑
+### 3.关注与互动==聊天==
+### 4.我的购买与我的售卖...
+### 5.商品收藏
 
 
-#### 特技
+## 商品模块
+### 1.商品发布编辑下架
+### 2.商品搜索与筛选
+### 3.主页商品推荐==推荐算法==
+### 4.商品评价与点赞...
 
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+
+## 交易模块
+### 1.交易流程
+### 2.==支付宝接口接入==
+### 3.订单状态通知...
+
+
+## 管理与审核模块
+### 1.订单状态监控
+### 2.商品投诉提交,投诉审核与处理
+### 3.管理员操作(下架商品,封禁用户)...
+*管理审核模块需要额外的前端页面,可以自行设计或和前端设计者联系*
+
+
+四个人负责四个模块,有一个人负责前端,负责人需要先把自己负责模块的接口文档写出来(自己设计本模块所需功能与接口),前端需要进行界面设计
+
+RESTful API接口文档demo:
+```json
+接口描述: 用户登录
+    url地址： user/login
+    请求方式：POST
+    请求参数：
+    请求体:
+{
+    "username":"zhangsan", //用户名
+    "userPwd":"123456"     //明文密码
+}
+    param:
+    无
+
+响应数据：
+成功
+{
+   "code":"200",         // 成功状态码 
+   "message":"success"   // 成功状态描述
+   "data":{
+    "token":"... ..." // 用户id的token
+  }
+}
+    失败
+{
+   "code":"501",
+   "message":"用户名有误"
+   "data":{}
+}
+{
+   "code":"503",
+   "message":"密码有误"
+   "data":{}
+}
+```
+
+
+
+
+代码仓库:https://gitee.com/littttlered/CFMP.git
+邀请链接:https://gitee.com/littttlered/CFMP/invite_link?invite=0d1b038065d0f31c6ee976cd4e925a74660674da5c53c6c6e511b1509403e86efe99d9637648fc1f46b2134329c5e2e52deb438a7165bb6e
+
