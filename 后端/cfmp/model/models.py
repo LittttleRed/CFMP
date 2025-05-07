@@ -19,7 +19,7 @@ class User(models.Model):
 #  图片存储暂时采用 JSONField 格式存储, 后期商品负责人可以根据需求更改
 class Product(models.Model):
     product_id = models.IntegerField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=100)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -42,10 +42,9 @@ class Category(models.Model):
 
 class Order(models.Model):
     order_id = models.IntegerField(primary_key=True)
-    buyer = models.ForeignKey(User, on_delete=models.CASCADE)
+    buyer = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     product = models.ForeignKey(
-        Product,
-        on_delete=models.CASCADE,
+        Product, on_delete=models.CASCADE, null=True, blank=True
     )
     status = models.SmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
