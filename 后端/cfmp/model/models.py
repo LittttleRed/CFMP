@@ -121,7 +121,8 @@ class ViolationRecord(models.Model):
     action = models.CharField(max_length=100)
     reason = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
-
+    ban_time = models.IntegerField(default=0)#封禁时间
+    ban_type = models.SmallIntegerField(default=0)#封禁类型
     class Meta:
         db_table = "violation_record"
 
