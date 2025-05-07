@@ -19,13 +19,14 @@ class User(models.Model):
 #  图片存储暂时采用 JSONField 格式存储, 后期商品负责人可以根据需求更改
 class Product(models.Model):
     product_id = models.IntegerField(primary_key=True)
-    user_id = models.IntegerField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.SmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     product_img = models.JSONField()
+    categories = models.ManyToManyField("Category", related_name="products")
 
     class Meta:
         db_table = "product"
@@ -39,18 +40,13 @@ class Category(models.Model):
         db_table = "category"
 
 
-class ProductCategory(models.Model):
-    product_id = models.IntegerField()
-    category_id = models.IntegerField()
-
-    class Meta:
-        db_table = "product_category"
-
-
 class Order(models.Model):
     order_id = models.IntegerField(primary_key=True)
-    buyer_id = models.IntegerField()
-    product_id = models.IntegerField()
+    buyer = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+    )
     status = models.SmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     payment_method = models.SmallIntegerField(default=2)
@@ -124,4 +120,3 @@ class ViolationRecord(models.Model):
 
     class Meta:
         db_table = "violation_record"
-
