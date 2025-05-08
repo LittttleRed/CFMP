@@ -22,5 +22,5 @@ def test(request):
         queryset = queryset.filter(**filtered_params)
 
     # 序列化并返回结果
-    serializer = UserSerializer(queryset, many=True)
-    return Response(serializer.data)
+
+    return None
