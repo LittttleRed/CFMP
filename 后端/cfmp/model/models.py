@@ -46,9 +46,11 @@ class Order(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, null=True, blank=True
     )
+    price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.SmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     payment_method = models.SmallIntegerField(default=2)
+
 
     class Meta:
         db_table = "order"
