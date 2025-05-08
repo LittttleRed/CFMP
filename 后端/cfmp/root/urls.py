@@ -5,4 +5,5 @@ from . import views
 app_name = 'root'
 urlpatterns = [
     path('user/',views.admin_user_get,name='admin_user_get'),
+    path('test/',views.test,name='test')
 ]
