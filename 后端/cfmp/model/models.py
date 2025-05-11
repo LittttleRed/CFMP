@@ -17,8 +17,10 @@ class User(models.Model):
 
 #  商品
 #  图片存储暂时采用 JSONField 格式存储, 后期商品负责人可以根据需求更改
+
+
 class Product(models.Model):
-    product_id = models.IntegerField(primary_key=True)
+    product_id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=100)
     description = models.TextField()
@@ -33,11 +35,26 @@ class Product(models.Model):
 
 
 class Category(models.Model):
-    category_id = models.IntegerField(primary_key=True)
+    category_id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=50)
 
     class Meta:
         db_table = "category"
+
+
+class ProductReview(models.Model):
+    review_id = models.BigAutoField(primary_key=True)
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="reviews"
+    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    rating = models.PositiveSmallIntegerField()  # 1-5 星
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "product_review"
+        unique_together = ("product", "user")  # 每个用户对同一商品只能评价一次
 
 
 class Order(models.Model):
@@ -50,7 +67,6 @@ class Order(models.Model):
     status = models.SmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     payment_method = models.SmallIntegerField(default=2)
-
 
     class Meta:
         db_table = "order"
@@ -120,5 +136,6 @@ class ViolationRecord(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     ban_time = models.IntegerField(default=0)  # 封禁时间
     ban_type = models.SmallIntegerField(default=0)  # 封禁类型
+
     class Meta:
         db_table = "violation_record"
