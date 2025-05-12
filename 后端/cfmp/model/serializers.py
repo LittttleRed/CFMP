@@ -60,4 +60,3 @@ class ComplaintSerializer(serializers.ModelSerializer):
         model = Complaint
         fields = "__all__"
         depth = 1
-

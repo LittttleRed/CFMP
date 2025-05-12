@@ -2,7 +2,7 @@ from django.db import models
 
 
 class User(models.Model):
-    user_id = models.IntegerField(primary_key=True)
+    user_id = models.BigAutoField(primary_key=True)
     username = models.CharField(max_length=30)
     password = models.CharField(max_length=64)
     email = models.CharField(max_length=50)
@@ -17,9 +17,11 @@ class User(models.Model):
 
 #  商品
 #  图片存储暂时采用 JSONField 格式存储, 后期商品负责人可以根据需求更改
+
+
 class Product(models.Model):
-    product_id = models.IntegerField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product_id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=100)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -33,32 +35,45 @@ class Product(models.Model):
 
 
 class Category(models.Model):
-    category_id = models.IntegerField(primary_key=True)
+    category_id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=50)
 
     class Meta:
         db_table = "category"
 
 
-class Order(models.Model):
-    order_id = models.IntegerField(primary_key=True)
-    buyer = models.ForeignKey(User, on_delete=models.CASCADE)
+class ProductReview(models.Model):
+    review_id = models.BigAutoField(primary_key=True)
     product = models.ForeignKey(
-        Product,
-        on_delete=models.CASCADE,
+        Product, on_delete=models.CASCADE, related_name="reviews"
     )
-    price = models.DecimalField(max_digits=10, decimal_places=2,default=0)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    rating = models.PositiveSmallIntegerField()  # 1-5 星
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "product_review"
+        unique_together = ("product", "user")  # 每个用户对同一商品只能评价一次
+
+
+class Order(models.Model):
+    order_id = models.BigAutoField(primary_key=True)
+    buyer = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, null=True, blank=True
+    )
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     status = models.SmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     payment_method = models.SmallIntegerField(default=2)
-
 
     class Meta:
         db_table = "order"
 
 
 class ChatLog(models.Model):
-    chat_id = models.IntegerField(primary_key=True)
+    chat_id = models.BigAutoField(primary_key=True)
     sender_id = models.IntegerField()
     receiver_id = models.IntegerField()
     content = models.TextField()
@@ -70,7 +85,7 @@ class ChatLog(models.Model):
 
 
 class TransactionLog(models.Model):
-    log_id = models.IntegerField(primary_key=True)
+    log_id = models.BigAutoField(primary_key=True)
     order_id = models.IntegerField()
     event = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -97,7 +112,7 @@ class Collection(models.Model):
 
 
 class Complaint(models.Model):
-    complaint_id = models.IntegerField(primary_key=True)
+    complaint_id = models.BigAutoField(primary_key=True)
     complainer_id = models.IntegerField()
     target_type = models.SmallIntegerField()
     target_id = models.IntegerField()
@@ -113,7 +128,7 @@ class Complaint(models.Model):
 
 
 class ViolationRecord(models.Model):
-    record_id = models.IntegerField(primary_key=True)
+    record_id = models.BigAutoField(primary_key=True)
     target_type = models.SmallIntegerField()
     target_id = models.IntegerField()
     action = models.CharField(max_length=100)
@@ -121,5 +136,6 @@ class ViolationRecord(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     ban_time = models.IntegerField(default=0)  # 封禁时间
     ban_type = models.SmallIntegerField(default=0)  # 封禁类型
+
     class Meta:
         db_table = "violation_record"
