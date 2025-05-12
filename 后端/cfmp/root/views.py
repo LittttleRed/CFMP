@@ -1,26 +1,65 @@
+from django.http import HttpResponse
 from django.shortcuts import render
 from rest_framework.decorators import api_view
+from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from model import models
+from model import serializers
+from rest_framework.views import APIView
+
+
 @api_view(['PUT'])
 def admin_user_get(request):
-    return Response({'code': "200", 'message':'admin_user_get'})
+    return Response({'code': "200", 'message': 'admin_user_get'})
+
+
 # Create your views here.
-def test(request):
-    params = request.query_params.dict()
 
-    # 初始化查询集
-    queryset = models.User.objects.all()
 
-    # 动态过滤（自动匹配模型字段）
-    if params:
-        # 过滤参数需要是模型的字段
-        valid_fields = [f.name for f in models.User._meta.get_fields()]
-        filtered_params = {k: v for k, v in params.items() if k in valid_fields}
-
-        # 使用 ** 解包参数进行过滤
-        queryset = queryset.filter(**filtered_params)
-
+# 基于函数的视图
+@api_view(['GET', 'POST'])
+def test(request, test_int):
+    print(request.path)  # 去掉域名的路径
+    print(request.method)  # 请求方法
+    print(request.query_params.dict())  # query形式的参数,转化为字典,DRF专属
+    print(request.data)  # json形式的参数,存在请求体中,纯字典形式
+    print(request.headers)  # 请求头内容
+    print(test_int)
     # 序列化并返回结果
 
-    return None
+    # 签名Response(data, status=None, template_name=None, headers=None, content_type=None)
+    """
+    data:返回的数据，内部会进行序列化，需传入一个字典
+    status:状态码,默认是200
+    header:响应头
+    """
+    return Response({'code': "200", 'message': 'test'}, status=200, headers={'Content-Type': 'application/json'})
+
+
+class TestView(APIView):
+    """
+    基于类的视图
+    """
+
+    def get(self, request):
+        return Response({'code': "123213", 'message': 'test'}, status=200, headers={'Content-Type': 'application/json'})
+
+    def post(self, request):
+        return Response({'code': "123213", 'message': 'testpost'}, status=200,
+                        headers={'Content-Type': 'application/json'})
+
+    def patch(self, request):
+        return Response({'code': "123213", 'message': 'testpatch'}, status=200,
+                        headers={'Content-Type': 'application/json'})
+
+
+class TestGenericView(GenericAPIView):
+    queryset = models.TransactionLog.objects.all()
+    serializer_class = serializers.TransactionLogSerializer
+    #lookup_field = 'id'
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({'code': "200", 'message': 'create success'})
