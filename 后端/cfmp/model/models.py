@@ -2,7 +2,7 @@ from django.db import models
 
 
 class User(models.Model):
-    user_id = models.IntegerField(primary_key=True)
+    user_id = models.BigAutoField(primary_key=True)
     username = models.CharField(max_length=30)
     password = models.CharField(max_length=64)
     email = models.CharField(max_length=50)
@@ -18,7 +18,7 @@ class User(models.Model):
 #  商品
 #  图片存储暂时采用 JSONField 格式存储, 后期商品负责人可以根据需求更改
 class Product(models.Model):
-    product_id = models.IntegerField(primary_key=True)
+    product_id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=100)
     description = models.TextField()
@@ -33,7 +33,7 @@ class Product(models.Model):
 
 
 class Category(models.Model):
-    category_id = models.IntegerField(primary_key=True)
+    category_id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=50)
 
     class Meta:
@@ -41,7 +41,7 @@ class Category(models.Model):
 
 
 class Order(models.Model):
-    order_id = models.IntegerField(primary_key=True)
+    order_id = models.BigAutoField(primary_key=True)
     buyer = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, null=True, blank=True
@@ -57,7 +57,7 @@ class Order(models.Model):
 
 
 class ChatLog(models.Model):
-    chat_id = models.IntegerField(primary_key=True)
+    chat_id = models.BigAutoField(primary_key=True)
     sender_id = models.IntegerField()
     receiver_id = models.IntegerField()
     content = models.TextField()
@@ -69,7 +69,7 @@ class ChatLog(models.Model):
 
 
 class TransactionLog(models.Model):
-    log_id = models.IntegerField(primary_key=True)
+    log_id = models.BigAutoField(primary_key=True)
     order_id = models.IntegerField()
     event = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -96,7 +96,7 @@ class Collection(models.Model):
 
 
 class Complaint(models.Model):
-    complaint_id = models.IntegerField(primary_key=True)
+    complaint_id = models.BigAutoField(primary_key=True)
     complainer_id = models.IntegerField()
     target_type = models.SmallIntegerField()
     target_id = models.IntegerField()
@@ -112,7 +112,7 @@ class Complaint(models.Model):
 
 
 class ViolationRecord(models.Model):
-    record_id = models.IntegerField(primary_key=True)
+    record_id = models.BigAutoField(primary_key=True)
     target_type = models.SmallIntegerField()
     target_id = models.IntegerField()
     action = models.CharField(max_length=100)
