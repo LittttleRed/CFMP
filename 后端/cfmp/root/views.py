@@ -3,8 +3,7 @@ from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
-from model import models
-from model import serializers
+from . import models
 from rest_framework.views import APIView
 
 
@@ -53,13 +52,13 @@ class TestView(APIView):
                         headers={'Content-Type': 'application/json'})
 
 
-class TestGenericView(GenericAPIView):
-    queryset = models.TransactionLog.objects.all()
-    serializer_class = serializers.TransactionLogSerializer
-    #lookup_field = 'id'
-
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response({'code': "200", 'message': 'create success'})
+# class TestGenericView(GenericAPIView):
+#     queryset = models.TransactionLog.objects.all()
+#     serializer_class = serializers.TransactionLogSerializer
+#     #lookup_field = 'id'
+#
+#     def post(self, request):
+#         serializer = self.get_serializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         serializer.save()
+#         return Response({'code': "200", 'message': 'create success'})

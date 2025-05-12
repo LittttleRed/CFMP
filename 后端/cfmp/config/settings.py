@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     "model",
     "product",
     "root",
+    "user",
+    "order",
 ]
 
 MIDDLEWARE = [
