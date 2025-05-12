@@ -60,3 +60,9 @@ class ComplaintSerializer(serializers.ModelSerializer):
         model = Complaint
         fields = "__all__"
         depth = 1
+
+class ProductReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductReview
+        fields = "__all__"
+        depth = 1
