@@ -16,7 +16,7 @@ class Complaint(models.Model):
         db_table = "complaint"
 
 
-class ViolationRecord(models.Model):
+class Violation(models.Model):
     record_id = models.BigAutoField(primary_key=True)
     target_type = models.SmallIntegerField()
     target_id = models.IntegerField()
@@ -27,14 +27,14 @@ class ViolationRecord(models.Model):
     ban_type = models.SmallIntegerField(default=0)  # 封禁类型
 
     class Meta:
-        db_table = "violation_record"
+        db_table = "violation"
 
-class TransactionLog(models.Model):
+class Transaction(models.Model):
     log_id = models.BigAutoField(primary_key=True)
     order_id = models.IntegerField()
     event = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = "transaction_log"
+        db_table = "transaction"
 # Create your models here.
