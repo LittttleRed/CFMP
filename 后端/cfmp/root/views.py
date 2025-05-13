@@ -1,10 +1,10 @@
 from django.http import HttpResponse
 from django.shortcuts import render
 from rest_framework.decorators import api_view
-from rest_framework.generics import GenericAPIView
+from rest_framework import generics, mixins, viewsets
 from rest_framework.response import Response
-from model import models
-from model import serializers
+from . import models
+from . import serializers
 from rest_framework.views import APIView
 
 
@@ -53,13 +53,19 @@ class TestView(APIView):
                         headers={'Content-Type': 'application/json'})
 
 
-class TestGenericView(GenericAPIView):
-    queryset = models.TransactionLog.objects.all()
-    serializer_class = serializers.TransactionLogSerializer
-    #lookup_field = 'id'
+class TestGenericView(viewsets.ModelViewSet):
+    queryset = models.Transaction.objects.all()
+    serializer_class = serializers.TransactionSerializer
+    lookup_field = 'log_id'
+    def list(self, request, *args, **kwargs):
+        list=super().list(request, *args, **kwargs)
+        return Response({'code':  "200", 'message': 'test', 'data': list.data})
 
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response({'code': "200", 'message': 'create success'})
+class TestDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = models.Transaction.objects.all()
+    serializer_class = serializers.TransactionSerializer
+    lookup_field ="log_id"
+
+class TestViolationView(TestGenericView):
+    queryset = models.Violation.objects.all()
+    serializer_class = serializers.ViolationSerializer
