@@ -22,7 +22,8 @@ class ComplaintReview(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     result = models.CharField(max_length=100)
 
-
+    class Meta:
+        db_table = "complaint_review"
 
 class Violation(models.Model):
     record_id = models.BigAutoField(primary_key=True)
