@@ -40,12 +40,13 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     'django_filters',
+    "rest_framework",
     "product",
     "root",
     "user",
     "order",
 ]
-
+#自己写自己的分页器,不要全局配置
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
