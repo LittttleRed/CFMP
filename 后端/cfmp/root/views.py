@@ -1,6 +1,6 @@
 from django.http import HttpResponse
 from django.shortcuts import render
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 from rest_framework import generics, mixins, viewsets, filters
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -10,9 +10,28 @@ from . import serializers
 from rest_framework.views import APIView
 
 class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 2
+    page_size = 50
     page_size_query_param = 'page_size'
     max_page_size = 1000
+
+class StandartView(viewsets.ModelViewSet):
+    def list(self, request, *args, **kwargs):
+        list = super().list(request, *args, **kwargs)
+
+        return Response({'data': list.data})
+
+    def retrieve(self, request, *args, **kwargs):#带路径参数的查询
+        retrieve = super().retrieve(request, *args, **kwargs)
+        return Response({'data': retrieve.data})
+
+    def create(self, request, *args, **kwargs):
+        create = super().create(request, *args, **kwargs)
+        return Response({'data': create.data})
+
+    def update(self, request, *args, **kwargs):
+        update = super().update(request, *args, **kwargs)
+        return Response({'data': update.data})
+
 
 @api_view(['PUT'])
 def admin_user_get(request):
@@ -59,40 +78,7 @@ class TestView(APIView):
                         headers={'Content-Type': 'application/json'})
 
 
-class TestGenericView(viewsets.ModelViewSet):
-    queryset = models.Transaction.objects.all()
-    serializer_class = serializers.TransactionSerializer
-    lookup_field = 'log_id'
-    def list(self, request, *args, **kwargs):
-        list=super().list(request, *args, **kwargs)
-        return Response({'code':  "200", 'message': 'test', 'data': list.data})
-
-class TestDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = models.Transaction.objects.all()
-    serializer_class = serializers.TransactionSerializer
-    lookup_field ="log_id"
-
-class TestViolationView(TestGenericView):
-    queryset = models.Violation.objects.all()
-    serializer_class = serializers.ViolationSerializer
-
-
-class TransactionView(viewsets.ModelViewSet):
-    queryset = models.Transaction.objects.all()
-    serializer_class = serializers.TransactionSerializer
-    lookup_field = 'log_id'
-
-    filter_backends = [DjangoFilterBackend,filters.SearchFilter,filters.OrderingFilter]
-    filterset_fields = ['order_id','event']
-    ordering_fields = ['created_at']
-    search_fields = ['event']
-    def list(self, request, *args, **kwargs):
-        list=super().list(request, *args, **kwargs)
-        return Response({'code':  "200", 'message': 'test', 'data': list.data})
-
-
-
-class UserView(TransactionView):
+class UserView(StandartView):
     queryset = models.User.objects.all()
     serializer_class = serializers.UserSerializer
     lookup_field = 'user_id'
@@ -102,16 +88,22 @@ class UserView(TransactionView):
     filterset_fields = ['user_id','username','phone']
     ordering_fields = ['created_at']
 
-class ComplaintView(UserView):
+
+class ComplaintView(StandartView):
     queryset = models.Complaint.objects.all()
     serializer_class = serializers.ComplaintSerializer
     lookup_field = 'complaint_id'
     pagination_class = StandardResultsSetPagination
 
     filter_backends = [DjangoFilterBackend,filters.OrderingFilter]
-    filterset_fields = ['complainer_id','target_id','target_type','status']
+    filterset_fields = ['complainer_id','target_id','target_type','status','complainer_id']
     ordering_fields = ['created_at']
 
+class ComplaintReviewView(StandartView):
+    queryset = models.ComplaintReview.objects.all()
+    serializer_class = serializers.ComplaintReviewSerializer
+    lookup_field = 'review_id'
+    pagination_class = StandardResultsSetPagination
 
 
 

@@ -10,7 +10,6 @@ class Complaint(models.Model):
     reason = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.SmallIntegerField(default=0)
-
     class Meta:
         db_table = "complaint"
 
