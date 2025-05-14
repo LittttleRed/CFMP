@@ -1,5 +1,7 @@
 from django.db import models
 from user.models import User
+
+
 class Product(models.Model):
     product_id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
@@ -37,9 +39,11 @@ class ProductReview(models.Model):
         db_table = "product_review"
         unique_together = ("product", "user")  # 每个用户对同一商品只能评价一次
 
+
 class Collection(models.Model):
-    collection_id = models.ForeignKey(Product, on_delete=models.CASCADE)
-    collecter_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    collection = models.ForeignKey(Product, on_delete=models.CASCADE)
+    collecter = models.ForeignKey(User, on_delete=models.CASCADE)
+    create_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "collection"
