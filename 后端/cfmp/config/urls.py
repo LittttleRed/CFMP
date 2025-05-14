@@ -21,8 +21,6 @@ from django.urls import path, include
 api_prefix = "api"
 
 urlpatterns = [
-    path(f"{api_prefix}", include("root.urls")),
-    path(f"{api_prefix}", include("product.urls")),
-    path(f"{api_prefix}", include("order.urls")),
-    path(f"{api_prefix}", include("user.urls")),
+    path(f"{api_prefix}/root/", include("root.urls")),
+    path(f"{api_prefix}", include("product.url")),
 ]

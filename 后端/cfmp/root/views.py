@@ -9,7 +9,7 @@ from . import models
 from . import serializers
 from rest_framework.views import APIView
 
-class StandardResultsSetPagination(PageNumberPagination):
+class StandardPagination(PageNumberPagination):
     page_size = 50
     page_size_query_param = 'page_size'
     max_page_size = 1000
@@ -82,18 +82,19 @@ class UserView(StandartView):
     queryset = models.User.objects.all()
     serializer_class = serializers.UserSerializer
     lookup_field = 'user_id'
-    pagination_class = StandardResultsSetPagination
+    pagination_class = StandardPagination
 
     filter_backends = [DjangoFilterBackend,filters.OrderingFilter]
     filterset_fields = ['user_id','username','phone']
     ordering_fields = ['created_at']
 
 
+
 class ComplaintView(StandartView):
     queryset = models.Complaint.objects.all()
     serializer_class = serializers.ComplaintSerializer
     lookup_field = 'complaint_id'
-    pagination_class = StandardResultsSetPagination
+    pagination_class = StandardPagination
 
     filter_backends = [DjangoFilterBackend,filters.OrderingFilter]
     filterset_fields = ['complainer_id','target_id','target_type','status','complainer_id']
@@ -103,9 +104,11 @@ class ComplaintReviewView(StandartView):
     queryset = models.ComplaintReview.objects.all()
     serializer_class = serializers.ComplaintReviewSerializer
     lookup_field = 'review_id'
-    pagination_class = StandardResultsSetPagination
+    pagination_class = StandardPagination
 
-
+    filter_backends = [DjangoFilterBackend,filters.OrderingFilter]
+    filterset_fields = ['complaint_id','status']
+    ordering_fields = ['created_at']
 
 
 
