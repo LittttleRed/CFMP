@@ -2,12 +2,17 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework import generics, mixins, viewsets, filters
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from . import models
 from . import serializers
 from rest_framework.views import APIView
 
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 2
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
 
 @api_view(['PUT'])
 def admin_user_get(request):
@@ -85,13 +90,26 @@ class TransactionView(viewsets.ModelViewSet):
         list=super().list(request, *args, **kwargs)
         return Response({'code':  "200", 'message': 'test', 'data': list.data})
 
+
+
 class UserView(TransactionView):
     queryset = models.User.objects.all()
     serializer_class = serializers.UserSerializer
     lookup_field = 'user_id'
+    pagination_class = StandardResultsSetPagination
 
     filter_backends = [DjangoFilterBackend,filters.OrderingFilter]
     filterset_fields = ['user_id','username','phone']
+    ordering_fields = ['created_at']
+
+class ComplaintView(UserView):
+    queryset = models.Complaint.objects.all()
+    serializer_class = serializers.ComplaintSerializer
+    lookup_field = 'complaint_id'
+    pagination_class = StandardResultsSetPagination
+
+    filter_backends = [DjangoFilterBackend,filters.OrderingFilter]
+    filterset_fields = ['complainer_id','target_id','target_type','status']
     ordering_fields = ['created_at']
 
 

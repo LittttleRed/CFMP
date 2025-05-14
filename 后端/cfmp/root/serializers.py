@@ -5,6 +5,11 @@ class ComplaintSerializer(serializers.ModelSerializer):
         model = models.Complaint
         fields = '__all__'
 
+class ComplaintReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.ComplaintReview
+        fields = '__all__'
+
 class ViolationSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Violation
@@ -16,3 +21,7 @@ class TransactionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.User
+        fields = '__all__'

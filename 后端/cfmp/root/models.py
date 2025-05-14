@@ -10,12 +10,18 @@ class Complaint(models.Model):
     reason = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.SmallIntegerField(default=0)
-    reviewer_id = models.IntegerField(default=-1)
-    reviewed_at = models.DateTimeField(default=None)
-    result = models.CharField(max_length=100)
 
     class Meta:
         db_table = "complaint"
+
+
+class ComplaintReview(models.Model):
+    review_id = models.BigAutoField(primary_key=True)
+    complaint_id = models.ForeignKey(Complaint, on_delete=models.CASCADE)
+    reviewer_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    result = models.CharField(max_length=100)
+
 
 
 class Violation(models.Model):
