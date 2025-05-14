@@ -1,5 +1,7 @@
 from django.db import models
 from user.models import User
+
+
 class Complaint(models.Model):
     complaint_id = models.BigAutoField(primary_key=True)
     complainer_id = models.ForeignKey(User, on_delete=models.CASCADE)

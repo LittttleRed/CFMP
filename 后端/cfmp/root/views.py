@@ -1,8 +1,9 @@
 from django.http import HttpResponse
 from django.shortcuts import render
 from rest_framework.decorators import api_view
-from rest_framework import generics, mixins, viewsets
+from rest_framework import generics, mixins, viewsets, filters
 from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
 from . import models
 from . import serializers
 from rest_framework.views import APIView
@@ -69,3 +70,35 @@ class TestDetailView(generics.RetrieveUpdateDestroyAPIView):
 class TestViolationView(TestGenericView):
     queryset = models.Violation.objects.all()
     serializer_class = serializers.ViolationSerializer
+
+
+class TransactionView(viewsets.ModelViewSet):
+    queryset = models.Transaction.objects.all()
+    serializer_class = serializers.TransactionSerializer
+    lookup_field = 'log_id'
+
+    filter_backends = [DjangoFilterBackend,filters.SearchFilter,filters.OrderingFilter]
+    filterset_fields = ['order_id','event']
+    ordering_fields = ['created_at']
+    search_fields = ['event']
+    def list(self, request, *args, **kwargs):
+        list=super().list(request, *args, **kwargs)
+        return Response({'code':  "200", 'message': 'test', 'data': list.data})
+
+class UserView(TransactionView):
+    queryset = models.User.objects.all()
+    serializer_class = serializers.UserSerializer
+    lookup_field = 'user_id'
+
+    filter_backends = [DjangoFilterBackend,filters.OrderingFilter]
+    filterset_fields = ['user_id','username','phone']
+    ordering_fields = ['created_at']
+
+
+
+
+
+
+
+
+
