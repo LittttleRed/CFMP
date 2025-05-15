@@ -23,7 +23,7 @@
       </el-form-item>
 
       <el-form-item>
-        <el-button type="primary" @click="handleSearch">搜索</el-button>
+        <el-button class="search-button" type="primary" @click="handleSearch">搜索</el-button>
       </el-form-item>
     </el-form>
 
@@ -33,10 +33,10 @@
       style="width: 100%"
       :default-sort="{ prop: 'createTime', order: 'descending' }"
     >
-      <el-table-column prop="id" label="用户ID" width="120"></el-table-column>
-      <el-table-column prop="name" label="姓名" width="150"></el-table-column>
-      <el-table-column prop="phone" label="手机号" width="180"></el-table-column>
-      <el-table-column prop="status" label="状态" width="120">
+      <el-table-column prop="id" label="用户ID" ></el-table-column>
+      <el-table-column prop="name" label="姓名" ></el-table-column>
+      <el-table-column prop="phone" label="手机号" ></el-table-column>
+      <el-table-column prop="status" label="状态" >
         <template #default="{ row }">
           <el-tag :type="row.status === '0' ? 'success' : 'danger'">
             {{ row.status === '0' ? '正常' : '已封禁' }}
@@ -47,9 +47,8 @@
         prop="createTime"
         label="创建时间"
         sortable
-        width="200"
       ></el-table-column>
-      <el-table-column label="操作" width="120">
+      <el-table-column label="操作">
         <template #default="{ row }">
           <el-button
             v-if="row.status === '0'"
@@ -70,6 +69,13 @@
         </template>
       </el-table-column>
     </el-table>
+     <el-pagination
+      :current-page="pagination.page"
+      :page-size="pagination.page_size"
+      layout="total, prev, pager, next"
+      :total="pagination.total"
+      @current-change="handlePageChange"
+    ></el-pagination>
   </div>
 </template>
 
@@ -82,6 +88,11 @@ export default {
   components: {LeftBar, Head},
   data() {
     return {
+      pagination: {
+        page: 1,
+        page_size: 10,
+        total: 1
+      },
       searchForm: {
         id: '',
         name: '',
@@ -98,11 +109,11 @@ export default {
           createTime: '2023-03-15 10:00:00'
         },
         {
-          id: '1002',
-          name: '李四',
-          phone: '13900139000',
+          id: '1001',
+          name: '张三',
+          phone: '13800138000',
           status: '1',
-          createTime: '2023-03-16 14:30:00'
+          createTime: '2023-03-15 10:00:00'
         }
       ]
     }
@@ -127,14 +138,23 @@ export default {
 <style scoped>
 .user-management {
   padding: 20px;
+  width: 100%;
 }
 
 .search-form {
-  margin-bottom: 20px;
+  width: 100%;
 }
-
+.search-button{
+ margin:  0 auto;
+}
+.el-table-column{
+  height: 100px;
+}
+.el-form{
+  width: 100%;
+}
 .el-form-item {
-  margin-right: 20px;
+  width:18%;
 }
 
 .el-tag {

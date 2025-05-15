@@ -7,19 +7,21 @@
       text-color="#303133"
       active-text-color="#409EFF"
       router
+        @open="handleOpen"
+        @close="handleClose"
     >
       <el-menu-item index="user">
-        <i class="el-icon-user"></i>
         <span slot="title">用户管理</span>
       </el-menu-item>
+          <el-menu-item index="/root/complaint_product">
+          <span>商品投诉</span>
+        </el-menu-item>
+      <el-menu-item index="/root/complaint_user">
+          <span>用户投诉</span>
+        </el-menu-item>
 
-      <el-menu-item index="complaint">
-        <i class="el-icon-warning"></i>
-        <span slot="title">投诉处理</span>
-      </el-menu-item>
 
       <el-menu-item index="product">
-        <i class="el-icon-goods"></i>
         <span slot="title">商品处理</span>
       </el-menu-item>
     </el-menu>
@@ -39,23 +41,32 @@ export default {
 
 <style scoped>
 .left-bar-container {
-  width: 200px;
+  width: 100%;
   min-height: 100vh;
   background-color: #f5f7fa;
 }
-
 .el-menu-vertical {
   border-right: none;
 }
-
-.el-menu-item {
+.el-sub-menu{
+  text-align: center;
+}
+.complaints{
+  text-align: center;
+}
+.el-menu-item  {
   font-size: 20px;
   font-weight: bold;
   height: 80px;
   line-height: 56px;
+  margin-right: 0;
+  padding-right: 0;
+}
+.el-menu-item span{
+  font-size: 25px;
+  text-align: center;
+  margin: 0 auto;
 }
 
-.el-menu-item i {
-  margin-right: 8px;
-}
+
 </style>

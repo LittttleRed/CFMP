@@ -29,6 +29,17 @@ export const constRoutes =   [
         name: 'UserManagement',
         component: () => (import('../views/root/user.vue')),
         meta: {title: '用户管理'}
+      },
+      {
+        path: 'complaint_product',
+        name: 'productManagement',
+        component: () => (import('../views/root/complaint_product.vue')),
+        meta: {title: '投诉管理'}
+      },{
+        path: 'complaint_user',
+        name: 'userManagement',
+        component: () => (import('../views/root/complaint_user.vue')),
+        meta: {title: '投诉管理'}
       }
     ]
   }

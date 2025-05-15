@@ -19,7 +19,6 @@ import user from "./user.vue"
       </main>
     </div>
 
-  <h1>root-index</h1>
 </template>
 
 <style scoped>
@@ -29,7 +28,7 @@ import user from "./user.vue"
   z-index: 1000;
 }
 .left-sidebar {
-  width: 200px;
+  width: 15%;
   background: #f5f7fa;
   overflow-y: auto;
 }
@@ -41,7 +40,8 @@ import user from "./user.vue"
 
 .main-content {
   flex: 1;
-  padding: 20px;
+  padding-top: 20px;
+  padding-left: 20px;
   overflow-y: auto;
   background: #fff;
 }
