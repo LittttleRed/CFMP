@@ -4,7 +4,7 @@ from user.models import User
 
 class Complaint(models.Model):
     complaint_id = models.BigAutoField(primary_key=True)
-    complainer_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    complainer_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column='complainer_id')
     target_type = models.SmallIntegerField()
     target_id = models.IntegerField()
     reason = models.TextField()
@@ -16,8 +16,9 @@ class Complaint(models.Model):
 
 class ComplaintReview(models.Model):
     review_id = models.BigAutoField(primary_key=True)
-    complaint_id = models.ForeignKey(Complaint, on_delete=models.CASCADE)
-    reviewer_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    target_id = models.IntegerField(default=0)
+    target_type = models.SmallIntegerField(default=0)
+    reviewer_id = models.ForeignKey(User, on_delete=models.CASCADE,db_column='reviewer_id')
     created_at = models.DateTimeField(auto_now_add=True)
     result = models.CharField(max_length=100)
 

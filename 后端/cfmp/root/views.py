@@ -1,7 +1,8 @@
+import django_filters
 from django.http import HttpResponse
 from django.shortcuts import render
 from rest_framework.decorators import api_view, action
-from rest_framework import generics, mixins, viewsets, filters
+from rest_framework import generics, mixins, viewsets, filters, status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
@@ -17,7 +18,6 @@ class StandardPagination(PageNumberPagination):
 class StandartView(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         list = super().list(request, *args, **kwargs)
-
         return Response({'data': list.data})
 
     def retrieve(self, request, *args, **kwargs):#带路径参数的查询
@@ -100,14 +100,43 @@ class ComplaintView(StandartView):
     filterset_fields = ['complainer_id','target_id','target_type','status','complainer_id']
     ordering_fields = ['created_at']
 
+    @action(methods=['patch'], detail=False, url_path='branch/(?P<target_type>\w+)/(?P<target_id>\d+)')
+    def branch_update(self, request,target_type, target_id):
+        queryset = self.get_queryset().filter(
+            target_type=target_type,
+            target_id=target_id
+        )
+        if not queryset.exists():
+            return Response({'detail':'没有对应的举报'},status=status.HTTP_404_NOT_FOUND)
+
+        serializer = self.get_serializer()
+        for complaint in queryset:
+            serializer = self.get_serializer(complaint, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+
+        return Response(status=status.HTTP_202_ACCEPTED)
+
+
+#增加过滤器
+# class ComplaintReviewFilter(django_filters.FilterSet):
+#     #获取特定物品对应举报的举报记录
+#     target_id = django_filters.NumberFilter(field_name='complaint_id__target_id')
+#     target_type = django_filters.NumberFilter(field_name='complaint_id__target_type')
+#     class Meta:
+#         model = models.ComplaintReview
+#         fields = ['target_id', 'target_type']
+
+
 class ComplaintReviewView(StandartView):
     queryset = models.ComplaintReview.objects.all()
     serializer_class = serializers.ComplaintReviewSerializer
     lookup_field = 'review_id'
     pagination_class = StandardPagination
 
+    # filter_class = ComplaintReviewFilter
     filter_backends = [DjangoFilterBackend,filters.OrderingFilter]
-    filterset_fields = ['complaint_id','status']
+    filterset_fields = ['target_id', 'target_type','reviewer_id']
     ordering_fields = ['created_at']
 
 
