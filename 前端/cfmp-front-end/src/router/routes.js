@@ -42,6 +42,9 @@ export const constRoutes =   [
         meta: {title: '投诉管理'}
       }
     ]
+  },{
+    path: '/',
+    redirect: '/root',
   }
   ]
 

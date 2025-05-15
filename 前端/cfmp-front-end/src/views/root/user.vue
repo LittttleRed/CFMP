@@ -82,10 +82,12 @@
 <script>
 import Head from "../../components/root/Head.vue";
 import LeftBar from "../../components/root/LeftBar.vue";
+import {getAllUser} from "../../api/root/index.js";
 
 export default {
   name: 'UserManagement',
   components: {LeftBar, Head},
+  all_user:{},
   data() {
     return {
       pagination: {
@@ -99,6 +101,8 @@ export default {
         phone: '',
         status: ''
       },
+      user:''
+      ,
       // 模拟数据
       userList: [
         {
@@ -130,8 +134,23 @@ export default {
     handleUnban(user) {
       // 解封逻辑
       console.log('解封用户：', user.id)
+    },
+     async loadUsers() {
+      try {
+        this.loading = true
+        this.all_user = await getAllUser()
+        console.log(this.all_user)
+      } catch (err) {
+        this.error = err.message
+        console.error('API Error:', err)
+      } finally {
+        this.loading = false
+      }
     }
-  }
+  },
+    created() {
+  this.loadUsers() // 调用独立方法
+}
 }
 </script>
 

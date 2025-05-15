@@ -40,7 +40,7 @@
       <el-table-column prop="created_at" label="投诉时间" sortable></el-table-column>
       <el-table-column label="操作">
         <template #default="{row}">
-          <el-button type="primary" size="mini" @click="handleDetail(row)">处理</el-button>
+          <el-button type="primary" size="mini" @click="openHandleDialog(row)">处理</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -53,6 +53,91 @@
       :total="pagination.total"
       @current-change="handlePageChange"
     ></el-pagination>
+    <el-dialog
+      title="商品投诉处理"
+      v-model="dialogVisible"
+      width="600px"
+      :close-on-click-modal="false"
+    >
+      <el-form
+        :model="handleForm"
+        label-width="100px"
+        :rules="rules"
+        ref="handleForm"
+      >
+        <el-form-item label="处理方式" prop="action" style="width: 300px">
+          <el-select
+            v-model="handleForm.action"
+            placeholder="请选择处理方式"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="item in actionOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item
+          label="下架时长"
+          prop="duration"
+          v-if="handleForm.action === 'remove'"
+          style="width: 300px"
+        >
+          <el-select
+            v-model="handleForm.duration"
+            placeholder="请选择下架时长"
+            style="width: 100%"
+          >
+            <el-option label="3天" value="3"></el-option>
+            <el-option label="7天" value="7"></el-option>
+            <el-option label="15天" value="15"></el-option>
+            <el-option label="永久下架" value="0"></el-option>
+          </el-select>
+        </el-form-item>
+
+        <el-form-item
+          label="处罚卖家"
+          prop="punishSeller"
+          v-if="handleForm.action === 'punish'"
+          style="width: 300px"
+        >
+          <el-select
+            v-model="handleForm.punishSeller"
+            placeholder="请选择处罚方式"
+            style="width: 100%"
+          >
+            <el-option label="警告" value="warning"></el-option>
+            <el-option label="限制发布商品" value="restrict"></el-option>
+            <el-option label="封禁账号" value="ban"></el-option>
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="处理原因" prop="reason" style="width: 500px">
+          <el-input
+            type="textarea"
+            :rows="4"
+            v-model="handleForm.reason"
+            placeholder="请输入处理原因及依据"
+            maxlength="300"
+            show-word-limit
+          ></el-input>
+        </el-form-item>
+      </el-form>
+
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">取 消</el-button>
+        <el-button
+          type="primary"
+          @click="submitHandle"
+          :loading="submitting"
+        >
+          确 定
+        </el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -83,10 +168,70 @@ export default {
         page: 1,
         page_size: 10,
         total: 1
+      },
+      dialogVisible: false,
+      submitting: false,
+      currentComplaint: null,
+      handleForm: {
+        action: '',
+        duration: '',
+        punishSeller: '',
+        reason: ''
+      },
+      actionOptions: [
+        { value: 'remove', label: '下架商品' },
+        { value: 'punish', label: '处罚卖家' },
+        { value: 'dismiss', label: '驳回投诉' }
+      ],
+      rules: {
+        action: [
+          { required: true, message: '请选择处理方式', trigger: 'change' }
+        ],
+        duration: [
+          { required: true, message: '请选择下架时长', trigger: 'change' }
+        ],
+        punishSeller: [
+          { required: true, message: '请选择处罚方式', trigger: 'change' }
+        ],
+        reason: [
+          { required: true, message: '请输入处理原因', trigger: 'blur' },
+          { min: 10, message: '至少输入10个字符', trigger: 'blur' }
+        ]
       }
     }
   },
   methods: {
+    openHandleDialog(row) {
+      this.currentComplaint = row
+      this.dialogVisible = true
+      this.$nextTick(() => {
+        this.$refs.handleForm.resetFields()
+      })
+    },
+
+    submitHandle() {
+      this.$refs.handleForm.validate(valid => {
+        if (valid) {
+          this.submitting = true
+          const params = {
+            target_type: 0, // 商品类型
+            target_id: this.currentComplaint.target_id,
+            ...this.handleForm
+          }
+
+          console.log('提交商品处理：', params)
+
+          // 模拟接口调用
+          setTimeout(() => {
+            this.submitting = false
+            this.dialogVisible = false
+            this.$message.success('处理成功')
+            // 这里应刷新表格数据
+          }, 1000)
+        }
+      })
+
+    },
     handleSearch() {
       console.log('搜索参数：', this.searchForm)
     },
@@ -96,7 +241,7 @@ export default {
     handlePageChange(page) {
       this.pagination.page = page
     }
-  }
+  },
 }
 </script>
 <style scoped>
