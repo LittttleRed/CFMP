@@ -10,10 +10,6 @@ class ComplaintReviewSerializer(serializers.ModelSerializer):
         model = models.ComplaintReview
         fields = '__all__'
 
-class ViolationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Violation
-        fields = '__all__'
 
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:

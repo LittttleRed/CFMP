@@ -21,22 +21,13 @@ class ComplaintReview(models.Model):
     reviewer_id = models.ForeignKey(User, on_delete=models.CASCADE,db_column='reviewer_id')
     created_at = models.DateTimeField(auto_now_add=True)
     result = models.CharField(max_length=100)
+    ban_type = models.SmallIntegerField(default=0)  # 封禁类型
+    ban_time = models.IntegerField(default=0)  # 封禁时间
 
     class Meta:
         db_table = "complaint_review"
 
-class Violation(models.Model):
-    record_id = models.BigAutoField(primary_key=True)
-    target_type = models.SmallIntegerField()
-    target_id = models.IntegerField()
-    action = models.CharField(max_length=100)
-    reason = models.CharField(max_length=100)
-    created_at = models.DateTimeField(auto_now_add=True)
-    ban_time = models.IntegerField(default=0)  # 封禁时间
-    ban_type = models.SmallIntegerField(default=0)  # 封禁类型
 
-    class Meta:
-        db_table = "violation"
 
 class Transaction(models.Model):
     log_id = models.BigAutoField(primary_key=True)
