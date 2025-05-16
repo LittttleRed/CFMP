@@ -1,3 +1,5 @@
+from datetime import timezone, timedelta, datetime
+
 import django_filters
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -11,7 +13,7 @@ from . import serializers
 from rest_framework.views import APIView
 
 class StandardPagination(PageNumberPagination):
-    page_size = 50
+    page_size = 2
     page_size_query_param = 'page_size'
     max_page_size = 1000
 
@@ -85,7 +87,7 @@ class UserView(StandartView):
     pagination_class = StandardPagination
 
     filter_backends = [DjangoFilterBackend,filters.OrderingFilter]
-    filterset_fields = ['user_id','username','phone']
+    filterset_fields = ['user_id','username','phone','status']
     ordering_fields = ['created_at']
 
 
@@ -139,8 +141,7 @@ class ComplaintReviewView(StandartView):
     filterset_fields = ['target_id', 'target_type','reviewer_id']
     ordering_fields = ['created_at']
 
-
-
+#解封定时任务
 
 
 

@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -40,12 +41,15 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     'django_filters',
+    'django_apscheduler',
     "rest_framework",
     "product",
     "root",
     "user",
     "order",
+#     python manage.py migrate --fake django_apscheduler zero
 ]
+
 #自己写自己的分页器,不要全局配置
 REST_FRAMEWORK = {
 

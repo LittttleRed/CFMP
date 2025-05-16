@@ -21,7 +21,7 @@ class ComplaintReview(models.Model):
     reviewer_id = models.ForeignKey(User, on_delete=models.CASCADE,db_column='reviewer_id')
     created_at = models.DateTimeField(auto_now_add=True)
     result = models.CharField(max_length=100)
-    ban_type = models.SmallIntegerField(default=0)  # 封禁类型
+    ban_type = models.CharField(max_length=100)  # 封禁类型
     ban_time = models.IntegerField(default=0)  # 封禁时间
 
     class Meta:
