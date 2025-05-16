@@ -1,14 +1,12 @@
-from rest_framework.permissions import IsAuthenticated
-from typing_extensions import override
-from rest_framework import views, status
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework import status
+from .pagination import StandardResultsSetPagination
+from .permissions import IsOwnerOrReadOnly
 from rest_framework.response import Response
-
 from rest_framework.generics import (
     ListAPIView,
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
-    CreateAPIView,
-    DestroyAPIView,
 )
 from rest_framework.views import APIView
 from .models import Product, Category, ProductReview, Collection
@@ -22,8 +20,9 @@ from .serializers import (
 
 # 商品相关视图
 class ProductListCreateAPIView(ListCreateAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.all().order_by("-created_at")
     serializer_class = ProductSerializer
+    pagination_class = StandardResultsSetPagination
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -33,15 +32,29 @@ class ProductDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     lookup_field = "product_id"
+    permission_classes = [IsOwnerOrReadOnly]
+
+    def get_permissions(self):
+        """区分权限，对于写操作需要验证所有者
+        对于读操作不需要权限
+        """
+        if self.request.method in ["GET", "HEAD", "OPTIONS"]:
+            return []
+        return [IsOwnerOrReadOnly()]
 
 
 # 商品评价相关视图
 class ProductReviewListCreateAPIView(ListCreateAPIView):
     serializer_class = ProductReviewSerializer
+    pagination_class = StandardResultsSetPagination
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        """获取特定商品的所有评价，按时间倒序排列"""
         product_id = self.kwargs.get("product_id")
-        return ProductReview.objects.filter(product_id=product_id)
+        return ProductReview.objects.filter(product_id=product_id).order_by(
+            "-created_at"
+        )
 
     def perform_create(self, serializer):
         product_id = self.kwargs.get("product_id")
@@ -52,6 +65,7 @@ class ProductReviewListCreateAPIView(ListCreateAPIView):
 class ProductReviewDetailAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class = ProductReviewSerializer
     lookup_field = "review_id"
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
     def get_queryset(self):
         product_id = self.kwargs.get("product_id")
@@ -64,38 +78,64 @@ class UserCollectionListAPIView(ListAPIView):
 
     serializer_class = CollectionSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
-        return Collection.objects.filter(collecter=self.request.user)
-
-
-class CollectionCreateAPIView(CreateAPIView):
-    """收藏商品"""
-
-    serializer_class = CollectionSerializer
-    permission_classes = [IsAuthenticated]
-
-    def perform_create(self, serializer):
-        product_id = self.kwargs.get("product_id")
-        product = Product.objects.get(product_id=product_id)
-        serializer.save(collection=product, collecter=self.request.user)
-
-
-class CollectionDestroyAPIView(DestroyAPIView):
-    """取消收藏"""
-
-    permission_classes = [IsAuthenticated]
-
-    def get_object(self):
-        product_id = self.kwargs.get("product_id")
-        return Collection.objects.get(
-            collection_id=product_id, collecter=self.request.user
+        return Collection.objects.filter(collecter=self.request.user).order_by(
+            "-create_at"
         )
 
-    def destroy(self, request, *args, **kwargs):
+
+class ProductCollectionView(APIView):
+    """
+    商品收藏相关操作的统一视图
+
+    GET: 检查商品是否已被当前用户收藏
+    POST: 收藏商品
+    DELETE: 取消收藏
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, product_id):
+        """检查商品是否已被当前用户收藏"""
+        is_collected = Collection.objects.filter(
+            collection__product_id=product_id, collecter=request.user
+        ).exists()
+
+        return Response({"is_collected": is_collected})
+
+    def post(self, request, product_id):
+        """收藏商品"""
+        # 检查商品是否存在
         try:
-            instance = self.get_object()
-            self.perform_destroy(instance)
+            product = Product.objects.get(product_id=product_id)
+        except Product.DoesNotExist:
+            return Response({"detail": "商品不存在"}, status=status.HTTP_404_NOT_FOUND)
+
+        # 检查是否已收藏
+        if Collection.objects.filter(
+            collection__product_id=product_id, collecter=request.user
+        ).exists():
+            return Response(
+                {"detail": "您已收藏过此商品"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 创建收藏
+        collection = Collection.objects.create(
+            collection=product, collecter=request.user
+        )
+
+        serializer = CollectionSerializer(collection)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, product_id):
+        """取消收藏"""
+        try:
+            collection = Collection.objects.get(
+                collection__product_id=product_id, collecter=request.user
+            )
+            collection.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Collection.DoesNotExist:
             return Response(
@@ -103,14 +143,44 @@ class CollectionDestroyAPIView(DestroyAPIView):
             )
 
 
-class CheckCollectionStatusAPIView(APIView):
-    """检查商品是否已被当前用户收藏"""
+class CategoryListCreateAPIView(ListCreateAPIView):
+    """获取所有分类或创建新分类"""
 
-    permission_classes = [IsAuthenticated]
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    pagination_class = StandardResultsSetPagination
 
-    def get(self, request, product_id):
-        is_collected = Collection.objects.filter(
-            collection_id=product_id, collecter=request.user
-        ).exists()
+    def get_permissions(self):
+        """针对写操作
+        Returns:
+            返回权限级别
+        """
+        if self.request.method == "GET":
+            return []
+        return [IsAdminUser()]
 
-        return Response({"is_collected": is_collected})
+
+class CategoryDetailAPIView(RetrieveUpdateDestroyAPIView):
+    """获取、更新或删除单个分类"""
+
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    lookup_field = "category_id"
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return []
+        return [IsAdminUser()]
+
+
+class ProductByCategoryAPIView(ListAPIView):
+    """获取指定分类下的所有商品"""
+
+    serializer_class = ProductSerializer
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        category_id = self.kwargs.get("category_id")
+        return Product.objects.filter(categories__category_id=category_id).order_by(
+            "-created_at"
+        )
