@@ -4,6 +4,7 @@ import { RouterView } from 'vue-router'
 </script>
 
 <template>
+   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
    <RouterView/>
 </template>
 

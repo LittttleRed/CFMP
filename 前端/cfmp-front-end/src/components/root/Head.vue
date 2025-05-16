@@ -11,6 +11,7 @@
     </div>
 
   <div class="right">
+
     <el-col :span="12">
       <div class="demo-basic--circle">
         <div class="block">
@@ -18,6 +19,9 @@
         </div>
       </div>
     </el-col>
+      <a class="username">
+      小红色的小红
+    </a>
   </div>
 </div>
 
@@ -31,6 +35,13 @@
   align-items: center;
   background: yellow;
 }
+.username{
+  font-size: 20px;
+  font-weight: bold;
+  margin: auto;
+  padding-right: 10px;
+  width: 200px;
+}
  .left {
    margin-left: 80px;
    display: flex;
@@ -38,9 +49,8 @@
   }
   .right {
     display: flex;
-    margin-right: 100px;
+    margin-right: 10px;
     flex-direction: row-reverse;
-
   }
   .title{
     font-size: 40px;
