@@ -47,7 +47,7 @@ class Collection(models.Model):
 
     class Meta:
         db_table = "collection"
-        unique_together = (("collection", "collecter"),)
+        unique_together = ("collection", "collecter")
 
 
 # Create your models here.
