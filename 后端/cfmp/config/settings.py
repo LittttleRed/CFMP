@@ -38,7 +38,6 @@ MINIO_STORAGE_SECRET_KEY = 'wbmud9Os71UJUqt4cf0cFbpn3yYgnkjQ3RmKYI2s'      # 替
 MINIO_STORAGE_USE_HTTPS = False                   # 根据你的 Minio 配置调整
 MINIO_STORAGE_MEDIA_BUCKET_NAME = 'img'    # 存储媒体文件的 Bucket 名称
 MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET = True     # 自动创建 Bucket
-
 DEFAULT_FILE_STORAGE = 'minio_storage.storage.MinioMediaStorage'
 INSTALLED_APPS = [
     "django.contrib.admin",

@@ -19,7 +19,13 @@ from minio import Minio
 class UploadPortraitView(APIView):
     def post(self, request):
         file=request.FILES['image']
-        file.name='test.jpg'
+        file.name='test1.jpg'
         storage=MinioMediaStorage()
         storage.save(file.name,file)
         return Response(status=status.HTTP_200_OK)
+
+    def get(self,request):
+        storage=MinioMediaStorage()
+        date={'image':storage.url('test.jpg')}
+        return Response(date,status=status.HTTP_200_OK)
+
