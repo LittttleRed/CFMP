@@ -45,6 +45,13 @@ export const constRoutes =   [
   },{
     path: '/',
     redirect: '/root',
+  },{
+    path: '/img',
+    component: () => (import('../views/test_img.vue')),
+  },
+ {
+  path: '/chat',
+    component: () => (import('../views/chat/index.vue')),
   }
   ]
 

@@ -1,8 +1,3 @@
-<script setup>
-import Head from "../../components/root/Head.vue";
-import LeftBar from "../../components/root/LeftBar.vue";
-import user from "./user.vue"
-</script>
 
 <template>
     <Head class="header"></Head>
@@ -20,6 +15,12 @@ import user from "./user.vue"
     </div>
 
 </template>
+<script setup>
+import Head from "../../components/root/Head.vue";
+import LeftBar from "../../components/root/LeftBar.vue";
+import user from "./user.vue"
+
+</script>
 
 <style scoped>
 .header {

@@ -35,7 +35,7 @@
        <el-table-column prop="complainer_id" label="投诉人ID"></el-table-column>
       <el-table-column label="状态">
         <template #default="{row}">
-          <el-tag :type="row.status === '0' ? 'warning' : 'success'">
+          <el-tag :type="row.status === 0 ? 'warning' : 'success'">
             {{ statusMap[row.status] }}
           </el-tag>
         </template>
@@ -43,7 +43,7 @@
       <el-table-column prop="created_at" label="投诉时间" sortable></el-table-column>
       <el-table-column label="操作">
         <template #default="{row}">
-          <el-button type="primary" size=small @click="openHandleDialog(row)" v-if="row.status === '0'">处理</el-button>
+          <el-button type="primary" size=small @click="openHandleDialog(row)" v-if="row.status === 0">处理</el-button>
         </template>
       </el-table-column>
     </el-table>

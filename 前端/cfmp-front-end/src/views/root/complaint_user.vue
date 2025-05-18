@@ -36,7 +36,7 @@
        <el-table-column prop="complainer_id" label="投诉人ID"></el-table-column>
       <el-table-column label="状态">
         <template #default="{row}">
-          <el-tag :type="row.status === '0' ? 'warning' : 'success'">
+          <el-tag :type="row.status === 0 ? 'warning' : 'success'">
             {{ statusMap[row.status] }}
           </el-tag>
         </template>
@@ -44,7 +44,7 @@
       <el-table-column prop="created_at" label="投诉时间" sortable></el-table-column>
       <el-table-column label="操作">
         <template #default="{row}">
-          <el-button type="primary" size=small @click="openHandleDialog(row)" v-if="row.status === '0'">处理</el-button>
+          <el-button type="primary" size=small @click="openHandleDialog(row)" v-if="row.status === 0">处理</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -127,7 +127,7 @@
 </template>
 
 <script>
-import {createReview, getAllComplaints, getComplaintByID, updateReview} from "../../api/root/index.js";
+import {changeUserState, createReview, getAllComplaints, getComplaintByID, updateReview} from "../../api/root/index.js";
 
 export default {
   name: 'UserComplaint',
@@ -157,7 +157,7 @@ export default {
       ],
       pagination: {
         page: 1,
-        page_size: 3,
+        page_size: 2,
         total: 1
       },
       submitting: false,
@@ -252,6 +252,7 @@ export default {
           console.log(review)
           await createReview(review)
           await updateReview(this.currentComplaint.target_id,1,1)
+          await changeUserState(this.currentComplaint.target_id,1)
             this.submitting = false
             this.dialogVisible = false
             this.$message.success('处理成功')
@@ -278,7 +279,7 @@ export default {
        try {
          console.log(filteredParams)
           let response =await getAllComplaints(1,{...filteredParams,page: this.pagination.page})
-          console.log(response.data.results)
+          console.log(response.data)
           this.complaintList = response.data.results
           this.pagination.total = response.data.count
       } catch (err) {

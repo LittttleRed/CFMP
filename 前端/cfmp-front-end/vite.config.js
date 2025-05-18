@@ -18,6 +18,13 @@ export default defineConfig(
         secure: false, // 如果是https接口，需要配置这个参数
         agent: new http.Agent(),
       },
+        "/minio":{
+          target: "http://59.110.23.64:9000",
+            changeOrigin: true,
+            secure: false,
+            agent: new http.Agent(),
+            rewrite: (path) => path.replace(/^\/minio/, ""),
+        }
     },
   }
     }

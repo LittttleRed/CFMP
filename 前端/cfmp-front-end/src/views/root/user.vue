@@ -39,7 +39,7 @@
       <el-table-column prop="status" label="状态" >
 
         <template #default="{ row }">
-          <el-tag :type="row.status === '0' ? 'success' : 'danger'">
+          <el-tag :type="row.status === 0 ? 'success' : 'danger'">
             {{ row.status === 0 ? '正常' : '已封禁' }}
           </el-tag>
         </template>
