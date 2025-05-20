@@ -60,3 +60,14 @@ export const updateReview=(id,type,status)=>{
         }
     })
 }
+
+export const getOrders=(day,status)=>{
+    return http({
+        url:'root/order/',
+        method:'get',
+        params:{
+            day:day,
+            status:status
+        }
+    })
+}

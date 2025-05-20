@@ -226,7 +226,7 @@ export default {
 <style scoped>
 .user-management {
   padding: 20px;
-  width: 100%;
+  width: auto;
 }
 
 .search-form {

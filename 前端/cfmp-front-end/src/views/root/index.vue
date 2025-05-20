@@ -37,6 +37,7 @@ import user from "./user.vue"
   flex: 1;
   display: flex;
   overflow: hidden;
+  width: 100%;
 }
 
 .main-content {
@@ -45,5 +46,6 @@ import user from "./user.vue"
   padding-left: 20px;
   overflow-y: auto;
   background: #fff;
+  width: 60%;
 }
 </style>

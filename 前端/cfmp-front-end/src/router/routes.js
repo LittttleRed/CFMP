@@ -18,6 +18,7 @@
  *     children: []                  // 子路由
  * }
  */
+
 export const constRoutes =   [
   {
     path: '/root',
@@ -40,6 +41,11 @@ export const constRoutes =   [
         name: 'userManagement',
         component: () => (import('../views/root/complaint_user.vue')),
         meta: {title: '投诉管理'}
+      },{
+        path: 'order',
+        name: 'orderManagement',
+        component: () => (import('../views/root/order.vue')),
+        meta: {title: '订单管理'}
       }
     ]
   },{
