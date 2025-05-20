@@ -1,4 +1,8 @@
+from django.core.validators import FileExtensionValidator
 from django.db import models
+from django_minio_backend import MinioBackend
+from minio_storage import MinioMediaStorage
+
 
 class User(models.Model):
     user_id = models.BigAutoField(primary_key=True)
@@ -13,6 +17,14 @@ class User(models.Model):
     class Meta:
         db_table = "user"
 
+class Image(models.Model):
+    image_id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(User,  on_delete=models.CASCADE,db_column='user_id')
+    image = models.ImageField(
+        upload_to='images/',
+        storage=MinioMediaStorage(),
+        null=True,
+        blank=True,)
 class ChatLog(models.Model):
     chat_id = models.BigAutoField(primary_key=True)
     sender_id = models.IntegerField()

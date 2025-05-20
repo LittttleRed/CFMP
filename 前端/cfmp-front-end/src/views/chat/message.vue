@@ -1,0 +1,229 @@
+<template>
+  <div class="chat-container">
+    <!-- 聊天内容区域 -->
+    <div class="chat-messages" ref="messagesContainer">
+      <div
+        v-for="(message, index) in messages"
+        :key="index"
+        class="message-item"
+        :class="{ 'self-message': message.isSelf }"
+      >
+        <!-- 对方消息 -->
+        <div v-if="!message.isSelf" class="other-message">
+          <img :src="currentUser.avatar" class="avatar" alt="头像">
+          <div class="message-content">
+            <div class="message-bubble">
+              {{ message.content }}
+            </div>
+            <span class="time">{{ formatTime(message.time) }}</span>
+          </div>
+        </div>
+
+        <!-- 自己发送的消息 -->
+        <div v-if="message.isSelf" class="self-message">
+          <div class="message-content">
+            <span class="time">{{ formatTime(message.time) }}</span>
+            <div class="message-bubble">
+              {{ message.content }}
+            </div>
+          </div>
+          <img :src="selfAvatar" class="avatar" alt="我的头像">
+        </div>
+      </div>
+    </div>
+
+    <!-- 输入框区域 -->
+    <div class="input-area">
+      <div class="input-box">
+        <textarea
+          v-model="inputMessage"
+          @keydown.enter.exact.prevent="sendMessage"
+          @keydown.ctrl.enter.exact="newLine"
+          placeholder="请输入内容"
+          rows="1"
+          ref="textarea"
+        ></textarea>
+      </div>
+      <button class="send-button" @click="sendMessage">发送</button>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'ChatContent',
+  data() {
+    return {
+      inputMessage: '',
+      currentUser: {
+        name: '测试用户',
+        avatar: 'https://via.placeholder.com/50'
+      },
+      selfAvatar: 'https://via.placeholder.com/50?text=Me',
+      messages: [
+        {
+          content: '你好呀！',
+          time: new Date(Date.now() - 3600000),
+          isSelf: false
+        },
+        {
+          content: '你好！有什么可以帮助你的？',
+          time: new Date(),
+          isSelf: true
+        }
+      ]
+    }
+  },
+  methods: {
+    sendMessage() {
+      if (!this.inputMessage.trim()) return
+
+      this.messages.push({
+        content: this.inputMessage,
+        time: new Date(),
+        isSelf: true
+      })
+
+      this.inputMessage = ''
+      this.$nextTick(() => {
+        this.scrollToBottom()
+        this.adjustTextareaHeight()
+      })
+    },
+    newLine() {
+      this.inputMessage += '\n'
+      this.adjustTextareaHeight()
+    },
+    formatTime(time) {
+      return `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`
+    },
+    scrollToBottom() {
+      const container = this.$refs.messagesContainer
+      container.scrollTop = container.scrollHeight
+    },
+    adjustTextareaHeight() {
+      const textarea = this.$refs.textarea
+      textarea.style.height = 'auto'
+      textarea.style.height = textarea.scrollHeight + 'px'
+    }
+  },
+  mounted() {
+    this.scrollToBottom()
+  }
+}
+</script>
+
+<style scoped>
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f0f0f0;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  padding-bottom: 0;
+}
+
+.message-item {
+  margin-bottom: 20px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 5px;
+  margin: 0 10px;
+}
+
+.other-message {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.self-message {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+
+.message-content {
+  max-width: 60%;
+  display: flex;
+  flex-direction: column;
+}
+
+.message-bubble {
+  padding: 10px 15px;
+  border-radius: 5px;
+  position: relative;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.other-message .message-bubble {
+  background: white;
+  border: 1px solid #e5e5e5;
+}
+
+.self-message .message-bubble {
+  background: #95ec69;
+  order: 1;
+}
+
+.time {
+  font-size: 12px;
+  color: #999;
+  margin: 5px 8px;
+}
+
+.input-area {
+  padding: 15px;
+  background: white;
+  border-top: 1px solid #e5e5e5;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.input-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+textarea {
+  flex: 1;
+  border: 1px solid #e5e5e5;
+  border-radius: 5px;
+  padding: 10px;
+  resize: none;
+  max-height: 150px;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #07c160;
+}
+
+.send-button {
+  background: #07c160;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.send-button:hover {
+  background: #06ad54;
+}
+</style>

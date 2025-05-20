@@ -1,10 +1,20 @@
 <script setup>
+<<<<<<< HEAD
 // 这里可以放置全局逻辑（如需）
 </script>
 
 <template>
   <!-- 简化版路由视图容器 -->
   <router-view />
+=======
+import HelloWorld from './components/HelloWorld.vue'
+import { RouterView } from 'vue-router'
+</script>
+
+<template>
+   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+   <RouterView/>
+>>>>>>> 11b53feeb6e16b34efa49e9a9e53ae43242ac49b
 </template>
 
 <style>

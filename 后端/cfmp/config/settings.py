@@ -9,8 +9,9 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+import os
 from pathlib import Path
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -31,7 +32,13 @@ ALLOWED_HOSTS = []
 # Application definition
 
 # python3 manage.py migrate
-
+MINIO_STORAGE_ENDPOINT = "59.110.23.64:9000" # Minio 服务器地址
+MINIO_STORAGE_ACCESS_KEY = 'T1oIslxvYe9YzP2ECk3U'      # 替换为你的 Access Key
+MINIO_STORAGE_SECRET_KEY = 'wbmud9Os71UJUqt4cf0cFbpn3yYgnkjQ3RmKYI2s'      # 替换为你的 Secret Key
+MINIO_STORAGE_USE_HTTPS = False                   # 根据你的 Minio 配置调整
+MINIO_STORAGE_MEDIA_BUCKET_NAME = 'img'    # 存储媒体文件的 Bucket 名称
+MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET = True     # 自动创建 Bucket
+DEFAULT_FILE_STORAGE = 'minio_storage.storage.MinioMediaStorage'
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -40,15 +47,21 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     'django_filters',
+    'django_apscheduler',
+    'minio_storage',
     "rest_framework",
     "product",
     "root",
     "user",
     "order",
-]
+#     python manage.py migrate --fake django_apscheduler zero
+]# 指定媒体文件的URL前缀（相对路径）
+
+# 允许的HOST（替换为你的IP或域名）
+
 #自己写自己的分页器,不要全局配置
 REST_FRAMEWORK = {
-    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
+
 }
 
 MIDDLEWARE = [
@@ -136,3 +149,5 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
