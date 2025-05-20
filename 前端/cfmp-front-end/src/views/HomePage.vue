@@ -1,36 +1,7 @@
 <template>
   <div class="home-container">
     <!-- 顶部导航栏 -->
-    <div class="nav-bar">
-      <div class="nav-left">
-        <span class="logo">校园市场</span>
-        <el-input
-          v-model="searchKeyword"
-          placeholder="搜索商品..."
-          class="search-input"
-          @keyup.enter="handleSearch"
-        >
-          <template #append>
-            <el-button :icon="Search" @click="handleSearch" />
-          </template>
-        </el-input>
-      </div>
-      
-      <div class="nav-right">
-        <el-dropdown @command="handleUserCommand">
-          <div class="user-info">
-            <el-avatar :size="36" :src="userStore.avatar" />
-            <span class="username">{{ userStore.username }}</span>
-          </div>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="profile">个人中心</el-dropdown-item>
-              <el-dropdown-item command="logout">退出登录</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-      </div>
-    </div>
+   <Head></Head>
 
     <!-- 商品展示区 -->
     <div class="goods-container">
@@ -39,12 +10,17 @@
       </div>
 
       <div v-else class="goods-list">
-        <GoodsItem 
-          v-for="item in homeStore.goodsList" 
-          :key="item.id"
-          :data="item"
-          class="goods-item"
-        />
+        <el-row :gutter="20">
+        <el-col v-for="(product, index) in homeStore.goodsList"
+        :key="product.id"
+        :lg="4"
+        :md="8"
+        :sm="12"
+        :xs="24"
+      >
+            <Product :goods="product" />
+          </el-col>
+        </el-row>
       </div>
     </div>
 
@@ -70,6 +46,8 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import { useHomeStore } from '../stores/home'
 import GoodsItem from '../components/GoodsItem.vue'
+import Product from "../components/product.vue";
+import Head from "../components/Head.vue";
 
 
 
@@ -163,24 +141,7 @@ const handleUserCommand = (command: string) => {
      min-width: 300px; // 与左侧保持间距
   }
 
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      padding: 8px 12px;
-      border-radius: 4px;
-      transition: background-color 0.3s;
 
-      &:hover {
-        background-color: #f5f7fa;
-      }
-
-      .username {
-        font-size: 14px;
-        color: #606266;
-      }
-    }
   }
 
   .goods-container {

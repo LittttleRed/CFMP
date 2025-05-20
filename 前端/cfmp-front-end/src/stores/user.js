@@ -1,20 +1,23 @@
-import { defineStore } from 'pinia';
+import { defineStore } from 'pinia'
+import { getLogin } from '../api/user/index'
 import {
-  getToken,
-  setToken,
-  removeToken,
-  getUserId,
-  getUserName,
   getHeadImg,
-  removeUserName, removeUserId, removeHeadImg
-} from "../utils/user-utils.js";
-export const UserInfoStore = defineStore('userInfo', {
+  getToken,
+  getUserId,
+  getUserName, removeHeadImg,
+  removeToken,
+  removeUserId,
+  removeUserName,
+  setToken
+} from "../utils/user-utils";
+
+export const useUserStore = defineStore('userInfo', {
 
 	state: () => ({
     token: getToken(),
     username: getUserName(),
     user_id: getUserId(),
-    headImg: getHeadImg(),
+    avatar: getHeadImg(),
   }),
 
 	actions: {

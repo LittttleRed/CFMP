@@ -4,7 +4,7 @@
   <div class="root-head">
     <div class="left">
       <h1 class="title" @click="toHomePage">
-        校园跳蚤市场管理系统
+        校园跳蚤市场
       </h1>
     </div>
 
@@ -14,7 +14,7 @@
       <div class="demo-basic--circle" style="padding-right: 50px;padding-left: 10px">
         <div class="block">
           <el-avatar :size="65" :src=headImg v-if="headImg"/>
-          <el-avatar :size="65"  v-else @click="toUploadImg" style="cursor: pointer">选择头像</el-avatar>
+          <el-avatar :size="65"  v-else @click="toUserHome" style="cursor: pointer"  src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"></el-avatar>
         </div>
       </div>
     </el-col>
@@ -30,16 +30,16 @@
 </template>
 <script setup>
   import vue from "../assets/vue.svg";
-  import {UserInfoStore} from "../stores/userInfo.js";
+  import { useUserStore } from "../stores/user.js";
   import {ref} from "vue";
-  const userInfoStore = UserInfoStore();
+  const userInfoStore = useUserStore();
   let userName = userInfoStore.username
-  let headImg = userInfoStore.headImg
+  let headImg = userInfoStore.avatar
   let toLogin = () => {
     console.log("toLogin")
   }
-  let toUploadImg = () => {
-    console.log("toUploadImg")
+  let toUserHome = () => {
+    console.log("toUserHome")
   }
   let toHomePage = () => {
     console.log("toHomePage")
