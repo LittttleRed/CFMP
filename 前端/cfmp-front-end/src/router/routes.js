@@ -84,6 +84,26 @@ export const constRoutes =   [
  {
   path: '/chat',
     component: () => (import('../views/chat/index.vue')),
-  }
+  },{
+    path: '/',
+    name: 'Home',
+    component: () => import('../views/HomePage.vue'),
+    meta: { title: '首页' }
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('../views/LoginPage.vue'),
+    meta: {
+      title: '用户登录',
+    //   guestOnly: true // 标记仅未登录用户可访问
+    }
+  },
+ {
+  path: '/profile',
+  name: 'Profile',
+  component: () => import('../views/ProfilePage.vue'),
+  meta: { requiresAuth: true }
+}
   ]
 
