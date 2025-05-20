@@ -81,7 +81,7 @@
 </template>
 
 <script>
-import Head from "../../components/root/Head.vue";
+import Head from "../../components/Head.vue";
 import LeftBar from "../../components/root/LeftBar.vue";
 import {getAllUser, getUserByID,changeUserState} from "../../api/root/index.js";
 

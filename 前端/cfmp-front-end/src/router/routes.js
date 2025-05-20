@@ -21,6 +21,9 @@
 
 export const constRoutes =   [
   {
+    path: '/',
+    redirect: '/user',
+  }, {
     path: '/root',
     component: () => (import('../views/root/index.vue')),
     redirect: '/root/user', // 默认重定向到用户管理
@@ -49,8 +52,31 @@ export const constRoutes =   [
       }
     ]
   },{
-    path: '/',
-    redirect: '/root',
+  path: '/user',
+    component: () => (import('../views/user/index.vue')),
+    children: [
+      {
+        path:'MyRelease',
+        name: 'MyRelease',
+        component: () => (import('../views/user/myrelease.vue')),
+        meta: {title: '我的发布'}
+      },{
+        path:'MyBought',
+        name: 'MyBought',
+        component: () => (import('../views/user/mybought.vue')),
+        meta: {title: '我的购买'}
+      },{
+        path:'MyCollection',
+        name: 'MyCollection',
+        component: () => (import('../views/user/mycollection.vue')),
+        meta: {title: '我的收藏'}
+      },{
+        path:'setting',
+        name: 'setting',
+        component: () => (import('../views/user/setting.vue')),
+        meta: {title: '个人资料'}
+      }
+    ]
   },{
     path: '/img',
     component: () => (import('../views/test_img.vue')),
