@@ -64,8 +64,9 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend',  # 启用过滤
     ],
     'DEFAULT_AUTHENTICATION_CLASSES':[
-        'CFMP.后端.extensions.auth.JwtQueryAuthentication',
+        'CFMP.back.extensions.auth.JwtQueryAuthentication',
     ]
+
 }
 
 MIDDLEWARE = [
