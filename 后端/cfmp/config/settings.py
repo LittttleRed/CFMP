@@ -63,10 +63,6 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',  # 启用过滤
     ],
-    'DEFAULT_AUTHENTICATION_CLASSES':[
-        'config.auth.JwtQueryAuthentication',
-    ]
-
 }
 
 MIDDLEWARE = [
