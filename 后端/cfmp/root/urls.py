@@ -8,6 +8,7 @@ router = routers.SimpleRouter()
 router.register(r'user', views.UserView)
 router.register(r'complaint', views.ComplaintView)
 router.register(r'review', views.ComplaintReviewView)
+router.register(r'order', views.OrderView)
 urlpatterns = router.urls
 urlpatterns += []
 

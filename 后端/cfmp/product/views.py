@@ -24,8 +24,8 @@ class ProductListCreateAPIView(ListCreateAPIView):
     serializer_class = ProductSerializer
     pagination_class = StandardResultsSetPagination
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    # def perform_create(self, serializer):
+    #     serializer.save(user=self.request.user)
 
 
 class ProductDetailAPIView(RetrieveUpdateDestroyAPIView):
@@ -148,7 +148,6 @@ class CategoryListCreateAPIView(ListCreateAPIView):
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    pagination_class = StandardResultsSetPagination
 
     def get_permissions(self):
         """针对写操作

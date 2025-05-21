@@ -1,24 +1,28 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
-import { RouterView } from 'vue-router'
+// 这里可以放置全局逻辑（如需）
 </script>
 
 <template>
-   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-   <RouterView/>
+  <!-- 简化版路由视图容器 -->
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <router-view />
 </template>
 
+<style>
+/* 全局基础样式 */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 
+               'Segoe UI', 'PingFang SC', 'Microsoft YaHei',
+               sans-serif;
+  margin: 0;
+  color: #333;  /* 更易读的文字颜色 */
+  background: #ffffff; /* 明确设置白色背景 */
+}
+
+/* 移除所有过渡动画相关样式 */
+</style>
+
 <style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
+/* 组件级样式（如需） */
+/* 空内容表示不需要组件级样式 */
 </style>

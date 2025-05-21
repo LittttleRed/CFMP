@@ -1,8 +1,11 @@
+<script setup>
+import  LeftBar  from '../../components/user/leftbar.vue'
+import Head from '../../components/Head.vue'
+</script>
 
 <template>
-    <Head class="header"></Head>
-      <!-- 左侧导航 -->
-  <div class="container">
+  <Head></Head>
+<div class="container">
       <!-- 左侧导航 -->
       <aside class="left-sidebar">
         <LeftBar />
@@ -15,12 +18,6 @@
     </div>
 
 </template>
-<script setup>
-import Head from "../../components/Head.vue";
-import LeftBar from "../../components/root/LeftBar.vue";
-import user from "./user.vue"
-
-</script>
 
 <style scoped>
 .header {
@@ -29,9 +26,11 @@ import user from "./user.vue"
   z-index: 1000;
 }
 .left-sidebar {
-  width: 15%;
-  background: #f5f7fa;
+  width: 16%;
+  background: #ffffff;
   overflow-y: auto;
+  height: 100vh;
+
 }
 .container {
   flex: 1;

@@ -297,7 +297,7 @@ export default {
 <style scoped>
 .complaint-container {
   padding: 20px;
-  width: 100%;
+  width: auto;
 }
 
 .search-form {

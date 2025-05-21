@@ -21,8 +21,8 @@
         </el-menu-item>
 
 
-      <el-menu-item index="product">
-        <span slot="title">商品处理</span>
+      <el-menu-item index="order">
+        <span slot="title">订单管理</span>
       </el-menu-item>
     </el-menu>
   </div>

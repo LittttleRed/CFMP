@@ -8,8 +8,8 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
-from .serializers import UserSerializer, ImageSerializer
-from .models import User,Image
+from .serializers import UserSerializer
+from .models import User
 from minio import Minio
 
 # Create your views here.

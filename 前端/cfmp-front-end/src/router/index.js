@@ -1,3 +1,4 @@
+
 import {createRouter, createWebHashHistory, createWebHistory} from "vue-router";
 import {constRoutes} from "./routes";
 
@@ -8,3 +9,4 @@ const router = createRouter({
 });
 
 export default router;
+

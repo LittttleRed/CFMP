@@ -18,8 +18,9 @@
  *     children: []                  // 子路由
  * }
  */
+
 export const constRoutes =   [
-  {
+   {
     path: '/root',
     component: () => (import('../views/root/index.vue')),
     redirect: '/root/user', // 默认重定向到用户管理
@@ -40,11 +41,49 @@ export const constRoutes =   [
         name: 'userManagement',
         component: () => (import('../views/root/complaint_user.vue')),
         meta: {title: '投诉管理'}
+      },{
+        path: 'order',
+        name: 'orderManagement',
+        component: () => (import('../views/root/order.vue')),
+        meta: {title: '订单管理'}
       }
     ]
   },{
-    path: '/',
-    redirect: '/root',
+  path: '/user',
+    component: () => (import('../views/user/index.vue')),
+    children: [
+      {
+        path:'MyRelease',
+        name: 'MyRelease',
+        component: () => (import('../views/user/myrelease.vue')),
+        meta: {title: '我的发布'}
+      },{
+        path:'MyBought',
+        name: 'MyBought',
+        component: () => (import('../views/user/mybought.vue')),
+        meta: {title: '我的购买'}
+      },{
+        path:'MyCollection',
+        name: 'MyCollection',
+        component: () => (import('../views/user/mycollection.vue')),
+        meta: {title: '我的收藏'}
+      },{
+        path:'setting',
+        name: 'setting',
+        component: () => (import('../views/user/setting.vue')),
+        meta: {title: '个人资料'}
+      },{
+        path: 'phone',
+        name: 'phone',
+        component: () => (import('../views/user/changePhone.vue')),
+        meta: {title: '修改手机号'}
+      },{
+        path: 'email',
+        name: 'email',
+        component: () => (import('../views/user/changeEmail.vue')),
+        meta: {title: '修改邮箱'}
+      }
+    ]
   },{
     path: '/img',
     component: () => (import('../views/test_img.vue')),
@@ -52,6 +91,20 @@ export const constRoutes =   [
  {
   path: '/chat',
     component: () => (import('../views/chat/index.vue')),
+  },{
+    path: '/',
+    name: 'Home',
+    component: () => import('../views/HomePage.vue'),
+    meta: { title: '首页' }
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('../views/LoginPage.vue'),
+    meta: {
+      title: '用户登录',
+    //   guestOnly: true // 标记仅未登录用户可访问
+    }
   }
   ]
 
