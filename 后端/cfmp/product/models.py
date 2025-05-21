@@ -1,5 +1,6 @@
 from django.db import models
 from user.models import User
+from django_minio_backend import MinioBackend
 
 
 class Product(models.Model):
@@ -10,11 +11,21 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.SmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
-    product_img = models.JSONField()
     categories = models.ManyToManyField("Category", related_name="products")
 
     class Meta:
         db_table = "product"
+
+
+class ProductMedia(models.Model):
+    media_id = models.BigAutoField(primary_key=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="media")
+    media = models.FileField(
+        upload_to="product_media/",
+        storage=MinioBackend(),
+        null=True,
+        blank=True,
+    )
 
 
 class Category(models.Model):
@@ -40,6 +51,19 @@ class ProductReview(models.Model):
         unique_together = ("product", "user")  # 每个用户对同一商品只能评价一次
 
 
+class ProductReviewMedia(models.Model):
+    review_media_id = models.BigAutoField(primary_key=True)
+    review = models.ForeignKey(
+        ProductReview, on_delete=models.CASCADE, related_name="media"
+    )
+    media = models.FileField(
+        upload_to="review_media/",
+        storage=MinioBackend(),
+        null=True,
+        blank=True,
+    )
+
+
 class Collection(models.Model):
     collection = models.ForeignKey(Product, on_delete=models.CASCADE)
     collecter = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -48,6 +72,3 @@ class Collection(models.Model):
     class Meta:
         db_table = "collection"
         unique_together = ("collection", "collecter")
-
-
-# Create your models here.
