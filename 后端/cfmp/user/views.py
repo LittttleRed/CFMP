@@ -46,8 +46,12 @@ class login(APIView):
                 "fail_msg":"邮箱和密码不能为空"
             },status=status.HTTP_400_BAD_REQUEST)
         
-        user = authenticate(email=email, password=password)
-
+        # user = authenticate(email=email, password=password)
+        user = User.objects.filter(email=email,password=password)
+        #反序列化user
+        user = user.first()
+        
+        print(user)
         if user:
             salt = settings.SECRET_KEY
 
@@ -55,14 +59,15 @@ class login(APIView):
                 'typ':'jwt',
                 'alg':'HS256'
             }
-
+            print(user.username)
             payload = {
                 'user_id': user.user_id,
                 'username': user.username,
-                'exp':datetime.datetime.now(timezone.utc) + datetime.timedelta(minutes = 1)
+                'exp':datetime.now(timezone.utc) + timedelta(minutes = 1)
             }
 
-            token = jwt.encode(payload = payload, key = salt,algorithm="HS256", headers=headers).decode('utf-8')
+            token = jwt.encode(payload = payload, key = salt,algorithm="HS256", headers=headers)
+
             return Response({
                 "success":True,
                 "access_token":token
