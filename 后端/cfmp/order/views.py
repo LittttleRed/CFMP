@@ -1,4 +1,4 @@
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import (
@@ -24,6 +24,8 @@ from .serializers import (
 import uuid
 import json
 
+# TODO: 用户登录认证暂时没有完成，所以这里在测试时绕过JWT鉴权，设置为AllowAny，最后上线时需要全部改为IsAuthenticated
+
 # 自定义分页类
 class StandardPagination(PageNumberPagination):
     page_size = 10
@@ -35,7 +37,7 @@ class OrderListCreateAPIView(ListCreateAPIView):
     """获取订单列表或创建新订单"""
     serializer_class = OrderListSerializer
     pagination_class = StandardPagination
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         """根据状态筛选订单"""
@@ -94,7 +96,7 @@ class OrderListCreateAPIView(ListCreateAPIView):
 class OrderDetailAPIView(RetrieveAPIView):
     """获取订单详情"""
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     lookup_field = 'order_id'
 
     def get_queryset(self):
@@ -110,7 +112,7 @@ class OrderDetailAPIView(RetrieveAPIView):
 
 class OrderCancelAPIView(UpdateAPIView):
     """取消订单"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     lookup_field = 'order_id'
 
     def get_queryset(self):
@@ -136,7 +138,7 @@ class OrderCancelAPIView(UpdateAPIView):
 
 class OrderCompleteAPIView(UpdateAPIView):
     """确认收货完成订单"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     lookup_field = 'order_id'
 
     def get_queryset(self):
@@ -170,7 +172,7 @@ class OrderCompleteAPIView(UpdateAPIView):
 
 class OrderStatsAPIView(APIView):
     """获取订单状态统计"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request):
         user = request.user
@@ -199,9 +201,16 @@ class OrderStatsAPIView(APIView):
 # 支付相关视图
 class PaymentCreateAPIView(APIView):
     """创建支付请求"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request):
+        # 检查用户是否已登录
+        if not request.user.is_authenticated:
+            return Response({
+                'code': 401,
+                'message': '需要登录才能创建支付请求'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
         # 获取参数
         order_id = request.query_params.get('order_id')
         total_amount = request.query_params.get('total_amount')
@@ -346,7 +355,7 @@ class PaymentCallbackAPIView(APIView):
 
 class PaymentQueryAPIView(RetrieveAPIView):
     """支付查询"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request, order_id):
         try:
@@ -402,7 +411,7 @@ class PaymentRecordsAPIView(ListAPIView):
     """获取支付记录列表"""
     serializer_class = PaymentListSerializer
     pagination_class = StandardPagination
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         user = self.request.user
@@ -462,7 +471,7 @@ class PaymentRecordsAPIView(ListAPIView):
 
 class PaymentCancelAPIView(APIView):
     """取消支付"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request, payment_id):
         try:
@@ -500,7 +509,7 @@ class NotificationListAPIView(ListAPIView):
     """获取通知列表"""
     serializer_class = NotificationSerializer
     pagination_class = StandardPagination
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         user = self.request.user
@@ -560,7 +569,7 @@ class NotificationListAPIView(ListAPIView):
 class NotificationDetailAPIView(RetrieveAPIView):
     """获取通知详情"""
     serializer_class = NotificationSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     lookup_field = 'id'
 
     def get_queryset(self):
@@ -582,7 +591,7 @@ class NotificationDetailAPIView(RetrieveAPIView):
 
 class NotificationDeleteAPIView(APIView):
     """删除通知"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def delete(self, request, notification_id):
         try:
@@ -606,7 +615,7 @@ class NotificationDeleteAPIView(APIView):
 
 class NotificationMarkReadAPIView(APIView):
     """标记通知为已读"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def put(self, request, notification_id):
         try:
@@ -631,7 +640,7 @@ class NotificationMarkReadAPIView(APIView):
 
 class NotificationMarkAllReadAPIView(APIView):
     """全部标记为已读"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def put(self, request):
         user = request.user
@@ -663,7 +672,7 @@ class NotificationMarkAllReadAPIView(APIView):
 
 class NotificationUnreadCountAPIView(APIView):
     """获取未读通知数量"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request):
         user = request.user
@@ -702,10 +711,16 @@ class NotificationUnreadCountAPIView(APIView):
 # 安全策略相关视图
 class RiskAssessmentAPIView(APIView):
     """风险评估"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request):
         # 简化实现，实际中需根据多种因素计算风险
+        # 检查用户是否已登录
+        if not request.user.is_authenticated:
+            return Response({
+                'code': 401,
+                'message': '需要登录才能进行风险评估，当然这条消息不应该在正常使用中被看见'
+            }, status=status.HTTP_401_UNAUTHORIZED)
 
         # 模拟风险评估结果
         risk_level = "medium"
@@ -733,11 +748,16 @@ class RiskAssessmentAPIView(APIView):
 
 class FraudDetectionAPIView(APIView):
     """欺诈检测"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request):
-        # 简化实现，实际中需要复杂的欺诈检测算法
-
+        # TODO：需要写一个实际可用的欺诈检测算法，或直接砍掉这一个功能
+        # 检查用户是否已登录
+        if not request.user.is_authenticated:
+            return Response({
+                'code': 401,
+                'message': '需要登录才能进行欺诈检测，当然这条消息不应该在正常使用中被看见'
+            }, status=status.HTTP_401_UNAUTHORIZED)
         # 模拟欺诈检测结果
         fraud_score = 75
         fraud_detected = True
