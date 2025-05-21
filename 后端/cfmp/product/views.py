@@ -9,7 +9,12 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
 )
 from rest_framework.views import APIView
-from .models import Product, Category, ProductReview, Collection
+from .models import (
+    Product,
+    Category,
+    ProductReview,
+    Collection,
+)
 from .serializers import (
     ProductReviewSerializer,
     CategorySerializer,
@@ -35,7 +40,8 @@ class ProductDetailAPIView(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOwnerOrReadOnly]
 
     def get_permissions(self):
-        """区分权限，对于写操作需要验证所有者
+        """
+        区分权限，对于写操作需要验证所有者
         对于读操作不需要权限
         """
         if self.request.method in ["GET", "HEAD", "OPTIONS"]:
@@ -148,7 +154,6 @@ class CategoryListCreateAPIView(ListCreateAPIView):
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    pagination_class = StandardResultsSetPagination
 
     def get_permissions(self):
         """针对写操作
