@@ -36,20 +36,34 @@ class ProductMedia(models.Model):
     Attributes:
         media_id: primary_key(not nessary)
         product: model(related_name="media")
-        media: FileField
+        media: ImageField
+        is_main: 是否为主图
+        created_at: 创建时间
     """
 
     media_id = models.BigAutoField(primary_key=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="media")
-    media = models.FileField(
+    media = models.ImageField(
         upload_to="product_media/",
         storage=MinioBackend(),
         null=True,
         blank=True,
     )
+    is_main = models.BooleanField(default=False)  # 是否为主图
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        da_table = "product_media"
+        db_table = "product_media"
+        ordering = ['-is_main', 'created_at']  # 主图优先，然后按时间排序
+    
+    def save(self, *args, **kwargs):
+        # 如果设置为主图，则将该产品的其他图片设为非主图
+        if self.is_main:
+            ProductMedia.objects.filter(
+                product=self.product, 
+                is_main=True
+            ).update(is_main=False)
+        super().save(*args, **kwargs)
 
 
 class Category(models.Model):
@@ -92,29 +106,6 @@ class ProductReview(models.Model):
         db_table = "product_review"
         unique_together = ("product", "user")  # 每个用户对同一商品只能评价一次
 
-
-class ProductReviewMedia(models.Model):
-    """ProductReviewMedia
-
-    Attributes:
-        review_media_id: primary_key(not nessary)
-        review: model(related_name="media")
-        media: FileField
-    """
-
-    review_media_id = models.BigAutoField(primary_key=True)
-    review = models.ForeignKey(
-        ProductReview, on_delete=models.CASCADE, related_name="media"
-    )
-    media = models.FileField(
-        upload_to="review_media/",
-        storage=MinioBackend(),
-        null=True,
-        blank=True,
-    )
-
-    class Meta:
-        db_table = "product_review_media"
 
 
 class Collection(models.Model):

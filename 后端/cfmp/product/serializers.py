@@ -5,7 +5,6 @@ from .models import (
     ProductReview,
     Collection,
     ProductMedia,
-    ProductReviewMedia,
 )
 from user.serializers import UserSerializer
 
@@ -19,20 +18,15 @@ class CategorySerializer(serializers.ModelSerializer):
 class ProductMediaSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductMedia
-        fields = ["media_id", "media"]
+        fields = ["media_id", "media", "is_main", "created_at"]
 
-
-class ProductReviewMediaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProductReviewMedia
-        fields = ["review_media_id", "media"]
 
 
 class ProductSerializer(serializers.ModelSerializer):
     categories = CategorySerializer(many=True, read_only=True)
     user = UserSerializer(read_only=True)
     # 反向引用外键，需要使用related_name
-    media = ProductMediaSerializer(source="media", many=True, read_only=True)
+    media = ProductMediaSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
@@ -51,8 +45,6 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class ProductReviewSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    # 反向引用外键，需要使用related_name
-    media = ProductReviewMediaSerializer(source="media", many=True, read_only=True)
 
     class Meta:
         model = ProductReview
@@ -63,7 +55,6 @@ class ProductReviewSerializer(serializers.ModelSerializer):
             "rating",
             "comment",
             "created_at",
-            "media",
         ]
 
 
