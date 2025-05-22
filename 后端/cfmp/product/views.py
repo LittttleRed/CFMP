@@ -1,8 +1,8 @@
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django_filters.rest_framework import DjangoFilterBackend
 from .pagination import StandardResultsSetPagination
-from .permissions import IsOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly, IsAdmin
 from rest_framework.response import Response
 from rest_framework.generics import (
     ListAPIView,
@@ -284,6 +284,12 @@ class ProductReviewListCreateAPIView(ListCreateAPIView):
     def perform_create(self, serializer):
         product_id = self.kwargs.get("product_id")
         product = Product.objects.get(product_id=product_id)
+        
+        # 检查用户是否已经评论过该商品
+        if ProductReview.objects.filter(product=product, user=self.request.user).exists():
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({"detail": "您已经评论过该商品"})
+            
         serializer.save(user=self.request.user, product=product)
 
 
@@ -380,7 +386,7 @@ class CategoryListCreateAPIView(ListCreateAPIView):
         """
         if self.request.method == "GET":
             return []
-        return [IsAdminUser()]
+        return [IsAdmin()]
 
 
 class CategoryDetailAPIView(RetrieveUpdateDestroyAPIView):
@@ -393,7 +399,7 @@ class CategoryDetailAPIView(RetrieveUpdateDestroyAPIView):
     def get_permissions(self):
         if self.request.method == "GET":
             return []
-        return [IsAdminUser()]
+        return [IsAdmin()]
 
 
 class ProductByCategoryAPIView(ListAPIView):

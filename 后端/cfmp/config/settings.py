@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -31,14 +32,12 @@ ALLOWED_HOSTS = []
 # Application definition
 
 # python3 manage.py migrate
-MINIO_ENDPOINT = "59.110.23.64:9000"
 MINIO_STORAGE_ENDPOINT = "59.110.23.64:9000" # Minio 服务器地址
 MINIO_STORAGE_ACCESS_KEY = 'T1oIslxvYe9YzP2ECk3U'      # 替换为你的 Access Key
 MINIO_STORAGE_SECRET_KEY = 'wbmud9Os71UJUqt4cf0cFbpn3yYgnkjQ3RmKYI2s'      # 替换为你的 Secret Key
 MINIO_STORAGE_USE_HTTPS = False                   # 根据你的 Minio 配置调整
 MINIO_STORAGE_MEDIA_BUCKET_NAME = 'img'    # 存储媒体文件的 Bucket 名称
 MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET = True     # 自动创建 Bucket
-MEDIA_URL=''
 DEFAULT_FILE_STORAGE = 'minio_storage.storage.MinioMediaStorage'
 INSTALLED_APPS = [
     "django.contrib.admin",

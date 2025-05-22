@@ -39,6 +39,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "price",
             "status",
             "created_at",
+            "product_img",
             "categories",
             "media",
         ]
@@ -46,6 +47,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class ProductReviewSerializer(serializers.ModelSerializer):
     user = PublicUserSerializer(read_only=True)
+    product = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = ProductReview
