@@ -64,12 +64,12 @@ class ProductMedia(models.Model):
     class Meta:
         db_table = "product_media"
         ordering = ['-is_main', 'created_at']  # 主图优先，然后按时间排序
-    
+
     def save(self, *args, **kwargs):
         # 如果设置为主图，则将该产品的其他图片设为非主图
         if self.is_main:
             ProductMedia.objects.filter(
-                product=self.product, 
+                product=self.product,
                 is_main=True
             ).update(is_main=False)
         super().save(*args, **kwargs)

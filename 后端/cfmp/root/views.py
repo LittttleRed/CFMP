@@ -72,7 +72,7 @@ class UserView(StandartView):
     pagination_class = StandardPagination
 
     filter_backends = [DjangoFilterBackend,filters.OrderingFilter]
-    filterset_fields = ['user_id','username','phone','status']
+    filterset_fields = ['user_id','username','status']
     ordering_fields = ['created_at']
 
 
