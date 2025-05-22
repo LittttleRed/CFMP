@@ -61,6 +61,8 @@
 <script setup>
 import {ref} from "vue";
 import {ElMessage} from "element-plus";
+import {getHeadImg, getToken, getUserId, getUserName} from "../../utils/user-utils.js";
+import {addProduct} from "../../api/product/index.js";
 
 const description = ref('')
 const price = ref('')
@@ -68,7 +70,7 @@ const shippingMethod = ref('')
 const imgList = ref([])
 const title = ref('')
 const handleFileChange=(file, fileList) => {
-  imgList.value = fileList
+  imgList.value = fileList.map(f => f.raw);
   console.log(fileList)
 }
 const validatePrice = (price) => {
@@ -108,12 +110,25 @@ const launch = async () => {
     return;
   }
   // 所有验证通过，继续发布流程
-  try {
-    // 这里添加实际的发布逻辑
-    // await api.post(...)
+   try {
+    const form = new FormData();
+    form.append('title', title.value);
+    form.append('description', description.value);
+    form.append('price', parseFloat(price.value)); // 转换为数字
+    form.append('status', '0'); // 确保字符串类型
+
+    // 修正文件上传逻辑
+    imgList.value.forEach(file => {
+      form.append('media', file); // 直接使用原始文件对象
+    });
+
+    // 删除冗余的用户信息传递
+    // ❌ 移除 form.append('user', ...)
+
+    await addProduct(form, getToken());
     ElMessage.success("发布成功！");
   } catch (error) {
-    ElMessage.error("发布失败，请重试");
+    ElMessage.error(error.response?.data?.message || "发布失败，请重试");
   }
 }
 </script>
