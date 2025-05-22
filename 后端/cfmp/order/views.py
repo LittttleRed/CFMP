@@ -24,7 +24,7 @@ from .serializers import (
 import uuid
 import json
 
-# TODO: 用户登录认证暂时没有完成，所以这里在测试时绕过JWT鉴权，设置为AllowAny，最后上线时需要全部改为IsAuthenticated
+# 用户登录认证测试，这里全部为IsAuthenticated
 
 # 自定义分页类
 class StandardPagination(PageNumberPagination):
@@ -37,7 +37,7 @@ class OrderListCreateAPIView(ListCreateAPIView):
     """获取订单列表或创建新订单"""
     serializer_class = OrderListSerializer
     pagination_class = StandardPagination
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         """根据状态筛选订单"""
@@ -75,6 +75,13 @@ class OrderListCreateAPIView(ListCreateAPIView):
         return OrderListSerializer
 
     def create(self, request, *args, **kwargs):
+        # 获取当前用户
+        user = request.user
+
+        # 将当前用户ID添加到请求数据中
+        data = request.data.copy()
+        data['buyer'] = user.user_id
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -88,7 +95,10 @@ class OrderListCreateAPIView(ListCreateAPIView):
                 'order_id': order.order_id,
                 'status': 'pending_payment',
                 'created_at': order.created_at,
+                'payment_method': order.payment_method,
+                'buyer_id': user.user_id,
                 'total_amount': order.total_amount,
+                'shipping_address': order.shipping_address,
                 'payment_url': f'/api/payment/create?order_id={order.order_id}'
             }
         }, status=status.HTTP_201_CREATED)
@@ -96,7 +106,7 @@ class OrderListCreateAPIView(ListCreateAPIView):
 class OrderDetailAPIView(RetrieveAPIView):
     """获取订单详情"""
     serializer_class = OrderSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     lookup_field = 'order_id'
 
     def get_queryset(self):
@@ -112,7 +122,7 @@ class OrderDetailAPIView(RetrieveAPIView):
 
 class OrderCancelAPIView(UpdateAPIView):
     """取消订单"""
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     lookup_field = 'order_id'
 
     def get_queryset(self):
@@ -138,7 +148,7 @@ class OrderCancelAPIView(UpdateAPIView):
 
 class OrderCompleteAPIView(UpdateAPIView):
     """确认收货完成订单"""
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     lookup_field = 'order_id'
 
     def get_queryset(self):
@@ -172,7 +182,7 @@ class OrderCompleteAPIView(UpdateAPIView):
 
 class OrderStatsAPIView(APIView):
     """获取订单状态统计"""
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
@@ -201,7 +211,7 @@ class OrderStatsAPIView(APIView):
 # 支付相关视图
 class PaymentCreateAPIView(APIView):
     """创建支付请求"""
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         # 检查用户是否已登录
@@ -355,7 +365,7 @@ class PaymentCallbackAPIView(APIView):
 
 class PaymentQueryAPIView(RetrieveAPIView):
     """支付查询"""
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, order_id):
         try:
@@ -411,7 +421,7 @@ class PaymentRecordsAPIView(ListAPIView):
     """获取支付记录列表"""
     serializer_class = PaymentListSerializer
     pagination_class = StandardPagination
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
@@ -471,7 +481,7 @@ class PaymentRecordsAPIView(ListAPIView):
 
 class PaymentCancelAPIView(APIView):
     """取消支付"""
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, payment_id):
         try:
@@ -509,7 +519,7 @@ class NotificationListAPIView(ListAPIView):
     """获取通知列表"""
     serializer_class = NotificationSerializer
     pagination_class = StandardPagination
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
@@ -569,7 +579,7 @@ class NotificationListAPIView(ListAPIView):
 class NotificationDetailAPIView(RetrieveAPIView):
     """获取通知详情"""
     serializer_class = NotificationSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     lookup_field = 'id'
 
     def get_queryset(self):
@@ -591,7 +601,7 @@ class NotificationDetailAPIView(RetrieveAPIView):
 
 class NotificationDeleteAPIView(APIView):
     """删除通知"""
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def delete(self, request, notification_id):
         try:
@@ -615,7 +625,7 @@ class NotificationDeleteAPIView(APIView):
 
 class NotificationMarkReadAPIView(APIView):
     """标记通知为已读"""
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def put(self, request, notification_id):
         try:
@@ -640,7 +650,7 @@ class NotificationMarkReadAPIView(APIView):
 
 class NotificationMarkAllReadAPIView(APIView):
     """全部标记为已读"""
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def put(self, request):
         user = request.user
@@ -672,7 +682,7 @@ class NotificationMarkAllReadAPIView(APIView):
 
 class NotificationUnreadCountAPIView(APIView):
     """获取未读通知数量"""
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
@@ -711,7 +721,7 @@ class NotificationUnreadCountAPIView(APIView):
 # 安全策略相关视图
 class RiskAssessmentAPIView(APIView):
     """风险评估"""
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         # 简化实现，实际中需根据多种因素计算风险
@@ -748,7 +758,7 @@ class RiskAssessmentAPIView(APIView):
 
 class FraudDetectionAPIView(APIView):
     """欺诈检测"""
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         # TODO：需要写一个实际可用的欺诈检测算法，或直接砍掉这一个功能

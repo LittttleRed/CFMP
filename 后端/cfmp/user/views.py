@@ -45,17 +45,15 @@ class login(APIView):
                 "fail_code":"MISSING_PARAM",
                 "fail_msg":"邮箱和密码不能为空"
             },status=status.HTTP_400_BAD_REQUEST)
-        
+
         # user = authenticate(email=email, password=password)
         user = User.objects.filter(email=email,password=password)
-        #反序列化user
+        # 反序列化user
         user = user.first()
-        
         print(user)
         if user:
             salt = settings.SECRET_KEY
-
-            headers ={
+            headers = {
                 'typ':'jwt',
                 'alg':'HS256'
             }
@@ -63,16 +61,16 @@ class login(APIView):
             payload = {
                 'user_id': user.user_id,
                 'username': user.username,
-                'exp':datetime.now(timezone.utc) + timedelta(minutes = 1)
+                'exp':datetime.now(timezone.utc) + timedelta(minutes = 60)  # 延长token有效期为60分钟
             }
 
-            token = jwt.encode(payload = payload, key = salt,algorithm="HS256", headers=headers)
+            token = jwt.encode(payload = payload, key = salt, algorithm="HS256", headers=headers)
 
             return Response({
                 "success":True,
                 "access_token":token
             })
-        
+
         try:
             User.objects.get(email=email)
             return Response({
@@ -83,6 +81,6 @@ class login(APIView):
         except User.DoesNotExist:
             return Response({
                 "success": False,
-                "fail_code": "USER_NOT_FOUND", 
+                "fail_code": "USER_NOT_FOUND",
                 "fail_msg": "用户不存在"
             }, status=status.HTTP_404_NOT_FOUND)

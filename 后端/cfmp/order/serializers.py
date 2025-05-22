@@ -46,8 +46,9 @@ class CreateOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['products', 'shipping_name', 'shipping_phone', 'shipping_address',
-                 'shipping_postal_code', 'remark', 'total_amount']
+        fields = ['products','total_amount', 'payment_method', 'remark',
+                  'shipping_name', 'shipping_phone', 'shipping_address',
+                  'shipping_postal_code']
 
     def create(self, validated_data):
         products_data = validated_data.pop('products')
@@ -56,17 +57,23 @@ class CreateOrderSerializer(serializers.ModelSerializer):
         # 创建订单
         order = Order.objects.create(
             buyer=buyer,
+            status=0,  # 默认状态为待支付
             **validated_data
         )
 
         # 创建订单项
         for product_item in products_data:
-            OrderItem.objects.create(
-                order=order,
-                product_id=product_item['product_id'],
-                price=product_item['price'],
-                quantity=product_item['quantity']
-            )
+            try:
+                OrderItem.objects.create(
+                    order=order,
+                    product_id=product_item['product_id'],
+                    price=product_item['price'],
+                    quantity=product_item['quantity']
+                )
+            except Exception as e:
+                # 如果创建订单项失败，删除已创建的订单
+                order.delete()
+                raise serializers.ValidationError(f"创建订单项失败: {str(e)}")
 
         return order
 
