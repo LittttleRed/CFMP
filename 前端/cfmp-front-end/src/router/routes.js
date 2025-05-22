@@ -51,6 +51,7 @@ export const constRoutes =   [
   },{
   path: '/user',
     component: () => (import('../views/user/index.vue')),
+    name: 'user',
     children: [
       {
         path:'MyRelease',
@@ -105,6 +106,24 @@ export const constRoutes =   [
       title: '用户登录',
     //   guestOnly: true // 标记仅未登录用户可访问
     }
+  },{
+    path: '/register',
+    name: 'Register',
+    component: () => import('../views/RegisterPage.vue'),
+    meta: {
+      title: '用户注册',
+    //   guestOnly: true // 标记仅未登录用户可访问
+    }
+  },{
+     path: '/product/launch',
+     name: 'launch',
+      component: () => import('../views/product/launch.vue'),
+      meta: { title: '发布商品' }
+  },{
+    path: '/product',
+    name: 'product',
+    component: () => import('../views/product/product.vue'),
+    meta: { title: '商品详情' }
   }
   ]
 
