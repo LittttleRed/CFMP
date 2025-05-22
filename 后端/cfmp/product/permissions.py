@@ -19,3 +19,14 @@ class IsOwnerOrReadOnly(BasePermission):
             return obj.collecter == request.user
 
         return False
+
+
+class IsAdmin(BasePermission):
+    """
+    自定义管理员权限类：只允许管理员用户访问
+    使用用户的privilege字段判断是否是管理员
+    """
+    message = "只有管理员可以执行此操作"
+
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.privilege == 1)

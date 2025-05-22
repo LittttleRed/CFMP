@@ -1,23 +1,88 @@
 from django.db import models
 from user.models import User
+from django_minio_backend import MinioBackend
 
 
 class Product(models.Model):
+    ON_SALE = 0
+    OFF_SALE = 1
+    STATUS_CHOICES = [
+        (ON_SALE, '上架'),
+        (OFF_SALE, '下架'),
+    ]
+    """Product
+
+    Attributes:
+        product_id: primary_key(not nessary)
+        user: model
+        title: CharField
+        description: TextField
+        price: DecimalField
+        status:  default=0 (0 = 上架, 1 = 下架)
+        created_at: DateTimeField(not nessary)
+        categories: model(related_name="products")
+    """
+
     product_id = models.BigAutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, db_column='user')
     title = models.CharField(max_length=100)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.SmallIntegerField(default=0)
+    status = models.SmallIntegerField(
+        choices=STATUS_CHOICES,
+        default=ON_SALE
+    )
     created_at = models.DateTimeField(auto_now_add=True)
-    product_img = models.JSONField()
     categories = models.ManyToManyField("Category", related_name="products")
 
     class Meta:
         db_table = "product"
 
 
+class ProductMedia(models.Model):
+    """ProductMedia
+
+    Attributes:
+        media_id: primary_key(not nessary)
+        product: model(related_name="media")
+        media: ImageField
+        is_main: 是否为主图
+        created_at: 创建时间
+    """
+
+    media_id = models.BigAutoField(primary_key=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="media")
+    media = models.ImageField(
+        upload_to="product_media/",
+        storage=MinioBackend(),
+        null=True,
+        blank=True,
+    )
+    is_main = models.BooleanField(default=False)  # 是否为主图
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "product_media"
+        ordering = ['-is_main', 'created_at']  # 主图优先，然后按时间排序
+    
+    def save(self, *args, **kwargs):
+        # 如果设置为主图，则将该产品的其他图片设为非主图
+        if self.is_main:
+            ProductMedia.objects.filter(
+                product=self.product, 
+                is_main=True
+            ).update(is_main=False)
+        super().save(*args, **kwargs)
+
+
 class Category(models.Model):
+    """Category
+
+    Attributes:
+        category_id: primary_key(not nessary)
+        name: CharField
+    """
+
     category_id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=50)
 
@@ -26,6 +91,17 @@ class Category(models.Model):
 
 
 class ProductReview(models.Model):
+    """ProductReview
+
+    Attributes:
+        review_id: primary_key(not nessary)
+        product: model(related_name="reviews")
+        user: model
+        rating: 1-5
+        comment: TextField
+        created_at: DateTimeField(not nessary)
+    """
+
     review_id = models.BigAutoField(primary_key=True)
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="reviews"
@@ -40,7 +116,16 @@ class ProductReview(models.Model):
         unique_together = ("product", "user")  # 每个用户对同一商品只能评价一次
 
 
+
 class Collection(models.Model):
+    """Collection
+
+    Attributes:
+        collection: model(related_name="collections")
+        collecter: model
+        create_at: DateTimeField(not nessary)
+    """
+
     collection = models.ForeignKey(Product, on_delete=models.CASCADE)
     collecter = models.ForeignKey(User, on_delete=models.CASCADE)
     create_at = models.DateTimeField(auto_now_add=True)
@@ -48,6 +133,3 @@ class Collection(models.Model):
     class Meta:
         db_table = "collection"
         unique_together = ("collection", "collecter")
-
-
-# Create your models here.

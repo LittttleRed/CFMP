@@ -7,14 +7,14 @@
         校园跳蚤市场
       </h1>
     </div>
-
+<Search v-if="showSearch===true" ></Search>
   <div class="right">
 
     <el-col :span="12">
-      <div class="demo-basic--circle" style="padding-right: 50px;padding-left: 10px">
+      <div class="demo-basic--circle" style="padding-right: 50px;padding-left: 10px" @click="toUserHome">
         <div class="block">
           <el-avatar :size="65" :src=headImg v-if="headImg"/>
-          <el-avatar :size="65"  v-else @click="toUserHome" style="cursor: pointer"  src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"></el-avatar>
+          <el-avatar :size="65"  v-else  style="cursor: pointer"  src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"></el-avatar>
         </div>
       </div>
     </el-col>
@@ -24,6 +24,7 @@
     <el-button v-else style="margin: auto;" @click="toLogin">
       登录
     </el-button>
+
   </div>
 </div>
 
@@ -32,6 +33,7 @@
   import vue from "../assets/vue.svg";
   import { useUserStore } from "../stores/user.js";
   import {ref} from "vue";
+  import Search from "./home/search.vue";
   const userInfoStore = useUserStore();
   let userName = userInfoStore.username
   let headImg = userInfoStore.avatar
@@ -40,10 +42,18 @@
   }
   let toUserHome = () => {
     console.log("toUserHome")
+    window.location.href = "/user"
   }
   let toHomePage = () => {
     console.log("toHomePage")
+    window.location.href = "/"
   }
+  defineProps({
+    showSearch: {
+      type: Boolean,
+      default: false
+    }
+  })
 </script>
 <style scoped>
 .root-head {

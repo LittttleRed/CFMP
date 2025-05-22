@@ -13,7 +13,8 @@ class User(models.Model):
     status = models.IntegerField(default=0)
     privilege = models.IntegerField(default=0)
     captcha = models.CharField(max_length=4,null=True,blank=True)
-
+    is_active = models.BooleanField(default=True)
+    is_authenticated = models.BooleanField(default=False)
     class Meta:
         db_table = "user"
 

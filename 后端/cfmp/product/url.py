@@ -11,6 +11,17 @@ urlpatterns = [
         views.ProductDetailAPIView.as_view(),
         name="product-detail",
     ),
+    # 商品图片相关路由
+    path(
+        "product/<int:product_id>/media/",
+        views.ProductMediaListView.as_view(),
+        name="product-media-list",
+    ),
+    path(
+        "product/<int:product_id>/media/<int:media_id>/",
+        views.ProductMediaDetailView.as_view(),
+        name="product-media-detail",
+    ),
     # 商品评价相关路由
     path(
         "product/<int:product_id>/reviews/",
