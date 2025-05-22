@@ -25,3 +25,9 @@ export const addProduct=(data,token)=>{
         }
     })
 }
+export const getProduct=(id)=>{
+    return http({
+        url:'/product/'+id,
+        method:'get',
+    })
+}

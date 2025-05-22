@@ -18,7 +18,8 @@ from .serializers import UserSerializer, PublicUserSerializer
 from .models import User
 from minio import Minio
 from django.conf import settings
-from jwt import exceptions
+from product.models import Product
+from product.serializers import ProductSerializer
 # Create your views here.
 
 class login(APIView):
@@ -120,4 +121,11 @@ class UploadAvatarView(APIView):
         #返回url
         return Response({'avatar': url})
 
-
+class UserProductsViewSet(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ProductSerializer
+    def get(self, request):
+        user_id = request.user.user_id
+        products = Product.objects.filter(user=user_id)
+        products = ProductSerializer(products, many=True).data
+        return Response(products)

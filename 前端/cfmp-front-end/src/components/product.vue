@@ -1,7 +1,8 @@
 <template>
   <el-card class="product-card" style="--el-card-border-radius: 10px;" shadow="hover">
     <div class="image-container" style="cursor: pointer" @click="()=>{router.push({name:'product',query:{product_id:product_id}})}">
-      <img :src="avatar" alt="商品图片" class="product-image">
+      <img :src="media" alt="商品图片" class="product-image" v-if="media!==null">
+      <img src="https://via.placeholder.com/150" alt="商品图片" class="product-image" v-else></img>
     </div>
 
     <div class="header" style="cursor: pointer" @click="()=>{router.push({name:'product',query:{product_id:product_id}})}">
@@ -10,14 +11,15 @@
         <h3 class="title-text" >{{ title }}</h3>
         <div class="price" style="margin-left: 10px">{{ price }}</div>
       </div>
-
     </div>
     <!-- 数据信息 -->
     <div class="stats" style="cursor: pointer" @click="()=>{router.push({name:'user',query:{user_id:user_id}})}">
      <el-avatar  :size="40" :src="avatar" v-if="avatar!==null"/>
       <el-avatar :size="40"  src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" v-else></el-avatar>
       <a style="margin: auto;padding-left: 20px;font-size: 15px;font-weight: bold">{{ username }}</a>
+
     </div>
+
   </el-card>
 </template>
 
@@ -36,6 +38,7 @@ defineProps({
   user_id: Number,
   username: String,
   avatar: String,
+  media: String,
 })
 
 </script>
@@ -111,40 +114,14 @@ defineProps({
   font-weight: bold;
 }
 
-.description {
-  margin-bottom: 12px;
+.product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 关键属性：保持比例填充容器 */
+  transition: transform 0.3s ease; /* 添加缩放过渡效果 */
 }
 
-.main-desc {
-  color: #666;
-  font-size: 14px;
-  line-height: 1.4;
-  margin-bottom: 4px;
-}
-
-.brand {
-  color: #999;
-  font-size: 12px;
-}
-
-
-.wants {
-  color: #999;
-}
-
-.seller {
-  display: flex;
-  align-items: center;
-  color: #666;
-}
-
-.credit-icon {
-  color: #ffb300;
-  font-size: 14px;
-  margin: 0 4px;
-}
-
-.credit-text {
-  color: #ffb300;
+.product-image:hover {
+  transform: scale(1.05); /* 悬停时轻微放大 */
 }
 </style>
