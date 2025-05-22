@@ -45,6 +45,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class ProductReviewSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
+    product = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = ProductReview

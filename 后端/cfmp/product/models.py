@@ -4,6 +4,12 @@ from django_minio_backend import MinioBackend
 
 
 class Product(models.Model):
+    ON_SALE = 0
+    OFF_SALE = 1
+    STATUS_CHOICES = [
+        (ON_SALE, '上架'),
+        (OFF_SALE, '下架'),
+    ]
     """Product
 
     Attributes:
@@ -12,17 +18,20 @@ class Product(models.Model):
         title: CharField
         description: TextField
         price: DecimalField
-        status:  default=0
+        status:  default=0 (0 = 上架, 1 = 下架)
         created_at: DateTimeField(not nessary)
         categories: model(related_name="products")
     """
 
     product_id = models.BigAutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True,db_column="user")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, db_column='user')
     title = models.CharField(max_length=100)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.SmallIntegerField(default=0)
+    status = models.SmallIntegerField(
+        choices=STATUS_CHOICES,
+        default=ON_SALE
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     categories = models.ManyToManyField("Category", related_name="products")
 

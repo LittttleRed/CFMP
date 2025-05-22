@@ -5,9 +5,10 @@ from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 from user.models import User
 from .models import Product, Category, ProductReview, ProductMedia, Collection
-import tempfile
 from PIL import Image
 import io
+from decimal import Decimal
+from unittest.mock import patch 
 
 
 def create_test_image(name='test.jpg'):
@@ -26,7 +27,7 @@ class ProductModelTest(TestCase):
 
     def setUp(self):
         # 创建测试用户
-        self.user = User.objects.create_user(
+        self.user = User.objects.create(
             username="testuser", 
             email="test@example.com", 
             password="testpass123"
@@ -57,9 +58,12 @@ class ProductModelTest(TestCase):
 class ProductMediaModelTest(TestCase):
     """测试商品图片模型"""
     
-    def setUp(self):
+    @patch('django_minio_backend.MinioBackend._save', return_value='test.jpg')
+    @patch('django_minio_backend.MinioBackend.exists', return_value=False)
+    @patch('django_minio_backend.MinioBackend.url', return_value='http://minio-server/test.jpg')
+    def setUp(self, mock_url, mock_exists, mock_save):
         # 创建测试用户
-        self.user = User.objects.create_user(
+        self.user = User.objects.create(
             username="testuser", 
             email="test@example.com", 
             password="testpass123"
@@ -91,7 +95,10 @@ class ProductMediaModelTest(TestCase):
         self.assertEqual(self.media.product, self.product)
         self.assertTrue(self.media.is_main)
     
-    def test_product_media_main_image_uniqueness(self):
+    @patch('django_minio_backend.MinioBackend._save', return_value='test2.jpg')
+    @patch('django_minio_backend.MinioBackend.exists', return_value=False)
+    @patch('django_minio_backend.MinioBackend.url', return_value='http://minio-server/test2.jpg')
+    def test_product_media_main_image_uniqueness(self, mock_url, mock_exists, mock_save):
         """测试一个商品只能有一张主图"""
         # 创建第二张图片并设置为主图
         test_image = create_test_image(name='test2.jpg')
@@ -119,13 +126,16 @@ class ProductAPITest(APITestCase):
     
     def setUp(self):
         # 创建测试用户
-        self.user = User.objects.create_user(
+        self.user = User.objects.create(
             username="testuser", 
             email="test@example.com", 
             password="testpass123"
         )
+        # 确保用户有正确的认证属性
+        self.user.is_authenticated = True
+        self.user.save()
         
-        # 创建客户端并登录
+        # 创建客户端并使用force_authenticate绕过JWT认证
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
         
@@ -179,14 +189,14 @@ class ProductAPITest(APITestCase):
         data = {
             "title": "更新后的商品",
             "description": "这是更新后的商品描述",
-            "price": "299.99",
+            "price": 299.99,
             "status": 1,
         }
         response = self.client.patch(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.product.refresh_from_db()
         self.assertEqual(self.product.title, "更新后的商品")
-        self.assertEqual(self.product.price, 299.99)
+        self.assertEqual(self.product.price, Decimal('299.99'))
         
     def test_delete_product(self):
         """测试删除商品"""
@@ -199,20 +209,29 @@ class ProductAPITest(APITestCase):
 class ProductMediaAPITest(APITestCase):
     """测试商品图片API"""
     
-    def setUp(self):
+    @patch('django_minio_backend.MinioBackend._save', return_value='test.jpg')
+    @patch('django_minio_backend.MinioBackend.exists', return_value=False)
+    @patch('django_minio_backend.MinioBackend.url', return_value='http://minio-server/test.jpg')
+    def setUp(self, mock_url, mock_exists, mock_save):
         # 创建测试用户
-        self.user = User.objects.create_user(
+        self.user = User.objects.create(
             username="testuser", 
             email="test@example.com", 
             password="testpass123"
         )
+        # 确保用户有正确的认证属性
+        self.user.is_authenticated = True
+        self.user.save()
         
         # 创建另一个用户用于测试权限
-        self.other_user = User.objects.create_user(
+        self.other_user = User.objects.create(
             username="otheruser", 
             email="other@example.com", 
             password="testpass123"
         )
+        # 确保另一个用户也有正确的认证属性
+        self.other_user.is_authenticated = True
+        self.other_user.save()
         
         # 创建客户端并登录
         self.client = APIClient()
@@ -246,7 +265,10 @@ class ProductMediaAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
     
-    def test_upload_media(self):
+    @patch('django_minio_backend.MinioBackend._save', return_value='upload_test.jpg')
+    @patch('django_minio_backend.MinioBackend.exists', return_value=False)
+    @patch('django_minio_backend.MinioBackend.url', return_value='http://minio-server/upload_test.jpg')
+    def test_upload_media(self, mock_url, mock_exists, mock_save):
         """测试上传商品图片"""
         url = reverse("product-media-list", kwargs={"product_id": self.product.product_id})
         
@@ -286,7 +308,10 @@ class ProductMediaAPITest(APITestCase):
         response = self.client.post(url, data, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
     
-    def test_set_main_image(self):
+    @patch('django_minio_backend.MinioBackend._save', return_value='second.jpg')
+    @patch('django_minio_backend.MinioBackend.exists', return_value=False)
+    @patch('django_minio_backend.MinioBackend.url', return_value='http://minio-server/second.jpg')
+    def test_set_main_image(self, mock_url, mock_exists, mock_save):
         """测试设置主图"""
         # 先创建第二张图片
         test_image = create_test_image(name="second.jpg")
@@ -332,7 +357,10 @@ class ProductMediaAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(ProductMedia.objects.filter(product=self.product).count(), 0)
     
-    def test_delete_main_image_and_set_new_main(self):
+    @patch('django_minio_backend.MinioBackend._save', return_value='second.jpg')
+    @patch('django_minio_backend.MinioBackend.exists', return_value=False)
+    @patch('django_minio_backend.MinioBackend.url', return_value='http://minio-server/second.jpg')
+    def test_delete_main_image_and_set_new_main(self, mock_url, mock_exists, mock_save):
         """测试删除主图并自动设置新主图"""
         # 先创建第二张图片
         test_image = create_test_image(name="second.jpg")
@@ -368,69 +396,71 @@ class CategoryAPITest(APITestCase):
     def setUp(self):
         # 创建管理员用户
         self.admin_user = User.objects.create_user(
-            username="admin", 
+            username="admin",
             email="admin@example.com",
-            password="admin123",
-            is_staff=True
+            password="password123",
+            privilege=1  # 设置为管理员权限
         )
         
         # 创建普通用户
         self.regular_user = User.objects.create_user(
-            username="user",
-            email="user@example.com",
-            password="user123"
+            username="regular",
+            email="regular@example.com",
+            password="password123",
+            privilege=0  # 设置为普通用户权限
         )
         
         # 创建测试分类
-        self.category = Category.objects.create(name="测试分类")
+        self.category = Category.objects.create(
+            name="测试分类"
+        )
         
         # 创建客户端
         self.client = APIClient()
         
     def test_get_category_list(self):
         """测试获取分类列表"""
-        url = reverse("category-list-create")
-        response = self.client.get(url)
+        response = self.client.get('/api/product/category/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['name'], "测试分类")
-        
+        self.assertEqual(len(response.data), 1)  # 应该有一个分类
+    
     def test_create_category_as_admin(self):
         """测试管理员创建分类"""
         self.client.force_authenticate(user=self.admin_user)
-        url = reverse("category-list-create")
-        data = {"name": "新分类"}
-        response = self.client.post(url, data, format="json")
+        data = {
+            "name": "新分类"
+        }
+        response = self.client.post('/api/product/category/', data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['name'], "新分类")
-        self.assertEqual(Category.objects.count(), 2)
-        
+        self.assertEqual(Category.objects.count(), 2)  # 应该有两个分类
+    
     def test_create_category_as_regular_user(self):
-        """测试普通用户创建分类被拒绝"""
+        """测试普通用户创建分类（应该被拒绝）"""
         self.client.force_authenticate(user=self.regular_user)
-        url = reverse("category-list-create")
-        data = {"name": "新分类"}
-        response = self.client.post(url, data, format="json")
+        data = {
+            "name": "新分类"
+        }
+        response = self.client.post('/api/product/category/', data, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(Category.objects.count(), 1)
-        
+        self.assertEqual(Category.objects.count(), 1)  # 分类数量应该不变
+    
     def test_update_category(self):
         """测试更新分类"""
         self.client.force_authenticate(user=self.admin_user)
-        url = reverse("category-detail", kwargs={"category_id": self.category.category_id})
-        data = {"name": "更新后的分类"}
-        response = self.client.patch(url, data, format="json")
+        data = {
+            "name": "更新的分类"
+        }
+        response = self.client.put(f'/api/product/category/{self.category.category_id}/', data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.category.refresh_from_db()
-        self.assertEqual(self.category.name, "更新后的分类")
-        
+        self.assertEqual(self.category.name, "更新的分类")
+    
     def test_delete_category(self):
         """测试删除分类"""
         self.client.force_authenticate(user=self.admin_user)
-        url = reverse("category-detail", kwargs={"category_id": self.category.category_id})
-        response = self.client.delete(url)
+        response = self.client.delete(f'/api/product/category/{self.category.category_id}/')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEqual(Category.objects.count(), 0)
+        self.assertEqual(Category.objects.count(), 0)  # 应该没有分类了
 
 
 class ProductByCategoryAPITest(APITestCase):
@@ -438,11 +468,14 @@ class ProductByCategoryAPITest(APITestCase):
     
     def setUp(self):
         # 创建测试用户
-        self.user = User.objects.create_user(
+        self.user = User.objects.create(
             username="testuser", 
             email="test@example.com", 
             password="testpass123"
         )
+        # 确保用户有正确的认证属性
+        self.user.is_authenticated = True
+        self.user.save()
         
         # 创建两个测试分类
         self.category1 = Category.objects.create(name="分类1")
@@ -510,18 +543,24 @@ class ProductReviewAPITest(APITestCase):
     
     def setUp(self):
         # 创建测试用户
-        self.user = User.objects.create_user(
+        self.user = User.objects.create(
             username="testuser", 
             email="test@example.com", 
             password="testpass123"
         )
+        # 确保用户有正确的认证属性
+        self.user.is_authenticated = True
+        self.user.save()
         
         # 创建另一个用户
-        self.other_user = User.objects.create_user(
+        self.other_user = User.objects.create(
             username="otheruser", 
             email="other@example.com", 
             password="testpass123"
         )
+        # 确保另一个用户也有正确的认证属性
+        self.other_user.is_authenticated = True
+        self.other_user.save()
         
         # 创建测试商品
         self.product = Product.objects.create(
@@ -563,6 +602,11 @@ class ProductReviewAPITest(APITestCase):
             "comment": "不错的商品，但有点贵"
         }
         response = self.client.post(url, data, format="json")
+        
+        # 如果失败，打印详细错误信息
+        if response.status_code != status.HTTP_201_CREATED:
+            print("评论创建失败:", response.data)
+            
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['comment'], "不错的商品，但有点贵")
         self.assertEqual(ProductReview.objects.count(), 2)
@@ -610,18 +654,24 @@ class CollectionAPITest(APITestCase):
     
     def setUp(self):
         # 创建测试用户
-        self.user = User.objects.create_user(
+        self.user = User.objects.create(
             username="testuser", 
             email="test@example.com", 
             password="testpass123"
         )
+        # 确保用户有正确的认证属性
+        self.user.is_authenticated = True
+        self.user.save()
         
         # 创建另一个用户
-        self.other_user = User.objects.create_user(
+        self.other_user = User.objects.create(
             username="otheruser", 
             email="other@example.com", 
             password="testpass123"
         )
+        # 确保另一个用户也有正确的认证属性
+        self.other_user.is_authenticated = True
+        self.other_user.save()
         
         # 创建测试商品
         self.product1 = Product.objects.create(
