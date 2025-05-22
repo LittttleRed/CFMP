@@ -39,7 +39,6 @@ class ProductSerializer(serializers.ModelSerializer):
             "price",
             "status",
             "created_at",
-            "product_img",
             "categories",
             "media",
         ]

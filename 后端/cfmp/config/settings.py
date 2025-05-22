@@ -66,7 +66,8 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'config.authentication.JWTAuthentication',  # JWT认证
-    ],
+    ],'DEFAULT_FILE_STORAGE':
+        'minio_storage.storage.MinioStaticStorage'
 
 }
 

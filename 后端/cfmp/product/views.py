@@ -38,7 +38,7 @@ class ProductListCreateAPIView(ListCreateAPIView):
     def perform_create(self, serializer):
         # 保存商品基本信息
         product = serializer.save(user=self.request.user)
-
+        print(self.request.FILES.getlist("media"))
         # 处理分类
         if "categories" in self.request.data:
             category_ids = (
