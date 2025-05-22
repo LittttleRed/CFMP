@@ -1,6 +1,7 @@
 from django.db import models
+from minio_storage import MinioMediaStorage
 from user.models import User
-from django_minio_backend import MinioBackend
+
 
 
 class Product(models.Model):
@@ -54,7 +55,7 @@ class ProductMedia(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="media")
     media = models.ImageField(
         upload_to="product_media/",
-        storage=MinioBackend(),
+        storage=MinioMediaStorage(),
         null=True,
         blank=True,
     )
