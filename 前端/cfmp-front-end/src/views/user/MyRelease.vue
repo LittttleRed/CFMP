@@ -10,30 +10,14 @@ let productList = ref([])
     name: 'product1',
     price: 10,
     description: 'description1',
-    image: 'https://picsum.photos/200/300',
-  },
-  {
-    id: 2,
-    name: 'product2',
-    price: 20,
-    description: 'description2',
-    image: 'https://picsum.photos/200/300',
-  },
-  {
-    id: 3,
-    name: 'product3',
-  },{
-
-   },{
-
-   },{
-
-   },{}
+    title:'title',
+    user:{username: 'seller',user_id: '2',avatar: '1231',}
+  }
  ]
 </script>
 
 <template>
-    <h1>myrelease</h1>
+    <h1>我发布的</h1>
     <div class="product-list">
     <el-row :gutter="10">  <!-- 控制列间距 -->
       <el-col
@@ -44,7 +28,7 @@ let productList = ref([])
         :sm="12"
         :xs="24"
       >
-        <Product :seller="seller" :title="title"></Product>
+        <Product :title="product.title" :price="product.price" :avatar="product.user.avatar" :username="product.user.username" :user_id="product.user.username" :product_id="product.product_id"></Product>
       </el-col>
     </el-row>
   </div>

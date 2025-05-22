@@ -14,3 +14,14 @@ export const getProducts=(data)=>{
     })
 
 }
+export const addProduct=(data,token)=>{
+    return http({
+        url:'/product/',
+        method:'post',
+        data:data,
+        headers:{
+            'Authorization':'Bearer '+token,
+            'Content-Type':'multipart/form-data'
+        }
+    })
+}

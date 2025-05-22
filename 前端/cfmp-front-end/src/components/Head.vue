@@ -32,11 +32,14 @@
 <script setup>
   import vue from "../assets/vue.svg";
   import { useUserStore } from "../stores/user.js";
-  import {ref} from "vue";
+  import {reactive, ref, watch} from "vue";
   import Search from "./home/search.vue";
+  import {storeToRefs} from "pinia";
+  import {getUserName} from "../utils/user-utils.js";
   const userInfoStore = useUserStore();
-  let userName = userInfoStore.username
+  let userName = getUserName()
   let headImg = userInfoStore.avatar
+
   let toLogin = () => {
     console.log("toLogin")
   }
@@ -53,6 +56,11 @@
       type: Boolean,
       default: false
     }
+  })
+  watch(userInfoStore.avatar,(newValue)=>{
+    headImg=newValue
+  },{
+    deep: true,
   })
 </script>
 <style scoped>

@@ -1,7 +1,7 @@
 <template>
   <!-- 固定定位组件 -->
   <div class="fixed-component">
-    <el-button class="right-button">发闲置</el-button>
+    <el-button class="right-button" @click="toLaunch">发闲置</el-button>
     <hr>
     <el-button class="right-button">消息</el-button>
     <hr>
@@ -19,6 +19,9 @@ const toHomePage = () => {
 };
 const toTop = () => {
   window.scrollTo(0, 0);
+};
+const toLaunch = () => {
+  window.location.href = "/product/launch"
 };
 </script>
 

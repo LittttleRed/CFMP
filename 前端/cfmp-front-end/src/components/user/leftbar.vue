@@ -15,14 +15,14 @@
           <span class="menu-title">我的交易</span>
         </template>
         <el-menu-item index="/user/myrelease">我发布的</el-menu-item>
-        <el-menu-item index="/user/mybought">我买到的</el-menu-item>
+        <el-menu-item index="/user/mybought" v-if="isMyHome">我买到的</el-menu-item>
       </el-sub-menu>
 
-      <el-menu-item  index="mycollection">我的收藏</el-menu-item>
+      <el-menu-item  index="mycollection" v-if="isMyHome">我的收藏</el-menu-item>
 
 
       <!-- 账户设置 -->
-      <el-sub-menu index="3">
+      <el-sub-menu index="3"  v-if="isMyHome">
         <template #title>
           <span class="menu-title">账户设置</span>
         </template>
@@ -36,7 +36,12 @@
 import { ref } from 'vue'
 
 const activeMenu = ref('1-1') // 默认激活菜单
-
+defineProps({
+  isMyHome: {
+    type: Boolean,
+    default: false
+  }
+})
 const handleSelect = (index) => {
   console.log('选中菜单:', index)
   // 这里可以添加路由跳转逻辑

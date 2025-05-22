@@ -4,7 +4,7 @@
     <!-- 顶部导航栏 -->
    <Head :show-search="true"></Head>
 
-    <Category style="width: 60%;margin: auto"></Category>
+    <Category style="width: 60%;margin: 10px auto"></Category>
     <!-- 商品展示区 -->
     <el-card class="goods-container" shadow="never">
       <div v-if="loading" class="loading-wrapper">
@@ -20,7 +20,7 @@
         :sm="12"
         :xs="24"
       >
-            <Product :goods="product" style="margin: 10px auto;"/>
+           <Product :title="product.title" :price="product.price" :avatar="product.user.avatar" :username="product.user.username" :user_id="product.user.username" :product_id="product.product_id"></Product>
           </el-col>
         </el-row>
       </div>
@@ -102,7 +102,7 @@ const windowScroll=()=> {
         let clientHeight = getClientHeight()
         let scrollHeight = getScrollHeight()
         //如果满足公式则，确实到底了
-        if(scrollTop+clientHeight >= scrollHeight-5&&isUpdating.value===false&&isMax.value===false){
+        if(scrollTop+clientHeight >= scrollHeight-3&&isUpdating.value===false&&isMax.value===false){
           isUpdating.value=true
           console.log("到底了1")
           updateProductList().then(() => {

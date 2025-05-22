@@ -1,42 +1,43 @@
 <template>
   <el-card class="product-card" style="--el-card-border-radius: 10px;" shadow="hover">
-    <div class="image-container">
-      <img :src="image" alt="商品图片" class="product-image">
+    <div class="image-container" style="cursor: pointer" @click="()=>{router.push({name:'product',query:{product_id:product_id}})}">
+      <img :src="avatar" alt="商品图片" class="product-image">
     </div>
 
-    <div class="header">
+    <div class="header" style="cursor: pointer" @click="()=>{router.push({name:'product',query:{product_id:product_id}})}">
       <div class="title">
         <span class="tag">包邮</span>
-        <h3 class="title-text">{{ title }}</h3>
+        <h3 class="title-text" >{{ title }}</h3>
+        <div class="price" style="margin-left: 10px">{{ price }}</div>
       </div>
-      <div class="price">{{ price }}</div>
+
     </div>
     <!-- 数据信息 -->
-    <div class="stats">
-     <el-avatar  :size="40" :src="seller.headimg" v-if="seller.headimg"/>
-      <el-avatar :size="40" v-else>未知</el-avatar>
-      <a style="margin: auto;padding-left: 20px">{{ seller.name }}</a>
+    <div class="stats" style="cursor: pointer" @click="()=>{router.push({name:'user',query:{user_id:user_id}})}">
+     <el-avatar  :size="40" :src="avatar" v-if="avatar!==null"/>
+      <el-avatar :size="40"  src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" v-else></el-avatar>
+      <a style="margin: auto;padding-left: 20px;font-size: 15px;font-weight: bold">{{ username }}</a>
     </div>
   </el-card>
 </template>
 
 <script setup>
 import { StarFilled } from '@element-plus/icons-vue'
+import { useRoute, useRouter } from 'vue-router'
+import {ref} from "vue";
+
+const router = useRouter()
+const route = useRoute()
 
 defineProps({
   title: String,
   price: String,
-  mainDesc: String,
-  brand: String,
-  wants: Number,
-  seller: {
-    type: Object,
-    default: () => ({
-      name: '',
-      headimg: ''
-    })
-  }
+  product_id: Number,
+  user_id: Number,
+  username: String,
+  avatar: String,
 })
+
 </script>
 
 <style scoped>
