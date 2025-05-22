@@ -1,5 +1,5 @@
 <template>
-  <el-card class="product-card" style="--el-card-border-radius: 5%">
+  <el-card class="product-card" style="--el-card-border-radius: 10px;" shadow="hover">
     <div class="image-container">
       <img :src="image" alt="商品图片" class="product-image">
     </div>

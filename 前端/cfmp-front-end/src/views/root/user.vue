@@ -10,10 +10,6 @@
         <el-input v-model="tempForm.name" placeholder="请输入姓名"></el-input>
       </el-form-item>
 
-      <el-form-item label="手机号">
-        <el-input v-model="tempForm.phone" placeholder="请输入手机号"></el-input>
-      </el-form-item>
-
       <el-form-item label="用户状态">
         <el-select v-model="tempForm.status" placeholder="请选择状态">
           <el-option label="全部" value=""></el-option>
@@ -35,7 +31,6 @@
     >
       <el-table-column prop="user_id" label="用户ID" ></el-table-column>
       <el-table-column prop="username" label="姓名" ></el-table-column>
-      <el-table-column prop="phone" label="手机号" ></el-table-column>
       <el-table-column prop="status" label="状态" >
 
         <template #default="{ row }">
