@@ -52,9 +52,10 @@ class Order(models.Model):
     shipping_address = models.TextField(null=True, blank=True)
     shipping_postal_code = models.CharField(max_length=20, null=True, blank=True)
 
+    # def __str__(self):
+    #     return f"Order {self.order_id}"
     def __str__(self):
-        return f"Order {self.order_id}"
-
+        return str(self.payment_id)
     class Meta:
         db_table = "order"
         ordering = ['-created_at']
@@ -74,7 +75,7 @@ class OrderItem(models.Model):
 
 class Payment(models.Model):
     """支付记录"""
-    payment_id = models.CharField(max_length=50, primary_key=True)
+    payment_id = models.BigAutoField(primary_key=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='payments')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments')
     amount = models.DecimalField(max_digits=10, decimal_places=2)

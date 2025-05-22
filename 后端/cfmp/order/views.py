@@ -251,18 +251,14 @@ class PaymentCreateAPIView(APIView):
                 'message': '该订单状态不允许支付'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # 生成支付ID
-        payment_id = f"PAY{timezone.now().strftime('%Y%m%d')}{str(uuid.uuid4().int)[:4]}"
-
         # 支付方式映射
         payment_method_map = {
             'alipay': 0,
             'wechat_pay': 1
         }
 
-        # 创建支付记录
+        # 创建支付记录 - 不再需要手动设置payment_id，它将自动生成
         payment = Payment.objects.create(
-            payment_id=payment_id,
             order=order,
             user=request.user,
             amount=total_amount,
@@ -271,17 +267,16 @@ class PaymentCreateAPIView(APIView):
             expires_at=timezone.now() + timezone.timedelta(minutes=30)
         )
 
-        # TODO:这里的可能并不能真的到达支付宝，需要依据支付宝的接口规则进行更改
         # 根据支付方式准备支付数据
         payment_data = {}
         if payment_method == 'alipay':
             payment_data = {
-                'url': f"https://openapi.alipay.com/gateway.do?order_id={order_id}&payment_id={payment_id}"
+                'url': f"https://openapi.alipay.com/gateway.do?order_id={order_id}&payment_id={payment.payment_id}"
             }
         elif payment_method == 'wechat_pay':
             payment_data = {
-                'url': f"https://wx.tenpay.com/cgi-bin/mmpayweb-bin/checkmweb?order_id={order_id}&payment_id={payment_id}",
-                'qrcode': f"weixin://wxpay/bizpayurl?pr={payment_id}"
+                'url': f"https://wx.tenpay.com/cgi-bin/mmpayweb-bin/checkmweb?order_id={order_id}&payment_id={payment.payment_id}",
+                'qrcode': f"weixin://wxpay/bizpayurl?pr={payment.payment_id}"
             }
 
         # 更新支付数据
@@ -292,14 +287,13 @@ class PaymentCreateAPIView(APIView):
             'code': 200,
             'message': '支付请求创建成功',
             'data': {
-                'payment_type': payment_method,
-                'payment_id': payment_id,
-                'order_id': order_id,
+                'payment_type': payment_method_map.get(payment_method, 0),  # 已经是整数类型
+                'payment_id': payment.payment_id,  # 已经是整数类型
+                'order_id': order_id,  # 确保是整数类型
                 'payment_data': payment_data,
                 'expires_at': payment.expires_at
             }
         })
-
 class PaymentCallbackAPIView(APIView):
     """支付回调处理"""
     def get(self, request, payment_method):
@@ -396,7 +390,7 @@ class PaymentQueryAPIView(RetrieveAPIView):
 
         # 构建响应数据
         data = {
-            'order_id': str(order.order_id),
+            'order_id': order.order_id,
             'payment_id': payment.payment_id,
             'status': payment.get_status_display(),
             'payment_method': payment.get_payment_method_display(),
