@@ -5,3 +5,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = models.User
         fields = '__all__'
 
+class PublicUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.User
+        fields = ['user_id', 'username', 'avatar']

@@ -8,6 +8,8 @@ router = routers.SimpleRouter()
 
 urlpatterns = router.urls
 urlpatterns += [
-    path('test_img/', views.UploadPortraitView.as_view(), name='upload_portrait'),
+    path('user/avatar/', views.UploadAvatarView.as_view(), name='upload_portrait'),
     path('auth/login-with-password',views.login.as_view(),name='login'),
+    path('user/<int:user_id>/', views.UserIdViewSet.as_view(), name='user'),
+    path('user/me/',  views.UserInfoView.as_view(), name='update_user')
 ]
