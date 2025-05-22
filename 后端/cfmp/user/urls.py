@@ -9,4 +9,5 @@ router = routers.SimpleRouter()
 urlpatterns = router.urls
 urlpatterns += [
     path('test_img/', views.UploadPortraitView.as_view(), name='upload_portrait'),
+    path('auth/login-with-password',views.login.as_view(),name='login'),
 ]
