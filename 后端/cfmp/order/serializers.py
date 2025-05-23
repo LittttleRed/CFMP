@@ -108,7 +108,7 @@ class OrderListSerializer(serializers.ModelSerializer):
 class PaymentSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     payment_method_display = serializers.CharField(source='get_payment_method_display', read_only=True)
-    order_id = serializers.CharField(source='order.order_id', read_only=True)
+    order_id = serializers.IntegerField(source='order.order_id', read_only=True)
 
     class Meta:
         model = Payment
@@ -130,7 +130,7 @@ class PaymentListSerializer(serializers.ModelSerializer):
     """用于列表展示的简化支付记录序列化器"""
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     payment_method_display = serializers.CharField(source='get_payment_method_display', read_only=True)
-    order_id = serializers.CharField(source='order.order_id')
+    order_id = serializers.IntegerField(source='order.order_id')
     product_snapshot = serializers.SerializerMethodField()
 
     class Meta:
