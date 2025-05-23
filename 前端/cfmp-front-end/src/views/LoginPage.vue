@@ -16,7 +16,7 @@
         <!-- 右侧登录面板 -->
         <div class="login-panel">
           <div class="panel-header">
-            <h2>账号密码登录</h2>
+            <h2>邮箱密码登录</h2>
           </div>
 
           <el-form 
@@ -25,10 +25,10 @@
             :rules="rules"
             @submit.prevent="handleLogin"
           >
-            <el-form-item prop="username">
+            <el-form-item prop="email">
               <el-input
-                v-model="loginForm.username"
-                placeholder="学号/邮箱"
+                v-model="loginForm.email"
+                placeholder="邮箱"
                 class="qqmail-input"
                 tabindex="1"
               >
@@ -54,18 +54,19 @@
             </el-form-item>
 
             <el-form-item class="remember-item">
-              <el-checkbox v-model="rememberMe">两周内自动登录</el-checkbox>
-              <div class="link-group">
+              <div class="link-group" style="margin-top: 10px">
                 <router-link to="/forgot" class="link">忘记密码？</router-link>
-                <router-link to="/qrlogin" class="link">二维码登录</router-link>
               </div>
             </el-form-item>
-
+            <div class="fail-msg">
+              {{fail_msg}}
+            </div>
             <el-button
               class="qqmail-login-btn"
               type="primary"
               native-type="submit"
               :loading="loading"
+              @click="handleLogin"
             >
               立即登录
             </el-button>
@@ -73,7 +74,7 @@
 
           <div class="register-section">
             <el-button type="text" class="register-btn">
-              还没有账号？<span class="emphasize">立即注册</span>
+              还没有账号？<span class="emphasize" @click="router.push('/register')">立即注册</span>
             </el-button>
           </div>
         </div>
@@ -91,22 +92,28 @@
 import { ref, reactive } from 'vue'
 import type { FormInstance } from 'element-plus'
 import { useRouter } from 'vue-router'
-
+import { getLogin } from '../api/user'
+import {getToken, setToken, setUserId, setUserName} from "../utils/user-utils";
 const router = useRouter()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
 const rememberMe = ref(false)
-
+const fail_msg = ref('')
 const loginForm = reactive({
-  username: '',
+  email: '',
   password: ''
 })
 
 const rules = {
-  username: [
-    { required: true, message: '账号不能为空', trigger: 'blur' },
-    { min: 6, max: 20, message: '长度在6到20个字符', trigger: 'blur' }
-  ],
+email: [
+  { required: true, message: '邮箱不能为空', trigger: 'blur' },
+  {
+    pattern: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/,
+    message: '请输入有效的邮箱地址',
+    trigger: ['blur', 'input'] // 失焦+输入时双重校验
+  },
+  { max: 254, message: '邮箱长度不能超过254个字符', trigger: 'blur' }
+],
   password: [
     { required: true, message: '密码不能为空', trigger: 'blur' },
     { min: 6, max: 16, message: '长度在6到16个字符', trigger: 'blur' }
@@ -114,23 +121,25 @@ const rules = {
 }
 
 const handleLogin = async () => {
-  try {
-    loading.value = true
-    await formRef.value?.validate()
-    
-    // 这里调用登录接口
-    // await loginAPI(loginForm)
-    
-    router.push('/home')
-  } catch (error) {
-    console.error('登录失败', error)
-  } finally {
-    loading.value = false
-  }
+   await getLogin(loginForm).then((res) => {
+     //如果状态码是404,提示用户未注册
+     if (res["success"] === false) {
+       fail_msg.value=res["fail_msg"]
+     } else {
+       console.log(res)
+       setToken(res["access_token"])
+       setUserId(res["user_id"])
+       setUserName(res["username"])
+       window.location.href = '/'
+     }
+})
 }
 </script>
 
 <style scoped lang="scss">
+.fail-msg{
+  color: red;
+}
 .qqmail-login-container {
   height: 100vh;
   display: flex;
@@ -150,7 +159,7 @@ const handleLogin = async () => {
       .logo-text {
         font-size: 24px;
         font-weight: bold;
-        color: #0066ff;
+        color: orange;
         letter-spacing: 2px;
       }
     }

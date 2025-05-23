@@ -9,22 +9,17 @@ class User(models.Model):
     username = models.CharField(max_length=30)
     password = models.CharField(max_length=64)
     email = models.CharField(max_length=50)
-    phone = models.CharField(max_length=20)
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.IntegerField(default=0)
     privilege = models.IntegerField(default=0)
-
+    captcha = models.CharField(max_length=4,null=True,blank=True)
+    is_active = models.BooleanField(default=True)
+    is_authenticated = models.BooleanField(default=False)
+    avatar = models.ImageField(null=True, blank=True)
+    address = models.CharField(max_length=100,null=True,blank=True)
     class Meta:
         db_table = "user"
 
-class Image(models.Model):
-    image_id = models.BigAutoField(primary_key=True)
-    user = models.ForeignKey(User,  on_delete=models.CASCADE,db_column='user_id')
-    image = models.ImageField(
-        upload_to='images/',
-        storage=MinioMediaStorage(),
-        null=True,
-        blank=True,)
 class ChatLog(models.Model):
     chat_id = models.BigAutoField(primary_key=True)
     sender_id = models.IntegerField()

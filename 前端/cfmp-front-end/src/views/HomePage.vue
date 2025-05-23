@@ -1,128 +1,133 @@
 <template>
+  <RightBar></RightBar>
   <div class="home-container">
     <!-- 顶部导航栏 -->
-    <div class="nav-bar">
-      <div class="nav-left">
-        <span class="logo">校园市场</span>
-        <el-input
-          v-model="searchKeyword"
-          placeholder="搜索商品..."
-          class="search-input"
-          @keyup.enter="handleSearch"
-        >
-          <template #append>
-            <el-button :icon="Search" @click="handleSearch" />
-          </template>
-        </el-input>
-      </div>
-      
-      <div class="nav-right">
-        <el-dropdown @command="handleUserCommand">
-          <div class="user-info">
-            <el-avatar :size="36" :src="userStore.avatar" />
-            <span class="username">{{ userStore.username }}</span>
-          </div>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="profile">个人中心</el-dropdown-item>
-              <el-dropdown-item command="logout">退出登录</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-      </div>
-    </div>
+   <Head :show-search="true"></Head>
 
+    <Category style="width: 60%;margin: 10px auto"></Category>
     <!-- 商品展示区 -->
-    <div class="goods-container">
+    <el-card class="goods-container" shadow="never">
       <div v-if="loading" class="loading-wrapper">
         <el-icon class="loading-icon" :size="50"><Loading /></el-icon>
       </div>
 
       <div v-else class="goods-list">
-        <GoodsItem 
-          v-for="item in homeStore.goodsList" 
-          :key="item.id"
-          :data="item"
-          class="goods-item"
-        />
+        <el-row :gutter="10">
+        <el-col v-for="(product, index) in productList"
+        :key="product.product_id"
+        :lg="4"
+        :md="8"
+        :sm="12"
+        :xs="24"
+      >
+           <Product :title="product.title"
+                    :price="product.price"
+                    :avatar="product.user.avatar"
+                    :username="product.user.username"
+                    :user_id="product.user.username"
+                    :product_id="product.product_id"
+                    :media="product.media[0]?product.media[0]['media']:''"></Product>
+          </el-col>
+        </el-row>
       </div>
-    </div>
+    </el-card>
 
     <!-- 分页器 -->
-    <div class="pagination-wrapper">
-      <el-pagination
-        v-model:current-page="currentPage"
-        :page-size="pageSize"
-        :total="homeStore.total"
-        :pager-count="5"
-        layout="prev, pager, next, jumper"
-        background
-        @current-change="handlePageChange"
-      />
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import {ref, onMounted, provide, onUnmounted} from 'vue'
 import { Search, Loading } from '@element-plus/icons-vue'
-import { useRouter } from 'vue-router'
+import {onBeforeRouteLeave, useRouter} from 'vue-router'
 import { useUserStore } from '../stores/user'
-import { useHomeStore } from '../stores/home'
 import GoodsItem from '../components/GoodsItem.vue'
+import Product from "../components/product.vue";
+import Head from "../components/Head.vue";
+import Category from "../components/home/category.vue";
+import RightBar from "./RightBar.vue";
+import {getProducts} from "../api/product";
 
-
-
-const router = useRouter()
-const userStore = useUserStore()
-const homeStore = useHomeStore()
-
-const searchKeyword = ref('')
-const currentPage = ref(1)
-const pageSize = ref(10)
-const loading = ref(false)
-
-// 初始化加载数据
-onMounted(() => {
-  fetchGoodsList()
-})
-
-// 获取商品列表
-const fetchGoodsList = async () => {
-  try {
-    loading.value = true
-    await homeStore.getGoodsList({
-      page: currentPage.value,
-      pageSize: pageSize.value,
-      keyword: searchKeyword.value
-    })
-  } finally {
-    loading.value = false
+const productList = ref([])
+const loading = ref(true)
+const isUpdating = ref(false)
+const page = ref(1)
+const isMax=ref(false)
+const updateProductList=async()=>{
+  let page_size=10
+  //根据页码获取商品列表
+  let data={
+    page: page.value,
+    page_size: page_size
   }
+  console.log(data)
+   await getProducts(data).then( res => {
+     console.log(res["results"])
+     if(res["results"].length<page_size){
+       productList.value=[...productList.value,...res["results"]]
+       isMax.value=true
+       console.log("max")
+     }else {
+       console.log(res["results"])
+       productList.value = [...productList.value, ...res["results"]]
+     }
+  })
+  loading.value=false
+   page.value++
 }
 
-// 搜索处理
-const handleSearch = () => {
-  currentPage.value = 1
-  fetchGoodsList()
+updateProductList()
+//获取当前可视范围的高度
+const getClientHeight=()=> {
+    let clientHeight = 0;
+    if (document.body.clientHeight && document.documentElement.clientHeight) {
+        clientHeight = Math.min(document.body.clientHeight, document.documentElement.clientHeight)
+    } else {
+        clientHeight = Math.max(document.body.clientHeight, document.documentElement.clientHeight)
+    }
+    return clientHeight
 }
-
-// 分页变化
-const handlePageChange = (val: number) => {
-  currentPage.value = val
-  fetchGoodsList()
+//获取文档完整的高度
+const getScrollHeight=()=> {
+    return Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)
 }
-
-// 用户菜单操作
-const handleUserCommand = (command: string) => {
-  if (command === 'profile') {
-    router.push('/profile')
-  } else if (command === 'logout') {
-    userStore.logout()
-    router.push('/login')
-  }
+//获取当前滚动条的位置
+const getScrollTop=()=> {
+    let scrollTop = 0;
+    //window.pageYOffset = document.documentElement.scrollTop
+    if (document.documentElement && document.documentElement.scrollTop) {
+        scrollTop = document.documentElement.scrollTop
+    } else if (document.body) {
+        scrollTop = document.body.scrollTop
+    }
+    return scrollTop
 }
+const windowScroll=()=> {
+        //获取三个值
+        let scrollTop = getScrollTop()
+        let clientHeight = getClientHeight()
+        let scrollHeight = getScrollHeight()
+        //如果满足公式则，确实到底了
+        if(scrollTop+clientHeight >= scrollHeight-3&&isUpdating.value===false&&isMax.value===false){
+          isUpdating.value=true
+          console.log("到底了")
+          updateProductList().then(() => {
+            isUpdating.value=false
+          })
+        }
+    }
 
+window.addEventListener('scroll', windowScroll,true)
+onUnmounted(
+    () => {
+        window.removeEventListener("scroll",windowScroll);//销毁滚动事件
+    },
+)
+onBeforeRouteLeave(
+    (to, from) => {
+        window.removeEventListener("scroll",windowScroll);//销毁滚动事件
+    },
+)
 </script>
 
 <style scoped lang="scss">
@@ -163,30 +168,12 @@ const handleUserCommand = (command: string) => {
      min-width: 300px; // 与左侧保持间距
   }
 
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      padding: 8px 12px;
-      border-radius: 4px;
-      transition: background-color 0.3s;
 
-      &:hover {
-        background-color: #f5f7fa;
-      }
-
-      .username {
-        font-size: 14px;
-        color: #606266;
-      }
-    }
   }
 
   .goods-container {
-    max-width: 1200px;
+    max-width: 1500px;
     margin: 20px auto;
-    padding: 0 20px;
 
     .loading-wrapper {
       text-align: center;
@@ -197,12 +184,7 @@ const handleUserCommand = (command: string) => {
       }
     }
 
-    .goods-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 20px;
-      padding: 20px 0;
-    }
+
   }
 
   .pagination-wrapper {

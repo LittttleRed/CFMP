@@ -1,6 +1,6 @@
 from django.db import models
 from user.models import User
-
+from order.models import  Order
 
 class Complaint(models.Model):
     complaint_id = models.BigAutoField(primary_key=True)

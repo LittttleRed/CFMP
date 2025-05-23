@@ -5,7 +5,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = models.User
         fields = '__all__'
 
-class ImageSerializer(serializers.ModelSerializer):
+class PublicUserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.Image
-        fields = '__all__'
+        model = models.User
+        fields = ['user_id', 'username', 'avatar']

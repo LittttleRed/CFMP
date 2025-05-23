@@ -20,10 +20,7 @@
  */
 
 export const constRoutes =   [
-  {
-    path: '/',
-    redirect: '/user',
-  }, {
+   {
     path: '/root',
     component: () => (import('../views/root/index.vue')),
     redirect: '/root/user', // 默认重定向到用户管理
@@ -54,6 +51,7 @@ export const constRoutes =   [
   },{
   path: '/user',
     component: () => (import('../views/user/index.vue')),
+    name: 'user',
     children: [
       {
         path:'MyRelease',
@@ -75,6 +73,16 @@ export const constRoutes =   [
         name: 'setting',
         component: () => (import('../views/user/setting.vue')),
         meta: {title: '个人资料'}
+      },{
+        path: 'phone',
+        name: 'phone',
+        component: () => (import('../views/user/changePhone.vue')),
+        meta: {title: '修改手机号'}
+      },{
+        path: 'email',
+        name: 'email',
+        component: () => (import('../views/user/changeEmail.vue')),
+        meta: {title: '修改邮箱'}
       }
     ]
   },{
@@ -98,12 +106,24 @@ export const constRoutes =   [
       title: '用户登录',
     //   guestOnly: true // 标记仅未登录用户可访问
     }
-  },
- {
-  path: '/profile',
-  name: 'Profile',
-  component: () => import('../views/ProfilePage.vue'),
-  meta: { requiresAuth: true }
-}
+  },{
+    path: '/register',
+    name: 'Register',
+    component: () => import('../views/RegisterPage.vue'),
+    meta: {
+      title: '用户注册',
+    //   guestOnly: true // 标记仅未登录用户可访问
+    }
+  },{
+     path: '/product/launch',
+     name: 'launch',
+      component: () => import('../views/product/launch.vue'),
+      meta: { title: '发布商品' }
+  },{
+    path: '/product',
+    name: 'product',
+    component: () => import('../views/product/product.vue'),
+    meta: { title: '商品详情' }
+  }
   ]
 

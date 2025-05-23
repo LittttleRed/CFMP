@@ -11,6 +11,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from . import models
 from . import serializers
 from rest_framework.views import APIView
+from . import filter
 
 class StandardPagination(PageNumberPagination):
     page_size = 2
@@ -63,22 +64,6 @@ def test(request, test_int):
     return Response({'code': "200", 'message': 'test'}, status=200, headers={'Content-Type': 'application/json'})
 
 
-class TestView(APIView):
-    """
-    基于类的视图
-    """
-
-    def get(self, request):
-        return Response({'code': "123213", 'message': 'test'}, status=200, headers={'Content-Type': 'application/json'})
-
-    def post(self, request):
-        return Response({'code': "123213", 'message': 'testpost'}, status=200,
-                        headers={'Content-Type': 'application/json'})
-
-    def patch(self, request):
-        return Response({'code': "123213", 'message': 'testpatch'}, status=200,
-                        headers={'Content-Type': 'application/json'})
-
 
 class UserView(StandartView):
     queryset = models.User.objects.all()
@@ -87,7 +72,7 @@ class UserView(StandartView):
     pagination_class = StandardPagination
 
     filter_backends = [DjangoFilterBackend,filters.OrderingFilter]
-    filterset_fields = ['user_id','username','phone','status']
+    filterset_fields = ['user_id','username','status']
     ordering_fields = ['created_at']
 
 
@@ -144,4 +129,11 @@ class ComplaintReviewView(StandartView):
 #解封定时任务
 
 
+class OrderView(StandartView):
+    queryset = models.Order.objects.all()
+    serializer_class = serializers.OrderSerializer
+    filterset_class = filter.OrderFilter
+    lookup_field = 'order_id'
+    filter_backends = [DjangoFilterBackend,]
+    filterset_fields = ['status']
 

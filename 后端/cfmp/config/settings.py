@@ -61,6 +61,13 @@ INSTALLED_APPS = [
 
 #自己写自己的分页器,不要全局配置
 REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',  # 启用过滤
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'config.authentication.JWTAuthentication',  # JWT认证
+    ],'DEFAULT_FILE_STORAGE':
+        'minio_storage.storage.MinioStaticStorage'
 
 }
 
