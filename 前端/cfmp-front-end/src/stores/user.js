@@ -39,7 +39,7 @@ export const useUserStore = defineStore('userInfo', {
       // setUserId()
       // setHeadImg()
     },
-    initUserInfo(){
+    logout(){
       removeToken()
       removeUserName()
       removeUserId()

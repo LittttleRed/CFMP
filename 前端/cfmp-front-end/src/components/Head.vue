@@ -35,13 +35,13 @@
   import {reactive, ref, watch} from "vue";
   import Search from "./home/search.vue";
   import {storeToRefs} from "pinia";
-  import {getUserName} from "../utils/user-utils.js";
+  import {getHeadImg, getUserName} from "../utils/user-utils.js";
   const userInfoStore = useUserStore();
   let userName = getUserName()
-  let headImg = userInfoStore.avatar
-
+  let headImg = getHeadImg()
   let toLogin = () => {
     console.log("toLogin")
+    window.location.href = "/login"
   }
   let toUserHome = () => {
     console.log("toUserHome")
@@ -57,11 +57,9 @@
       default: false
     }
   })
-  watch(userInfoStore.avatar,(newValue)=>{
-    headImg=newValue
-  },{
-    deep: true,
-  })
+const initUserInfo = () => {
+
+  }
 </script>
 <style scoped>
 .root-head {
@@ -76,7 +74,7 @@
   font-weight: bold;
   margin: auto;
   padding-right: 10px;
-  width: 200px;
+  width: 300px;
 }
  .left {
    margin-left: 80px;

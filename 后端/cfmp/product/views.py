@@ -1,3 +1,5 @@
+import uuid
+
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django_filters.rest_framework import DjangoFilterBackend
@@ -65,6 +67,7 @@ class ProductListCreateAPIView(ListCreateAPIView):
 
             for media_file in media_files:
                 # 创建媒体文件记录
+                media_file.name = f"{product.product_id}+'_'+{uuid.uuid4().hex}.jpg"
                 ProductMedia.objects.create(
                     product=product,
                     media=media_file,
