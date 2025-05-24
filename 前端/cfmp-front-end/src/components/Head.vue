@@ -42,6 +42,7 @@
 
   let toLogin = () => {
     console.log("toLogin")
+    window.location.href = "/login"
   }
   let toUserHome = () => {
     console.log("toUserHome")

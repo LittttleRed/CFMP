@@ -1,24 +1,36 @@
 <template>
-  <div class="qqmail-login-container">
+  <div class="mail-login-container">
+    <!-- 动态背景容器（粒子效果） -->
+    <ParticlesComponent
+      id="tsparticles"
+      class="login__particles"
+      :options="particles_config"
+      :particlesInit="particlesInit"
+    />
+
     <!-- 顶部导航栏 -->
-    <div class="login-header">
+    <div class="login-header" style="z-index: 1;">
       <div class="logo-wrapper">
+        <img 
+          src="../assets/logo1.png"
+          alt="校园跳蚤市场"
+          class="logo-image"
+        />
         <span class="logo-text">校园跳蚤市场</span>
       </div>
     </div>
 
     <!-- 主体登录区域 -->
-    <div class="login-main">
+    <div class="login-main" style="z-index: 2;">
       <div class="login-wrapper">
         <!-- 左侧装饰图 -->
-        <div class="decorative-image"></div>
+        <div > </div>
 
         <!-- 右侧登录面板 -->
         <div class="login-panel">
           <div class="panel-header">
-            <h2>邮箱密码登录</h2>
+            <h2>账号登录</h2>
           </div>
-
           <el-form 
             ref="formRef"
             :model="loginForm"
@@ -28,8 +40,8 @@
             <el-form-item prop="email">
               <el-input
                 v-model="loginForm.email"
-                placeholder="邮箱"
-                class="qqmail-input"
+                placeholder="邮箱/手机号"
+                class="mail-input"
                 tabindex="1"
               >
                 <template #prefix>
@@ -43,7 +55,7 @@
                 v-model="loginForm.password"
                 type="password"
                 placeholder="密码"
-                class="qqmail-input"
+                class="mail-input"
                 tabindex="2"
                 show-password
               >
@@ -62,7 +74,7 @@
               {{fail_msg}}
             </div>
             <el-button
-              class="qqmail-login-btn"
+              class="mail-login-btn"
               type="primary"
               native-type="submit"
               :loading="loading"
@@ -74,15 +86,15 @@
 
           <div class="register-section">
             <el-button type="text" class="register-btn">
-              还没有账号？<span class="emphasize" @click="router.push('/register')">立即注册</span>
+              还没有账号？<span class="emphasize" @click="router.push('/register/email')">立即注册</span>
             </el-button>
           </div>
         </div>
       </div>
     </div>
-
+    
     <!-- 底部版权信息 -->
-    <div class="login-footer">
+    <div class="login-footer" style="z-index: 2;">
       <p class="copyright">© CampusMarket 校园交易平台</p>
     </div>
   </div>
@@ -94,6 +106,18 @@ import type { FormInstance } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { getLogin } from '../api/user'
 import {getToken, setToken, setUserId, setUserName} from "../utils/user-utils";
+
+import { ParticlesComponent } from 'particles.vue3';
+import { loadSlim } from 'tsparticles-slim'
+import { particles_config } from '../components/background/particles-config'
+
+const particlesInit = async engine => {
+    //await loadFull(engine);
+    await loadSlim(engine);
+};
+
+
+
 const router = useRouter()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
@@ -103,7 +127,6 @@ const loginForm = reactive({
   email: '',
   password: ''
 })
-
 const rules = {
 email: [
   { required: true, message: '邮箱不能为空', trigger: 'blur' },
@@ -124,6 +147,7 @@ const handleLogin = async () => {
    await getLogin(loginForm).then((res) => {
      //如果状态码是404,提示用户未注册
      if (res["success"] === false) {
+       console.log("登录失败")
        fail_msg.value=res["fail_msg"]
      } else {
        console.log(res)
@@ -137,57 +161,88 @@ const handleLogin = async () => {
 </script>
 
 <style scoped lang="scss">
+.login__particles {
+  position: fixed;
+  left: 0; top: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none; // 避免遮挡表单交互
+}
 .fail-msg{
   color: red;
 }
-.qqmail-login-container {
+.mail-login-container  {
   height: 100vh;
+  width: 100vw;
   display: flex;
   flex-direction: column;
-  background: #f1f6ff;
+  position: relative;
+  :deep(.particles-container) {
+    z-index: 0;
+  }
 
   .login-header {
-    height: 64px;
+    height: 100px;
     background: white;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    
+    // background:red;
+
     .logo-wrapper {
-      width: 1200px;
       margin: 0 auto;
-      line-height: 64px;
-      
+      height: 100%;
+  
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding-left: 20px;
+
       .logo-text {
         font-size: 24px;
         font-weight: bold;
         color: orange;
         letter-spacing: 2px;
+        margin-left:10px;
+      }
+      .logo-image {
+        width: 100px;
+        height: 100%;
+        display: block;
+        object-fit: contain;
       }
     }
   }
+
 
   .login-main {
     flex: 1;
     padding: 60px 0;
     
+    
     .login-wrapper {
-      width: 1200px;
+      width: 100%;
       margin: 0 auto;
       display: flex;
       align-items: center;
       justify-content: space-around;
-      
       .decorative-image {
         width: 600px;
         height: 400px;
-        background: url('@/assets/login-bg.png') no-repeat center/contain;
+        // background: url('@/assets/login-bg.png') no-repeat center/contain;
+        
       }
 
       .login-panel {
+        margin-left:  calc(80% - 380px);
+        margin-right: auto ;
         width: 380px;
         background: white;
         border-radius: 8px;
         padding: 40px;
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        background: rgba(255, 255, 255, 0.92); // 增加透明度
+        backdrop-filter: blur(8px); // 添加毛玻璃效果
+        border: 1px solid rgba(255, 255, 255, 0.2); // 增加边框
 
         .panel-header {
           margin-bottom: 30px;
@@ -198,7 +253,7 @@ const handleLogin = async () => {
           }
         }
 
-        .qqmail-input {
+        .mail-input {
           :deep(.el-input__wrapper) {
             height: 48px;
             padding: 0 15px;
@@ -234,7 +289,7 @@ const handleLogin = async () => {
           }
         }
 
-        .qqmail-login-btn {
+        .mail-login-btn {
           width: 100%;
           height: 48px;
           font-size: 16px;
@@ -268,6 +323,7 @@ const handleLogin = async () => {
   .login-footer {
     padding: 20px 0;
     background: white;
+    z-index: 1;
     
     .copyright {
       text-align: center;

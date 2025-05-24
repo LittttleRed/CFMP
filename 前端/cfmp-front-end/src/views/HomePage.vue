@@ -40,7 +40,7 @@
 import {ref, onMounted, provide, onUnmounted} from 'vue'
 import { Search, Loading } from '@element-plus/icons-vue'
 import {onBeforeRouteLeave, useRouter} from 'vue-router'
-import { useUserStore } from '../stores/user'
+import { useUserStore } from '../stores/user.js'
 import GoodsItem from '../components/GoodsItem.vue'
 import Product from "../components/product.vue";
 import Head from "../components/Head.vue";
