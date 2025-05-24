@@ -81,28 +81,14 @@ class CreateOrderSerializer(serializers.ModelSerializer):
 class OrderListSerializer(serializers.ModelSerializer):
     """用于列表展示的简化订单序列化器"""
     status_display = serializers.CharField(source='get_status_display', read_only=True)
-    product_snapshot = serializers.SerializerMethodField()
-    product_count = serializers.SerializerMethodField()
+    items = OrderItemSerializer(source='order_items', many=True, read_only=True)
+    payment_method_display = serializers.CharField(source='get_payment_method_display', read_only=True)
 
     class Meta:
         model = Order
-        fields = ['order_id', 'status', 'status_display', 'created_at', 'total_amount',
-                  'product_count', 'product_snapshot']
-
-    def get_product_count(self, obj):
-        return obj.order_items.count()
-
-    def get_product_snapshot(self, obj):
-        # 获取第一个商品的信息作为快照
-        first_item = obj.order_items.first()
-        if first_item:
-            product = first_item.product
-            return {
-                'product_id': product.product_id,
-                'name': product.title,
-                'thumbnail': product.product_img if hasattr(product, 'product_img') else None
-            }
-        return None
+        fields = ['order_id', 'status', 'status_display', 'created_at', 'updated_at',
+                  'total_amount', 'payment_method', 'payment_method_display',
+                  'payment_time', 'items', 'remark', 'cancel_reason']
 
 
 class PaymentSerializer(serializers.ModelSerializer):

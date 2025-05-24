@@ -58,30 +58,33 @@
                   <div class="order-time">
                     {{ formatDate(order.created_at) }}
                   </div>
-                </div>
-
-                <div class="order-content">
+                </div>                <div class="order-content">
                   <div class="product-info">
-                    <div
-                      v-for="item in order.items"
-                      :key="item.id"
-                      class="product-item"
-                    >
-                      <div class="product-image">
-                        <img
-                          :src="item.product_image || '/default-product.png'"
-                          :alt="item.product_name"
-                          @error="handleImageError"
-                        >
-                      </div>
-                      <div class="product-details">
-                        <h4 class="product-name">{{ item.product_name }}</h4>
-                        <p class="product-desc">{{ item.product_description }}</p>
-                        <div class="product-meta">
-                          <span class="price">¥{{ item.price }}</span>
-                          <span class="quantity">x{{ item.quantity }}</span>
+                    <div v-if="order.items && order.items.length > 0">
+                      <div
+                        v-for="item in order.items"
+                        :key="item.product_id"
+                        class="product-item"
+                      >
+                        <div class="product-image">
+                          <img
+                            :src="item.product_image || '/default-product.png'"
+                            :alt="item.product_name"
+                            @error="handleImageError"
+                          >
+                        </div>
+                        <div class="product-details">
+                          <h4 class="product-name">{{ item.product_name }}</h4>
+                          <div class="product-meta">
+                            <span class="price">¥{{ item.price }}</span>
+                            <span class="quantity">x{{ item.quantity }}</span>
+                          </div>
                         </div>
                       </div>
+                    </div>
+                    <div v-else class="no-products">
+                      <p>订单商品信息缺失</p>
+                      <p class="order-id-text">订单号：{{ order.order_id }}</p>
                     </div>
                   </div>
 
@@ -256,8 +259,13 @@ const loadOrderList = async () => {
     }
 
     const response = await getOrderList(params)
+    console.log('API 响应:', response) // 添加调试日志
 
-    if (response.code === 200) {
+    // 处理 DRF 分页响应格式
+    if (response.results) {
+      orderList.value = response.results
+      total.value = response.count || 0
+    } else if (response.code === 200) {
       orderList.value = response.results || response.data || []
       total.value = response.count || orderList.value.length
     } else {
@@ -561,6 +569,24 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+}
+
+.no-products {
+  padding: 20px;
+  text-align: center;
+  color: #909399;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px dashed #dcdfe6;
+}
+
+.no-products p {
+  margin: 5px 0;
+}
+
+.order-id-text {
+  font-size: 12px;
+  color: #666;
 }
 
 /* 响应式设计 */
