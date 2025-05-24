@@ -53,7 +53,9 @@ class login(APIView):
             }
 
             token = jwt.encode(payload = payload, key = salt, algorithm="HS256", headers=headers)
-            url= user.avatar
+            url= None
+            if user.avatar:
+                url = user.avatar.url
             return Response({
                 "success":True,
                 "access_token":token,

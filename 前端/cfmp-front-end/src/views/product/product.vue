@@ -170,8 +170,15 @@ const initProduct=async (id) => {
     console.log(productData)
 
   })
-
 }
+const change = () => {
+  router.push({
+    name: 'edit-product',
+    query: { product_id: productData.product_id }
+  });
+  //刷新
+
+};
 checkCollection(product_id,getToken()).then(
         res=>{
           isCollected.value = res.is_collected
