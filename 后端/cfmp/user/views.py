@@ -34,7 +34,7 @@ def send_sms_code(to_email):
     email_title = '邮箱激活'
     email_body = "您的邮箱注册验证码为：{0}, 该验证码有效时间为两分钟，请及时进行验证。".format(sms_code)
     send_status = send_mail(email_title, email_body, EMAIL_FROM, [to_email])
-    if send_status == 0:
+    if send_status != 0:
         # 存储验证码
         captcha = Captcha.objects.create(
             captcha=sms_code,
@@ -54,7 +54,7 @@ class CaptchaView(APIView):
         common_scene = {'register','login','forget'}
         need_token_scene = {'change_email','change_password'}
         if scene in common_scene:
-            if send_sms_code(email) == 0:
+            if send_sms_code(email) != 0:
                 return Response({
                     "success":True,
                     "msg":"发送成功"
@@ -72,7 +72,7 @@ class CaptchaView(APIView):
                     "msg":"验证失败"
                 })
             JWTAuthentication.authenticate(self,request)
-            if send_sms_code(email) == 0:
+            if send_sms_code(email) != 0:
                 return Response({
                     "success":True,
                     "msg":"发送成功"
@@ -146,7 +146,7 @@ class RegisterView(APIView):
                 "fail_code":"CAPTCHA_NOT_FOUND",
                 "fail_msg":"验证码不存在"
             },status=status.HTTP_400_BAD_REQUEST)
-        if captchaObj.created_at < datetime.now() - timedelta(minutes=2):  # 验证码有效时间2分钟
+        if captchaObj.created_at < datetime.now(timezone.utc) - timedelta(minutes=2):  # 验证码有效时间2分钟
             return Response({
                 "fail_code":"CAPTCHA_EXPIRED",
                 "fail_msg":"验证码已过期"
