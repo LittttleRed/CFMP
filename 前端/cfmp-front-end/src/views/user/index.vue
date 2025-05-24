@@ -33,9 +33,12 @@ const avatar = ref('')
 const route = useRoute()
 const touter = useRouter()
 const isMyHome = ref(false)
+
 if(route.query.user_id === getUserId() || route.query.user_id === undefined){
   isMyHome.value = true
 }
+
+
 const getOtherUser=async ()=>{
 let response = await getUserById(route.query.user_id).then(
     (response) => {
@@ -52,13 +55,9 @@ const getMySelf=async ()=>{
 let token = getToken()
 await getMe(token).then((response) => {
   let user=response[0]
+  console.log(user["avatar"])
   username.value=user["username"]
   avatar.value=user["avatar"]
-  //去除avatar的"http://127.0.0.1:8000/"前缀
-  avatar.value=avatar.value.replace("http://127.0.0.1:8000/","")
-  //将avatar的第一个"/"换成"//"
-  avatar.value=avatar.value.replace("/","//",1)
-  avatar.value=decodeURIComponent(avatar.value)
 })
 }
 if(isMyHome.value===true){

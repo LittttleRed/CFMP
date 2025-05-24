@@ -80,3 +80,12 @@ export const changeUser=(token,data)=>{
         data:data
     })
 }
+export const getAllLaunches=(token,id)=>{
+    return http({
+        url:'/v1/user/me/products/'+id+'/',
+        method:'get',
+        headers:{
+            'Authorization':'Bearer '+token
+        }
+    })
+}

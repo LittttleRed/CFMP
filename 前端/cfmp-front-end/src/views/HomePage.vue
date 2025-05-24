@@ -11,16 +11,22 @@
         <el-icon class="loading-icon" :size="50"><Loading /></el-icon>
       </div>
 
-      <div v-else class="goods-list">
+      <div v-else class="goods-list" style="padding: 10px 10px 0 0">
         <el-row :gutter="10">
         <el-col v-for="(product, index) in productList"
-        :key="product.id"
+        :key="product.product_id"
         :lg="4"
         :md="8"
         :sm="12"
         :xs="24"
       >
-           <Product :title="product.title" :price="product.price" :avatar="product.user.avatar" :username="product.user.username" :user_id="product.user.username" :product_id="product.product_id"></Product>
+           <Product :title="product.title"
+                    :price="product.price"
+                    :avatar="product.user.avatar"
+                    :username="product.user.username"
+                    :user_id="product.user.user_id"
+                    :product_id="product.product_id"
+                    :media="product.media[0]?product.media[0]['media']:''"></Product>
           </el-col>
         </el-row>
       </div>
@@ -104,7 +110,7 @@ const windowScroll=()=> {
         //如果满足公式则，确实到底了
         if(scrollTop+clientHeight >= scrollHeight-3&&isUpdating.value===false&&isMax.value===false){
           isUpdating.value=true
-          console.log("到底了1")
+          console.log("到底了")
           updateProductList().then(() => {
             isUpdating.value=false
           })
@@ -166,7 +172,7 @@ onBeforeRouteLeave(
   }
 
   .goods-container {
-    max-width: 1500px;
+    max-width: 1600px;
     margin: 20px auto;
 
     .loading-wrapper {

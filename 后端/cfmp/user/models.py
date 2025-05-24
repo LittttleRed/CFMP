@@ -15,7 +15,7 @@ class User(models.Model):
     captcha = models.CharField(max_length=4,null=True,blank=True)
     is_active = models.BooleanField(default=True)
     is_authenticated = models.BooleanField(default=False)
-    avatar = models.ImageField(null=True, blank=True)
+    avatar = models.ImageField(storage=MinioMediaStorage(),null=True, blank=True)
     address = models.CharField(max_length=100,null=True,blank=True)
     class Meta:
         db_table = "user"

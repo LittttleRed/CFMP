@@ -14,4 +14,5 @@ urlpatterns += [
     path('user/<int:user_id>/', views.UserIdViewSet.as_view(), name='user'),
     path('user/me/',  views.UserInfoView.as_view(), name='update_user'),
     path('captcha/', views.CaptchaView.as_view(), name='captcha'),
+    path('user/me/products/<int:user_id>/', views.UserProductsViewSet.as_view())
 ]
