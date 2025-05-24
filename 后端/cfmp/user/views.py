@@ -14,12 +14,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
-from .serializers import UserSerializer, PublicUserSerializer
-from .models import User
+from .serializers import UserSerializer, PublicUserSerializer, FollowSerializer
+from .models import User, Follow
 from minio import Minio
 from django.conf import settings
 from product.models import Product
 from product.serializers import ProductSerializer
+from root.serializers import ComplaintSerializer
 # Create your views here.
 
 class login(APIView):
@@ -138,3 +139,33 @@ class UserProductsViewSet(ListCreateAPIView):
         user_id = self.kwargs['user_id']
         return Product.objects.filter(user_id=user_id).order_by('-created_at')
 
+class UserComplaintViewSet(ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ComplaintSerializer
+    def perform_create(self, serializer):
+        # 自动将当前登录用户绑定到complainer_id字段
+        serializer.save(complainer_id=self.request.user)
+
+class FollowUserDetailsViewSet(ListCreateAPIView,  RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = FollowSerializer
+    lookup_field = 'followee_id'
+
+    #  创建关注
+    def create(self, request, *args, **kwargs):
+        follower = self.request.user
+        followee = User.objects.get(user_id=self.kwargs.get("followee_id"))
+        Follow.objects.create(follower=follower, followee=followee)
+        return Response(status=status.HTTP_201_CREATED)
+    def delete(self, request, *args, **kwargs):
+        follower = self.request.user
+        followee = User.objects.get(user_id=self.kwargs.get("followee_id"))
+        Follow.objects.filter(follower=follower, followee=followee).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class FollowUserViewSet(ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = FollowSerializer
+    def get_queryset(self):
+        user = self.request.user
+        return Follow.objects.filter(follower=user)

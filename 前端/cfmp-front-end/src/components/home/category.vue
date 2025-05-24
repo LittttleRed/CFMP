@@ -16,8 +16,8 @@ getCategoryList()
     <el-row :gutter="0">
       <el-col v-for="(category,index) in categoryList"
       :key="category.category_id"
-      :lg="2"
-      :md="4"
+      :lg="8"
+      :md="6"
       >
         <div class="category-name" style="margin: auto;cursor: pointer;width: 40px;padding-top: 10px;padding-bottom: 10px" @click="searchWithCategory" >{{ category.name }}</div>
       </el-col>

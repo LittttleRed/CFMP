@@ -81,3 +81,12 @@ export const getAllImage=(id,token)=>{
         }
     })
 }
+export const deletePro=(id,token)=>{
+    return http({
+        url:'/product/'+id+'/',
+        method:'delete',
+        headers:{
+            'Authorization':'Bearer '+token,
+        }
+    })
+}

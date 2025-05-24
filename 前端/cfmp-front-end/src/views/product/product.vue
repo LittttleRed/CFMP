@@ -4,6 +4,7 @@
     <!-- 商品主内容卡片 -->
     <el-card shadow="hover" class="product-card">
       <!-- 商品图片和基本信息 -->
+
       <div class="main-content">
         <!-- 商品主图 -->
         <el-button class="btn" style="margin: auto;font-size: 20px;font-weight: bold"
@@ -35,36 +36,20 @@
           </div>
           <!-- 操作按钮 -->
           <div class="action-buttons">
-            <el-button
-              type="success"
-              size="large"
-              @click="showPurchaseDialog = true"
-            >
+            <el-button type="success" size="large" @click="showPurchaseDialog = true">
               立即购买
             </el-button>
-            <el-button
-            type="warning"
-            size="large"
-            v-if="productData.user.user_id==getUserId()"
-            @click="change"
-            >
+            <el-button type="warning" size="large" v-if="productData.user.user_id==getUserId()" @click="change">
               修改
             </el-button>
-             <el-button
-            type="warning"
-            size="large"
-            v-if="productData.user.user_id!=getUserId()&&!isCollected"
-            @click="collect"
-            >
+             <el-button type="warning" size="large" v-if="productData.user.user_id!=getUserId()&&!isCollected" @click="collect">
               收藏
             </el-button>
-            <el-button
-            type="warning"
-            size="large"
-            v-if="productData.user.user_id!=getUserId()&&isCollected"
-            @click="uncollect"
-            >
+            <el-button type="warning" size="large" v-if="productData.user.user_id!=getUserId()&&isCollected" @click="uncollect">
               取消收藏
+            </el-button>
+            <el-button type="danger" size="large" v-if="productData.user.user_id!=getUserId()" @click="complaintdialog = true">
+              举报
             </el-button>
           </div>
         </div>
@@ -77,7 +62,6 @@
         <div @click="()=>{router.push({name:'user',query:{user_id:productData.user.user_id}})}"
              style="cursor:  pointer;margin-left: 15px;margin-top: auto;margin-bottom: auto;font-weight: bold;font-size: 20px">
           {{ productData.user.username }}
-          <el-button style="background:#ffd364;border:none;margin: auto auto auto 20px;">关注</el-button>
         </div>
 
       </div>
@@ -118,24 +102,23 @@
       <div class="comment-item" v-else></div>
     </el-card>
 
-    <!-- 购买对话框 -->
-    <el-dialog v-model="showPurchaseDialog" title="确认购买">
-      <div class="purchase-dialog">
-        <el-form label-width="80px">
-          <el-form-item label="购买数量">
-            <el-input-number
-              v-model="purchaseQuantity"
-              :min="1"
-              :max="productData.stock"
-            />
-            <span class="stock">库存：{{ productData.stock }}件</span>
-          </el-form-item>
-        </el-form>
-        <div class="dialog-footer">
-          <el-button @click="showPurchaseDialog = false">取消</el-button>
-          <el-button type="primary" @click="handlePurchase">支付</el-button>
-        </div>
-      </div>
+    <!-- 举报 -->
+    <el-dialog v-model="complaintdialog" title="举报">
+      <el-form>
+        <el-form-item label="举报类型">
+          <el-select v-model="complaintType" placeholder="请选择举报类型">
+            <el-option label="商品信息错误" value="商品信息错误"></el-option>
+            <el-option label="商品价格低" value="商品价格低"></el-option>
+            <el-option label="商品质量差" value="商品质量差"></el-option>
+            <el-option label="其他" value="其他"></el-option>
+          </el-select>
+          <el-form-item v-if="complaintType==='其他'"  style="margin-top:20px;width: 100%;height: 200px">
+              <el-input type="textarea" :rows="6" v-model="complaintOther" placeholder="请输入举报内容"></el-input>
+            </el-form-item>
+        </el-form-item>
+        <el-button type="primary" @click="complaintdialog = false">取消</el-button>
+        <el-button type="primary" @click="complaint">提交</el-button>
+      </el-form>
     </el-dialog>
   </div>
 </template>
@@ -149,11 +132,15 @@ import {getToken, getUserId} from "../../utils/user-utils.js";
 import Head from "../../components/Head.vue";
 import {ElMessage} from "element-plus";
 import router from "../../router/index.js";
+import {createComplaint} from "../../api/user/index.js";
 const route = useRoute()
 const product_id = route.query.product_id
 const imgindex = ref(0)
 const isMyProduct  = ref(false)
 const isCollected = ref(false)
+const complaintdialog = ref(false)
+const complaintType = ref('其他')
+const complaintOther = ref('')
 const initProduct=async (id) => {
   await getProduct(id).then(res => {
     console.log(res)
@@ -177,8 +164,26 @@ const change = () => {
     query: { product_id: productData.product_id }
   });
   //刷新
-
 };
+const complaint= async () => {
+  let message = ''
+  if (complaintType.value === '其他') {
+    message = complaintOther.value
+  } else {
+    message = complaintType.value
+  }
+  let data = {
+    complainer_id: getUserId(),
+    target_type: 0,
+    target_id: productData.product_id,
+    reason: message,
+    status: 0
+  }
+  await createComplaint(getToken(),data).then(res => {
+    ElMessage.success('举报成功')
+    complaintdialog.value = false
+  })
+}
 checkCollection(product_id,getToken()).then(
         res=>{
           isCollected.value = res.is_collected

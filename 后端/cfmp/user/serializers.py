@@ -9,3 +9,8 @@ class PublicUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.User
         fields = ['user_id', 'username', 'avatar']
+
+class FollowSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Follow
+        fields = '__all__'
