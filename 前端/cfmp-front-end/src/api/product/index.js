@@ -14,6 +14,7 @@ export const getProducts=(data)=>{
     })
 
 }
+
 export const addProduct=(data,token)=>{
     return http({
         url:'/product/',

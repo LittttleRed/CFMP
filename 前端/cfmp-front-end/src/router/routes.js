@@ -110,11 +110,21 @@ export const constRoutes =   [
   },{
     path: '/register',
     name: 'Register',
-    component: () => import('../views/RegisterPage.vue'),
-    meta: {
-      title: '用户注册',
-    //   guestOnly: true // 标记仅未登录用户可访问
-    }
+    redirect: '/register/email',
+    children:[
+      {
+        path: 'email',
+        name: 'emailRegister',
+        component: () => import('../views/RegisterPage.vue'),
+        meta: { title: '邮箱注册' }
+      },
+      {
+        path: 'phone',
+        name: 'phoneRegister',
+        component: () => import('../views/RegisterPage.vue'),
+        meta: { title: '手机号注册' }
+      }
+    ]
   },{
      path: '/product/launch',
      name: 'launch',
@@ -130,6 +140,15 @@ export const constRoutes =   [
   name: 'edit-product',
   component: () => import('../views/product/edit.vue'),
   meta: { requiresAuth: true } // 如果需要登录权限
+  },
+
+
+  {
+    path: '/test',
+    name: 'test',
+    component: () => import('../views/test.vue'),
+    meta: { title: '测试' }
   }
+
   ]
 
