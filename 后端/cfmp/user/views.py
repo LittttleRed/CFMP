@@ -26,11 +26,6 @@ from config.authentication import JWTAuthentication
 # Create your views here.
 
 def send_sms_code(to_email):
-    """
-    发送邮箱验证码
-    :param to_mail: 发到这个邮箱
-    :return: 成功：0 失败 -1
-    """
     # 生成邮箱验证码
     sms_code = '%06d' % random.randint(0, 999999)
     EMAIL_FROM = "3417934680@qq.com"  # 邮箱来自
