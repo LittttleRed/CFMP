@@ -34,7 +34,7 @@ NOTIFICATION_TYPE_CHOICES = (
 )
 
 class Order(models.Model):
-    order_id = models.BigAutoField(primary_key=True)
+    order_id = models.AutoField(primary_key=True)
     buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="orders")
     products = models.ManyToManyField(Product, through='OrderItem')
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -52,8 +52,6 @@ class Order(models.Model):
     shipping_address = models.TextField(null=True, blank=True)
     shipping_postal_code = models.CharField(max_length=20, null=True, blank=True)
 
-    def __str__(self):
-        return f"Order {self.order_id}"
 
     class Meta:
         db_table = "order"
@@ -74,7 +72,7 @@ class OrderItem(models.Model):
 
 class Payment(models.Model):
     """支付记录"""
-    payment_id = models.CharField(max_length=50, primary_key=True)
+    payment_id = models.AutoField(primary_key=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='payments')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -83,13 +81,13 @@ class Payment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     paid_at = models.DateTimeField(null=True, blank=True)
     expires_at = models.DateTimeField(null=True, blank=True)
-    transaction_id = models.CharField(max_length=100, null=True, blank=True)  # 支付平台交易号
+    transaction_id = models.IntegerField(null=True, blank=True)  # 支付平台交易号
     payment_subject = models.CharField(max_length=255)  # 支付标题
     payment_data = models.JSONField(default=dict, blank=True)  # 支付数据（如支付URL、二维码等）
     failure_reason = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        return self.payment_id
+        return str(self.payment_id)
 
     class Meta:
         db_table = "payment"
@@ -97,7 +95,7 @@ class Payment(models.Model):
 
 class Notification(models.Model):
     """通知"""
-    id = models.BigAutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     type = models.SmallIntegerField(choices=NOTIFICATION_TYPE_CHOICES)
     title = models.CharField(max_length=100)
@@ -116,7 +114,7 @@ class Notification(models.Model):
 
 class SecurityPolicy(models.Model):
     """安全策略"""
-    policy_id = models.CharField(max_length=50, primary_key=True)
+    policy_id = models.IntegerField(primary_key=True)
     policy_name = models.CharField(max_length=100)
     policy_description = models.TextField()
     is_enabled = models.BooleanField(default=True)

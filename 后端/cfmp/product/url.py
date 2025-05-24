@@ -22,6 +22,11 @@ urlpatterns = [
         views.ProductMediaDetailView.as_view(),
         name="product-media-detail",
     ),
+    path(
+        "product/<int:product_id>/media/bulk/",
+        views.ProductMediaBulkUpdateView.as_view(),
+        name="product-media-bulk-update",
+    ),
     # 商品评价相关路由
     path(
         "product/<int:product_id>/reviews/",
@@ -60,4 +65,5 @@ urlpatterns = [
         views.ProductByCategoryAPIView.as_view(),
         name="category-products",
     ),
+
 ]

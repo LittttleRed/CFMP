@@ -78,6 +78,32 @@ class OrderListCreateAPIView(ListCreateAPIView):
         # 获取当前用户
         user = request.user
 
+        # 获取请求中的商品信息
+        products_data = request.data.get('products', [])
+
+        # 检查是否已有同一商品的未完成订单
+        for product_data in products_data:
+            product_id = product_data.get('product_id')
+            if product_id:
+                # 查找用户对该商品的未完成订单（待支付状态）
+                existing_order = Order.objects.filter(
+                    buyer=user,
+                    status=0,  # 待支付状态
+                    order_items__product_id=product_id
+                ).first()
+
+                if existing_order:
+                    # 如果存在未完成的订单，返回该订单信息
+                    return Response({
+                        'code': 409,  # Conflict状态码
+                        'message': '该商品已有未完成的订单，请先完成或取消现有订单',
+                        'data': {
+                            'existing_order_id': existing_order.order_id,
+                            'redirect_to_payment': True,
+                            'order_status': 'pending_payment'
+                        }
+                    }, status=status.HTTP_409_CONFLICT)
+
         # 将当前用户ID添加到请求数据中
         data = request.data.copy()
         data['buyer'] = user.user_id
@@ -167,7 +193,7 @@ class OrderCompleteAPIView(UpdateAPIView):
             type=0,  # 交易通知
             title='订单已完成',
             content=f'您的订单#{order.order_id}已成功完成，感谢您的购买!',
-            related_id=str(order.order_id)
+            related_id=order.order_id
         )
 
         return Response({
@@ -212,47 +238,47 @@ class OrderStatsAPIView(APIView):
 class PaymentCreateAPIView(APIView):
     """创建支付请求"""
     permission_classes = [IsAuthenticated]
-
     def post(self, request):
         # 检查用户是否已登录
         if not request.user.is_authenticated:
-            return Response({
-                'code': 401,
-                'message': '需要登录才能创建支付请求'
-            }, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'code': 401, 'message': '未登录'}, status=status.HTTP_401_UNAUTHORIZED)
 
         # 获取参数
-        order_id = request.query_params.get('order_id')
-        total_amount = request.query_params.get('total_amount')
-        payment_method = request.query_params.get('payment_method')
-        payment_subject = request.query_params.get('payment_subject')
-        return_url = request.query_params.get('return_url')
+        order_id = request.data.get('order_id')
+        total_amount = request.data.get('total_amount')
+        payment_method = request.data.get('payment_method')
+        payment_subject = request.data.get('payment_subject')
+        return_url = request.data.get('return_url')
 
         # 验证参数
         if not all([order_id, total_amount, payment_method, payment_subject]):
-            return Response({
-                'code': 400,
-                'message': '参数不完整'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'code': 400, 'message': '参数不完整'}, status=status.HTTP_400_BAD_REQUEST)
 
         # 获取订单信息
         try:
             order = Order.objects.get(order_id=order_id, buyer=request.user)
         except Order.DoesNotExist:
-            return Response({
-                'code': 404,
-                'message': '订单不存在'
-            }, status=status.HTTP_404_NOT_FOUND)
+            return Response({'code': 404, 'message': '订单不存在'}, status=status.HTTP_404_NOT_FOUND)
 
         # 判断订单状态
         if order.status != 0:
-            return Response({
-                'code': 400,
-                'message': '该订单状态不允许支付'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'code': 400, 'message': '订单状态不允许支付'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 生成支付ID
-        payment_id = f"PAY{timezone.now().strftime('%Y%m%d')}{str(uuid.uuid4().int)[:4]}"
+        # 检查是否已有未支付的支付请求
+        existing_payment = Payment.objects.filter(order=order, status=0).first()
+        if existing_payment:
+            # 直接返回已有支付请求信息
+            return Response({
+                'code': 200,
+                'message': '已有未支付的支付请求',
+                'data': {
+                    'payment_method': existing_payment.payment_method,
+                    'payment_id': existing_payment.payment_id,
+                    'order_id': order.order_id,
+                    'payment_data': existing_payment.payment_data,
+                    'expires_at': existing_payment.expires_at
+                }
+            })
 
         # 支付方式映射
         payment_method_map = {
@@ -260,9 +286,8 @@ class PaymentCreateAPIView(APIView):
             'wechat_pay': 1
         }
 
-        # 创建支付记录
+        # 创建支付记录 - 不再需要手动设置payment_id，它将自动生成
         payment = Payment.objects.create(
-            payment_id=payment_id,
             order=order,
             user=request.user,
             amount=total_amount,
@@ -271,17 +296,16 @@ class PaymentCreateAPIView(APIView):
             expires_at=timezone.now() + timezone.timedelta(minutes=30)
         )
 
-        # TODO:这里的可能并不能真的到达支付宝，需要依据支付宝的接口规则进行更改
         # 根据支付方式准备支付数据
         payment_data = {}
         if payment_method == 'alipay':
             payment_data = {
-                'url': f"https://openapi.alipay.com/gateway.do?order_id={order_id}&payment_id={payment_id}"
+                'url': f"https://openapi.alipay.com/gateway.do?order_id={order_id}&payment_id={payment.payment_id}"
             }
         elif payment_method == 'wechat_pay':
             payment_data = {
-                'url': f"https://wx.tenpay.com/cgi-bin/mmpayweb-bin/checkmweb?order_id={order_id}&payment_id={payment_id}",
-                'qrcode': f"weixin://wxpay/bizpayurl?pr={payment_id}"
+                'url': f"https://wx.tenpay.com/cgi-bin/mmpayweb-bin/checkmweb?order_id={order_id}&payment_id={payment.payment_id}",
+                'qrcode': f"weixin://wxpay/bizpayurl?pr={payment.payment_id}"
             }
 
         # 更新支付数据
@@ -292,9 +316,9 @@ class PaymentCreateAPIView(APIView):
             'code': 200,
             'message': '支付请求创建成功',
             'data': {
-                'payment_type': payment_method,
-                'payment_id': payment_id,
-                'order_id': order_id,
+                'payment_method': payment_method_map.get(payment_method, 0),  # 已经是整数类型
+                'payment_id': payment.payment_id,  # 已经是整数类型
+                'order_id': order.order_id,  # 确保是整数类型
                 'payment_data': payment_data,
                 'expires_at': payment.expires_at
             }
@@ -313,8 +337,8 @@ class PaymentCallbackAPIView(APIView):
     def post(self, request, payment_method):
         """异步回调"""
         # 解析回调参数
-        trade_no = request.query_params.get('trade_no')
-        out_trade_no = request.query_params.get('out_trade_no')
+        transaction_id = request.query_params.get('transaction_id')
+        payment_id = request.query_params.get('payment_id')
         order_id = request.query_params.get('order_id')
         status_param = request.query_params.get('status')
         total_amount = request.query_params.get('total_amount')
@@ -324,12 +348,12 @@ class PaymentCallbackAPIView(APIView):
 
         # 假设支付已成功
         try:
-            payment = Payment.objects.get(payment_id=out_trade_no)
+            payment = Payment.objects.get(payment_id=payment_id)
             order = payment.order
 
             # 更新支付状态
             payment.status = 2  # 成功
-            payment.transaction_id = trade_no
+            payment.transaction_id = transaction_id
             payment.paid_at = timezone.now()
             payment.save()
 
@@ -344,9 +368,9 @@ class PaymentCallbackAPIView(APIView):
                 type=0,  # 交易通知
                 title='支付成功通知',
                 content=f'您的订单 #{order.order_id} 已成功支付，感谢您的购买！',
-                related_id=str(order.order_id),
+                related_id=order.order_id,
                 related_data={
-                    'order_id': str(order.order_id),
+                    'order_id': order.order_id,
                     'payment_amount': float(payment.amount),
                     'payment_method': payment.get_payment_method_display()
                 }
@@ -396,10 +420,10 @@ class PaymentQueryAPIView(RetrieveAPIView):
 
         # 构建响应数据
         data = {
-            'order_id': str(order.order_id),
+            'order_id': order.order_id,
             'payment_id': payment.payment_id,
             'status': payment.get_status_display(),
-            'payment_method': payment.get_payment_method_display(),
+            'payment_method': payment.payment_method,  # 保证为数字
             'created_at': payment.created_at,
             'amount': float(payment.amount),
             'products': products
@@ -509,7 +533,7 @@ class PaymentCancelAPIView(APIView):
             'data': {
                 'success': True,
                 'payment_id': payment.payment_id,
-                'order_id': str(payment.order.order_id),
+                'order_id': payment.order.order_id,
                 'status': 'cancelled'
             }
         })
