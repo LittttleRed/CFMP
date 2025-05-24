@@ -76,7 +76,7 @@ const router = useRouter()
 const handleFileChange=(file, fileList) => {
   console.log(fileList)
   imgList.value = fileList.map(f => f.raw);
-  console.log(fileList)
+  console.log(imgList.value)
 }
 const validatePrice = (price) => {
   const pattern = /^\d+(\.\d{1,2})?$/;

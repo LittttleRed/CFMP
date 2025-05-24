@@ -71,3 +71,12 @@ export const updateImg=(id,data,token)=>{
         }
     })
 }
+export const getAllImage=(id,token)=>{
+    return http({
+        url:'/product/'+id+'/media/',
+        method:'get',
+        headers:{
+            'Authorization':'Bearer '+token,
+        }
+    })
+}
