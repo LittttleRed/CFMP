@@ -24,7 +24,7 @@ class Captcha(models.Model):
     email = models.CharField(max_length=50)
     captcha = models.CharField(max_length=6)
     created_at = models.DateTimeField(auto_now_add=True)
-
+    is_used = models.BooleanField(default=False)
     class Meta:
         db_table = "captcha"
 class ChatLog(models.Model):

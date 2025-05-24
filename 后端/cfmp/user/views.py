@@ -42,6 +42,33 @@ def send_sms_code(to_email):
         )
         captcha.save()
     return send_status
+
+def varify_captcha(email,captcha):
+    captchaObj = Captcha.objects.filter(email=email).last()
+    if  not captchaObj:  # 验证码不存在
+        return Response({
+            "fail_code":"CAPTCHA_NOT_FOUND",
+            "fail_msg":"验证码不存在"
+        },status=status.HTTP_400_BAD_REQUEST)
+    if captcha != captchaObj.captcha:
+        return Response({
+            "fail_code":"CAPTCHA_ERROR",
+            "fail_msg":"验证码错误"
+        },status=status.HTTP_400_BAD_REQUEST)
+    if captchaObj.created_at < datetime.now(timezone.utc) - timedelta(minutes=2):  # 验证码有效时间2分钟
+        return Response({
+            "fail_code":"CAPTCHA_EXPIRED",
+            "fail_msg":"验证码已过期"
+        },status=status.HTTP_400_BAD_REQUEST)
+    if captchaObj.is_used:  # 验证码已使用
+        return Response({
+            "fail_code":"CAPTCHA_ERROR",
+            "fail_msg":"验证码错误"
+        },status=status.HTTP_400_BAD_REQUEST)
+    captchaObj.is_used = True
+    captchaObj.save()
+    return 0
+
 class CaptchaView(APIView):
     def post(self, request):
         email = request.data.get('email')
@@ -140,23 +167,9 @@ class RegisterView(APIView):
             },status=status.HTTP_400_BAD_REQUEST)
         
         #验证码检查
-        captchaObj = Captcha.objects.filter(email=email).last()
-        if  not captchaObj:  # 验证码不存在
-            return Response({
-                "fail_code":"CAPTCHA_NOT_FOUND",
-                "fail_msg":"验证码不存在"
-            },status=status.HTTP_400_BAD_REQUEST)
-        if captchaObj.created_at < datetime.now(timezone.utc) - timedelta(minutes=2):  # 验证码有效时间2分钟
-            return Response({
-                "fail_code":"CAPTCHA_EXPIRED",
-                "fail_msg":"验证码已过期"
-            },status=status.HTTP_400_BAD_REQUEST)
-        if captcha != captchaObj.captcha:
-            return Response({
-                "fail_code":"CAPTCHA_ERROR",
-                "fail_msg":"验证码错误"
-            },status=status.HTTP_400_BAD_REQUEST)
-               
+        if varify_captcha(email,captcha)!=0:
+            return varify_captcha(email,captcha)
+        
         #存入数据库
         user = User.objects.create(
             username=username,
@@ -171,17 +184,16 @@ class RegisterView(APIView):
             "user_id":user.user_id
         })
 
-class login(APIView):
+class login_passwordView(APIView):
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
-
         if not all([email, password]):
             return Response({
                 "fail_code":"MISSING_PARAM",
-                "fail_msg":"邮箱和密码不能为空"
+                "fail_msg":"缺少参数"
             },status=status.HTTP_400_BAD_REQUEST)
-
+        
         # user = authenticate(email=email, password=password)
         user = User.objects.filter(email=email,password=password)
         user = user.first()
@@ -201,6 +213,8 @@ class login(APIView):
 
             token = jwt.encode(payload = payload, key = salt, algorithm="HS256", headers=headers)
             url= user.avatar
+            if not url:
+                url = None
             return Response({
                 "success":True,
                 "access_token":token,
@@ -223,6 +237,54 @@ class login(APIView):
                 "fail_msg": "用户不存在"
             }, status=status.HTTP_404_NOT_FOUND)
 
+class login_captchaView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        captcha = request.data.get('captcha')
+        if not all([email, captcha]):
+            return Response({
+                "fail_code":"MISSING_PARAM",
+                "fail_msg":"缺少参数"
+            },status=status.HTTP_400_BAD_REQUEST)
+        if  varify_captcha(email,captcha)!=0:
+            return varify_captcha(email,captcha)
+        # user = authenticate(email=email, password=password)
+        user = User.objects.filter(email=email)
+        user = user.first()
+        print(user)
+        if user:
+            salt = settings.SECRET_KEY
+            headers = {
+                'typ':'jwt',
+                'alg':'HS256'
+            }
+            print(user.username)
+            payload = {
+                'user_id': user.user_id,
+                'username': user.username,
+                'exp':datetime.now(timezone.utc) + timedelta(days=3)  # 延长token有效期为60分钟
+            }
+
+            token = jwt.encode(payload = payload, key = salt, algorithm="HS256", headers=headers)
+            url= user.avatar
+            if not url:
+                url = None
+            return Response({
+                "success":True,
+                "access_token":token,
+                "username":user.username,
+                "user_id":user.user_id,
+                "avatar":url
+            })
+
+        try:
+            User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({
+                "success": False,
+                "fail_code": "USER_NOT_FOUND",
+                "fail_msg": "用户不存在"
+            }, status=status.HTTP_404_NOT_FOUND)
 class UserIdViewSet(RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = PublicUserSerializer
@@ -235,8 +297,10 @@ class UserInfoView(ListCreateAPIView,RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         # 直接返回当前请求的用户对象（通过 Token 解析出的用户）
+        print(1)
         return self.request.user
     def get_queryset(self):
+        print(2)
         return User.objects.filter(user_id=self.request.user.user_id)
 
 
@@ -283,3 +347,58 @@ class UserProductsViewSet(ListCreateAPIView):
         user_id = self.kwargs['user_id']
         return Product.objects.filter(user_id=user_id).order_by('-created_at')
 
+class modify_email(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        new_email = request.data.get('new_email')
+        captcha = request.data.get('captcha')
+        if not all([new_email, captcha]):
+            return Response({
+                "fail_code":"MISSING_PARAM",
+                "fail_msg":"缺少参数"
+            },status=status.HTTP_400_BAD_REQUEST)
+        if varify_captcha(new_email,captcha)!=0:
+            return varify_captcha(new_email,captcha)
+        #确定新邮箱不重复
+        if User.objects.filter(email=new_email).exists():
+            return Response({
+                "fail_code":"EMAIL_EXIST",
+                "fail_msg":"邮箱已存在"
+            },status=status.HTTP_400_BAD_REQUEST)
+        
+        #修改邮箱
+        user = request.user
+        user.email = new_email
+        user.save()
+        return Response({
+            "success":True,
+            "user_id":user.user_id
+        })
+
+
+class modify_password(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        new_password = request.data.get('new_password')
+        new_password_repeat = request.data.get('new_password_repeat')
+        captcha = request.data.get('captcha') 
+        if not all([new_password, new_password_repeat,captcha]):
+            return Response({
+                "fail_code":"MISSING_PARAM",
+                "fail_msg":"缺少参数"
+            },status=status.HTTP_400_BAD_REQUEST)
+        
+        if new_password  != new_password_repeat:
+            return Response({
+                "fail_code":"PASSWORD_NOT_MATCH",
+                "fail_msg":"密码不匹配"
+            },status=status.HTTP_400_BAD_REQUEST)
+        user = request.user
+        if varify_captcha(request.user.email,captcha)!=0:
+            return varify_captcha(request.user.email,captcha)
+        user.password = new_password
+        user.save()
+        return Response({
+            "success":True,
+            "user_id":user.user_id
+        })
