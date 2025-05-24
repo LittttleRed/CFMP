@@ -124,12 +124,27 @@ export const constRoutes =   [
     path: '/product',
     name: 'product',
     component: () => import('../views/product/product.vue'),
-    meta: { title: '商品详情' }
-  },{
+    meta: { title: '商品详情' }  },{
   path: '/edit-product',
   name: 'edit-product',
   component: () => import('../views/product/edit.vue'),
   meta: { requiresAuth: true } // 如果需要登录权限
+  },{
+    path: '/order/pay',
+    name: 'pay',
+    component: () => import('../views/order/pay.vue'),
+    meta: {
+      title: '订单支付',
+      requiresAuth: true
+    }
+  },{
+    path: '/order/payment',
+    name: 'OrderPayment',
+    component: () => import('../views/order/payment.vue'),
+    meta: {
+      title: '订单详情',
+      requiresAuth: true
+    }
   }
   ]
 

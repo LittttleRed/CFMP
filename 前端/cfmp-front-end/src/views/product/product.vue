@@ -34,11 +34,11 @@
             <span class="current-price">¥{{ productData.price }}</span>
           </div>
           <!-- 操作按钮 -->
-          <div class="action-buttons">
-            <el-button
+          <div class="action-buttons">            <el-button
               type="success"
               size="large"
-              @click="showPurchaseDialog = true"
+              @click="handleBuyNow"
+              v-if="productData.user.user_id != getUserId()"
             >
               立即购买
             </el-button>
@@ -113,30 +113,9 @@
           />
         </div>
         <div class="comment-content">{{ comment.content }}</div>
-        <el-divider />
-      </div>
+        <el-divider />      </div>
       <div class="comment-item" v-else></div>
     </el-card>
-
-    <!-- 购买对话框 -->
-    <el-dialog v-model="showPurchaseDialog" title="确认购买">
-      <div class="purchase-dialog">
-        <el-form label-width="80px">
-          <el-form-item label="购买数量">
-            <el-input-number
-              v-model="purchaseQuantity"
-              :min="1"
-              :max="productData.stock"
-            />
-            <span class="stock">库存：{{ productData.stock }}件</span>
-          </el-form-item>
-        </el-form>
-        <div class="dialog-footer">
-          <el-button @click="showPurchaseDialog = false">取消</el-button>
-          <el-button type="primary" @click="handlePurchase">支付</el-button>
-        </div>
-      </div>
-    </el-dialog>
   </div>
 </template>
 
@@ -213,8 +192,6 @@ const productData = reactive({
 })
 
 // 交互状态
-const showPurchaseDialog = ref(false)
-const purchaseQuantity = ref(1)
 const showCommentDialog = ref(false)
 
 const collect = () => {
@@ -223,9 +200,26 @@ const collect = () => {
 const uncollect = () => {
   ElMessage.success('取消收藏成功')
 }
-const handlePurchase = () => {
-  showPurchaseDialog.value = false
-  ElMessage.success('购买成功')
+
+// 立即购买 - 直接跳转到支付页面
+const handleBuyNow = () => {
+  // 检查是否登录
+  if (!getToken()) {
+    ElMessage.warning('请先登录')
+    router.push('/login')
+    return
+  }
+
+  // 跳转到支付页面，携带商品信息
+  router.push({
+    name: 'pay',
+    query: {
+      product_id: productData.product_id,
+      quantity: 1, // 默认数量为1
+      price: productData.price,
+      seller_id: productData.user.user_id
+    }
+  })
 }
 </script>
 
@@ -348,18 +342,6 @@ const handlePurchase = () => {
 .comment-content {
   color: #666;
   line-height: 1.6;
-}
-
-.purchase-dialog {
-  .stock {
-    margin-left: 20px;
-    color: #666;
-  }
-
-  .dialog-footer {
-    text-align: right;
-    margin-top: 20px;
-  }
 }
 
 .image-error {
