@@ -40,7 +40,7 @@
           <el-upload
             list-type="picture-card"
             :file-list="list.map(f => ({ url: f.media || f.url ,name: f.media_id }))"
-            :on-success="handleSuccess"
+            :on-change="handleChange"
             :on-remove="handleRemove"
             multiple
             :limit="9"
@@ -152,7 +152,7 @@ async function prepareMediaFiles(mediaList) {
   );
 }
 // 处理图片上传成功
-const handleSuccess = (file, fileList) => {
+const handleChange = (file, fileList) => {
   list.value.push(file)
   console.log(list.value)
 };

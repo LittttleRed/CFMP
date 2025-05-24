@@ -13,7 +13,10 @@
             <el-avatar  :size="120" v-else src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"></el-avatar>
             <div class="info" style="margin-top: 20px;margin-bottom: 30px;margin-left: 50px;font-weight: bold;font-size: 30px">
               {{ username }}
-              <el-button style="margin: 20px auto" v-if="!isMyHome">关注</el-button>
+              <div>
+                <el-button style="margin: 20px auto" v-if="!isMyHome">关注</el-button>
+              <el-button style="margin-left: 20px;" type="danger"  v-if="!isMyHome">举报</el-button>
+              </div>
             </div>
           </div>
         <router-view />
