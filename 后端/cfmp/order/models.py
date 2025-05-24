@@ -34,7 +34,7 @@ NOTIFICATION_TYPE_CHOICES = (
 )
 
 class Order(models.Model):
-    order_id = models.IntegerField(primary_key=True)
+    order_id = models.AutoField(primary_key=True)
     buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="orders")
     products = models.ManyToManyField(Product, through='OrderItem')
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)

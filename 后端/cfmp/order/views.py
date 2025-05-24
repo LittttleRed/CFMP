@@ -78,6 +78,32 @@ class OrderListCreateAPIView(ListCreateAPIView):
         # 获取当前用户
         user = request.user
 
+        # 获取请求中的商品信息
+        products_data = request.data.get('products', [])
+
+        # 检查是否已有同一商品的未完成订单
+        for product_data in products_data:
+            product_id = product_data.get('product_id')
+            if product_id:
+                # 查找用户对该商品的未完成订单（待支付状态）
+                existing_order = Order.objects.filter(
+                    buyer=user,
+                    status=0,  # 待支付状态
+                    order_items__product_id=product_id
+                ).first()
+
+                if existing_order:
+                    # 如果存在未完成的订单，返回该订单信息
+                    return Response({
+                        'code': 409,  # Conflict状态码
+                        'message': '该商品已有未完成的订单，请先完成或取消现有订单',
+                        'data': {
+                            'existing_order_id': existing_order.order_id,
+                            'redirect_to_payment': True,
+                            'order_status': 'pending_payment'
+                        }
+                    }, status=status.HTTP_409_CONFLICT)
+
         # 将当前用户ID添加到请求数据中
         data = request.data.copy()
         data['buyer'] = user.user_id
@@ -212,18 +238,17 @@ class OrderStatsAPIView(APIView):
 class PaymentCreateAPIView(APIView):
     """创建支付请求"""
     permission_classes = [IsAuthenticated]
-
     def post(self, request):
         # 检查用户是否已登录
         if not request.user.is_authenticated:
             return Response({'code': 401, 'message': '未登录'}, status=status.HTTP_401_UNAUTHORIZED)
 
         # 获取参数
-        order_id = request.query_params.get('order_id')
-        total_amount = request.query_params.get('total_amount')
-        payment_method = request.query_params.get('payment_method')
-        payment_subject = request.query_params.get('payment_subject')
-        return_url = request.query_params.get('return_url')
+        order_id = request.data.get('order_id')
+        total_amount = request.data.get('total_amount')
+        payment_method = request.data.get('payment_method')
+        payment_subject = request.data.get('payment_subject')
+        return_url = request.data.get('return_url')
 
         # 验证参数
         if not all([order_id, total_amount, payment_method, payment_subject]):
