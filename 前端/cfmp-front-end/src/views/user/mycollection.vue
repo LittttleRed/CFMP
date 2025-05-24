@@ -15,11 +15,23 @@
         <Product :title="product.title" :price="product.price" :avatar="product.user.avatar" :username="product.user.username" :user_id="product.user.username" :product_id="product.product_id"></Product>
       </el-col>
     </el-row>
+    <div v-if="productList.length===0" style="margin: auto">暂无收藏</div>
   </div>
 </template>
 <script setup>
 import Product from "../../components/product.vue";
+import {getToken} from "../../utils/user-utils.js";
+import {getMyCollections} from "../../api/product/index.js";
 const productList=[];
+const getCollections=async()=>{
+  const res=await getMyCollections(getToken()).then(
+      res=>{
+        productList.push(...res.results)
+      }
+  );
+
+}
+getCollections()
 </script>
 <style scoped>
 

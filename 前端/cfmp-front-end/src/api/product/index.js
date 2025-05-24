@@ -31,3 +31,21 @@ export const getProduct=(id)=>{
         method:'get',
     })
 }
+export const getMyCollections=(token)=>{
+    return http({
+        url:'/product/collections/',
+        method:'get',
+        headers:{
+            'Authorization':'Bearer '+token,
+        }
+    })
+}
+export const checkCollection=(id,token)=>{
+    return http({
+        url:'/product/'+id+'/collection',
+        method:'get',
+        headers:{
+            'Authorization':'Bearer '+token,
+        }
+    })
+}

@@ -11,7 +11,7 @@
         <el-icon class="loading-icon" :size="50"><Loading /></el-icon>
       </div>
 
-      <div v-else class="goods-list">
+      <div v-else class="goods-list" style="padding: 10px 10px 0 0">
         <el-row :gutter="10">
         <el-col v-for="(product, index) in productList"
         :key="product.product_id"
@@ -24,7 +24,7 @@
                     :price="product.price"
                     :avatar="product.user.avatar"
                     :username="product.user.username"
-                    :user_id="product.user.username"
+                    :user_id="product.user.user_id"
                     :product_id="product.product_id"
                     :media="product.media[0]?product.media[0]['media']:''"></Product>
           </el-col>
@@ -172,7 +172,7 @@ onBeforeRouteLeave(
   }
 
   .goods-container {
-    max-width: 1500px;
+    max-width: 1600px;
     margin: 20px auto;
 
     .loading-wrapper {

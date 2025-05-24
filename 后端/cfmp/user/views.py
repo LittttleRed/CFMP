@@ -53,12 +53,13 @@ class login(APIView):
             }
 
             token = jwt.encode(payload = payload, key = salt, algorithm="HS256", headers=headers)
-
+            url= user.avatar
             return Response({
                 "success":True,
                 "access_token":token,
                 "username":user.username,
                 "user_id":user.user_id,
+                "avatar":url
             })
 
         try:
@@ -94,38 +95,44 @@ class UserInfoView(ListCreateAPIView,RetrieveUpdateDestroyAPIView):
 
 class UploadAvatarView(APIView):
     permission_classes = [IsAuthenticated]
+
     def post(self, request):
+        # 检查文件是否存在
         if 'avatar' not in request.FILES:
             return Response({'error': 'No avatar file provided'}, status=status.HTTP_400_BAD_REQUEST)
 
         file = request.FILES['avatar']
-        user_id=request.user.user_id
+        user = request.user
 
-        #起一个合理的名字
-        file.name=f"{user_id}.png"
-        storage=MinioMediaStorage()
+        try:
+            # 保存文件到MinIO
+            user.avatar.save(file.name, file)  # 自动触发存储系统保存
 
-        #如果重复就删除
-        if storage.exists(f"{user_id}.png"):
-            storage.delete(file.name)
+            # 确保用户对象保存到数据库
+            user.save()
 
-        #重新创建
-        storage.save(file.name,file)
+            # 获取完整的访问URL
+            avatar_url = user.avatar.url
 
-        #将url存到数据库
-        user=User.objects.get(user_id=user_id)
-        user.avatar=storage.url(file.name)
-        url=storage.url(file.name)
-        user.save()
+            return Response({
+                'success': True,
+                'avatar': avatar_url
+            }, status=status.HTTP_200_OK)
 
-        #返回url
-        return Response({'avatar': url})
+        except Exception as e:
+            # 处理存储异常
+            return Response({
+                'error': f'Failed to upload avatar: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-class UserProductsViewSet(APIView):
+
+
+class UserProductsViewSet(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ProductSerializer
-    def get(self, request):
-        user_id = request.user.user_id
-        products = Product.objects.filter(user=user_id)
-        products = ProductSerializer(products, many=True).data
-        return Response(products)
+    lookup_field = 'user_id'
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        return Product.objects.filter(user_id=user_id).order_by('-created_at')
+
