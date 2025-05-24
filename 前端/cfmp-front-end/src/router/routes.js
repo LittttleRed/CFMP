@@ -52,6 +52,7 @@ export const constRoutes =   [
   path: '/user',
     component: () => (import('../views/user/index.vue')),
     name: 'user',
+    redirect: '/user/MyRelease',
     children: [
       {
         path:'MyRelease',
@@ -134,6 +135,11 @@ export const constRoutes =   [
     name: 'product',
     component: () => import('../views/product/product.vue'),
     meta: { title: '商品详情' }
+  },{
+  path: '/edit-product',
+  name: 'edit-product',
+  component: () => import('../views/product/edit.vue'),
+  meta: { requiresAuth: true } // 如果需要登录权限
   },
 
 

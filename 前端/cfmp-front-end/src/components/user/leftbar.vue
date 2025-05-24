@@ -14,7 +14,7 @@
         <template #title>
           <span class="menu-title">我的交易</span>
         </template>
-        <el-menu-item index="/user/myrelease">我发布的</el-menu-item>
+        <el-menu-item :index="path">我发布的</el-menu-item>
         <el-menu-item index="/user/mybought" v-if="isMyHome">我买到的</el-menu-item>
       </el-sub-menu>
 
@@ -33,13 +33,20 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-
+import {onMounted, ref} from 'vue'
+import {useRoute} from "vue-router";
+const path = ref('/user/myrelease')
+const route=useRoute()
 const activeMenu = ref('1-1') // 默认激活菜单
 defineProps({
   isMyHome: {
     type: Boolean,
     default: false
+  },
+})
+onMounted(()=>{
+  if(route.query.user_id) {
+    path.value = '/user/myrelease?user_id=' + route.query.user_id
   }
 })
 const handleSelect = (index) => {

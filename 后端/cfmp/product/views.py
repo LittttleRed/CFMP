@@ -1,5 +1,7 @@
 import uuid
 
+from django.db import transaction
+from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django_filters.rest_framework import DjangoFilterBackend
@@ -229,6 +231,77 @@ class ProductMediaDetailView(APIView):
         except Product.DoesNotExist:
             return Response({"detail": "商品不存在"}, status=status.HTTP_404_NOT_FOUND)
 
+
+class ProductMediaBulkUpdateView(APIView):
+    """
+    批量更新商品图片（替换全部）
+    PUT: 删除原有图片，上传新图片
+    """
+    parser_classes = [MultiPartParser]
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, product_id):
+        try:
+            # 获取商品对象
+            product = Product.objects.get(product_id=product_id)
+
+            # 权限验证
+            if request.user != product.user:
+                return Response(
+                    {"detail": "无权操作此商品"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # 使用事务保证操作原子性
+            with transaction.atomic():
+                # 删除所有旧图片
+                old_media = ProductMedia.objects.filter(product=product)
+                for media in old_media:
+                    media.media.delete(save=False)  # 删除物理文件
+                old_media.delete()
+
+                # 处理新图片
+                media_files = request.FILES.getlist('media', [])
+                new_media = []
+                is_first = True
+
+                for idx, file in enumerate(media_files):
+                    # 生成唯一文件名
+                    file.name = f"{product_id}_{uuid.uuid4().hex}"
+
+                    media = ProductMedia(
+                        product=product,
+                        media=file,
+                        is_main=is_first
+                    )
+                    new_media.append(media)
+                    is_first = False
+
+                # 批量创建
+                ProductMedia.objects.bulk_create(new_media)
+
+                # 如果没有上传新图片，设置主图为None
+                if not new_media:
+                    product.main_image = None
+                    product.save()
+
+            # 序列化返回结果
+            serializer = ProductMediaSerializer(
+                ProductMedia.objects.filter(product=product),
+                many=True
+            )
+            return Response(serializer.data)
+
+        except Product.DoesNotExist:
+            return Response(
+                {"detail": "商品不存在"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class ProductDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()

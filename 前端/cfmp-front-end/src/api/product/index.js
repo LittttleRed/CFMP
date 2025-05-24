@@ -28,7 +28,47 @@ export const addProduct=(data,token)=>{
 }
 export const getProduct=(id)=>{
     return http({
-        url:'/product/'+id,
+        url:'/product/'+id+'/',
         method:'get',
+    })
+}
+export const updateProduct=(id,data,token)=>{
+    return http({
+        url:'/product/'+id+'/',
+        method:'put',
+        data:data,
+        headers:{
+            'Authorization':'Bearer '+token,
+            'Content-Type':'multipart/form-data'
+        }
+    })
+}
+export const getMyCollections=(token)=>{
+    return http({
+        url:'/product/collections/',
+        method:'get',
+        headers:{
+            'Authorization':'Bearer '+token,
+        }
+    })
+}
+export const checkCollection=(id,token)=>{
+    return http({
+        url:'/product/'+id+'/collection',
+        method:'get',
+        headers:{
+            'Authorization':'Bearer '+token,
+        }
+    })
+}
+export const updateImg=(id,data,token)=>{
+    return http({
+        url:'/product/'+id+'/media/bulk/',
+        method:'put',
+        data:data,
+        headers:{
+            'Authorization':'Bearer '+token,
+            'Content-Type':'multipart/form-data'
+        }
     })
 }

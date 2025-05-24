@@ -105,7 +105,7 @@ import { ref, reactive } from 'vue'
 import type { FormInstance } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { getLogin } from '../api/user'
-import {getToken, setToken, setUserId, setUserName} from "../utils/user-utils";
+import {getToken, setHeadImg, setToken, setUserId, setUserName} from "../utils/user-utils";
 
 import { ParticlesComponent } from 'particles.vue3';
 import { loadSlim } from 'tsparticles-slim'
@@ -144,19 +144,23 @@ email: [
 }
 
 const handleLogin = async () => {
+
    await getLogin(loginForm).then((res) => {
      //如果状态码是404,提示用户未注册
      if (res["success"] === false) {
        console.log("登录失败")
-       fail_msg.value=res["fail_msg"]
+
      } else {
        console.log(res)
        setToken(res["access_token"])
        setUserId(res["user_id"])
        setUserName(res["username"])
-       window.location.href = '/'
+       setHeadImg(res["avatar"])
+       // window.location.href = '/'
      }
-})
+}).catch(e=>{
+     fail_msg.value = e.response.data.fail_msg
+   })
 }
 </script>
 

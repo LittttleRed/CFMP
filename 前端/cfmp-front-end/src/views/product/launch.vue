@@ -1,4 +1,5 @@
 <template>
+  <Head></Head>
   <div class="publish-container">
     <!-- 头部标题 -->
     <div class="header">
@@ -63,13 +64,17 @@ import {ref} from "vue";
 import {ElMessage} from "element-plus";
 import {getHeadImg, getToken, getUserId, getUserName} from "../../utils/user-utils.js";
 import {addProduct} from "../../api/product/index.js";
+import {useRoute, useRouter} from "vue-router";
+import Head from "../../components/Head.vue";
 
 const description = ref('')
 const price = ref('')
 const shippingMethod = ref('')
 const imgList = ref([])
 const title = ref('')
+const router = useRouter()
 const handleFileChange=(file, fileList) => {
+  console.log(fileList)
   imgList.value = fileList.map(f => f.raw);
   console.log(fileList)
 }
@@ -118,6 +123,7 @@ const launch = async () => {
     form.append('status', '0'); // 确保字符串类型
 
     // 修正文件上传逻辑
+    console.log(imgList.value)
     imgList.value.forEach(file => {
       form.append('media', file); // 直接使用原始文件对象
     });
@@ -127,6 +133,8 @@ const launch = async () => {
 
     await addProduct(form, getToken());
     ElMessage.success("发布成功！");
+    //返回首页
+    //  await router.push('/')
   } catch (error) {
     ElMessage.error(error.response?.data?.message || "发布失败，请重试");
   }

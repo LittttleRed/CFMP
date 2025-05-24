@@ -50,7 +50,7 @@
           <el-button @click="changeEmail">修改电子邮箱</el-button>
         </div>
         <div class="info-item">
-          <label class="info-label">地址：</label>
+          <label class="info-label">我的地址：</label>
           <span class="info-content" v-if="addressChanging===false">{{ address }}</span>
           <el-input
             v-model="address"
@@ -64,6 +64,7 @@
           <el-button @click="changeAddr">修改地址</el-button>
         </div>
         <el-button style="width: 20%" @click="changepwd">修改密码</el-button>
+        <el-button style="width: 20%;margin-left: 0" @click="logout">退出登录</el-button>
       </div>
     </div>
   </el-card>
@@ -72,9 +73,18 @@
 <script setup>
 import {useUserStore} from '../../stores/user.js'
 import {onMounted, ref,watch} from 'vue'
-import {getToken, setHeadImg, setUserName} from "../../utils/user-utils.js";
+import {
+  getToken,
+  removeHeadImg,
+  removeToken,
+  removeUserId,
+  removeUserName,
+  setHeadImg,
+  setUserName
+} from "../../utils/user-utils.js";
 import * as $api from "../../api/user/index.js";
 import {changeUser, getMe, updateAvatar} from "../../api/user/index.js";
+import router from "../../router/index.js";
 
 let userStore = useUserStore()
 const error = ref('')
@@ -87,19 +97,23 @@ const addressChanging = ref(false)
 const preAddr = ref('')
 const email = ref('')
 const address = ref('')
+const logout = ()=>{
+  removeToken()
+      removeUserName()
+      removeUserId()
+      removeHeadImg()
+  router.push('/')
+}
 const showinfo=async () => {
   let token = getToken()
   await getMe(token).then((response) => {
     let user=response[0]
+    console.log(user)
     userStore.username = user["username"]
     email.value = user["email"]
     avatar.value= user["avatar"]
     address.value = user["address"]
   //去除avatar的"http://127.0.0.1:8000/"前缀
-  avatar.value=avatar.value.replace("http://127.0.0.1:8000/","")
-  //将avatar的第一个"/"换成"//"
-  avatar.value=avatar.value.replace("/","//",1)
-  avatar.value=decodeURIComponent(avatar.value)
   })
 }
 showinfo()
@@ -124,6 +138,7 @@ const changeAvatar = async (event) => {
   avatar.value = URL.createObjectURL(file);
   let token = getToken()
   updateAvatar(token, file).then(res => {
+    avatar.value = res["avatar"];
     setHeadImg(res["avatar"])
   });
 }
