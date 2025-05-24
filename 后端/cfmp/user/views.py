@@ -21,8 +21,53 @@ from django.conf import settings
 from jwt import exceptions
 # Create your views here.
 
+class RegisterView(APIView):
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        password_repeat = request.data.get('password_repeat')
+        email = request.data.get('email')
+        captcha = request.data.get('captcha')
+
+        if not all([username, password, password_repeat, email, captcha]):
+            return Response({
+                "fail_code":"MISSING_PARAM",
+                "fail_msg":"缺少参数"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        if password != password_repeat:
+            return Response({
+                "fail_code":"PASSWORD_NOT_MATCH",
+                "fail_msg":"密码不一致"
+            },status=status.HTTP_400_BAD_REQUEST)
+        
+        user = User.objects.filter(email=email)
+        if user.exists():
+            return Response({
+                "fail_code":"USER_EXIST",
+                "fail_msg":"用户已存在"
+            },status=status.HTTP_400_BAD_REQUEST)
+        
+        #存入数据库
+        user = User.objects.create(
+            username=username,
+            password=password,
+            email=email,
+            created_at=datetime.now(),
+            status=0,
+            privilege=0,
+            is_active=True,
+            is_authenticated=False
+        )
+        user.save()
+
+        #返回user_id
+        return Response({
+            "success":True,
+            "user_id":user.user_id
+        })
+
 class login(APIView):
-    authentication_classes = []
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
