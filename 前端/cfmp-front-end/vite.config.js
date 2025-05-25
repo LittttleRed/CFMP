@@ -1,12 +1,18 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import * as http from "http";
+import { resolve } from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig(
   () => {
     return{
       plugins: [vue()],
+      resolve: {
+        alias: {
+          '@': resolve(__dirname, 'src')
+        }
+      },
        // 这个不用一点点写, 但每个配置都要理解
     server: {
           port: 5173,
