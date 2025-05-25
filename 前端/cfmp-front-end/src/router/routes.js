@@ -110,21 +110,11 @@ export const constRoutes =   [
   },{
     path: '/register',
     name: 'Register',
-    redirect: '/register/email',
-    children:[
-      {
-        path: 'email',
-        name: 'emailRegister',
-        component: () => import('../views/RegisterPage.vue'),
-        meta: { title: '邮箱注册' }
-      },
-      {
-        path: 'phone',
-        name: 'phoneRegister',
-        component: () => import('../views/RegisterPage.vue'),
-        meta: { title: '手机号注册' }
-      }
-    ]
+    component: () => import('../views/RegisterPage.vue'),
+    meta: {
+      title: '用户注册',
+    //   guestOnly: true // 标记仅未登录用户可访问
+    }
   },{
      path: '/product/launch',
      name: 'launch',
@@ -134,21 +124,38 @@ export const constRoutes =   [
     path: '/product',
     name: 'product',
     component: () => import('../views/product/product.vue'),
-    meta: { title: '商品详情' }
-  },{
+    meta: { title: '商品详情' }  },{
   path: '/edit-product',
   name: 'edit-product',
   component: () => import('../views/product/edit.vue'),
   meta: { requiresAuth: true } // 如果需要登录权限
+  },{
+    path: '/order/pay',
+    name: 'pay',
+    component: () => import('../views/order/pay.vue'),
+    meta: {
+      title: '订单支付',
+      requiresAuth: true
+    }
+  },{
+    path: '/order/payment',
+    name: 'OrderPayment',
+    component: () => import('../views/order/payment.vue'),
+    meta: {
+      title: '订单详情',
+      requiresAuth: true
+    }
   },
-
-
   {
     path: '/test',
     name: 'test',
     component: () => import('../views/test.vue'),
     meta: { title: '测试' }
-  }
-
+  },{
+    path: '/search',
+    name: 'search',
+    component: () => import('../views/search.vue'),
+    meta:{title: '搜索'}
+    }
   ]
 

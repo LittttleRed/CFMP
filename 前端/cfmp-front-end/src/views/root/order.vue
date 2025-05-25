@@ -27,8 +27,7 @@ export default {
     // 处理每个订单，按日期累加金额
     response.data.forEach(order => {
         const date = order.created_at.slice(0, 10); // 提取日期部分
-        const amount = parseFloat(order.price);     // 转换金额为数字
-
+        const amount = parseFloat(order.total_amount);     // 转换金额为数字
         if (dailyTotals[date]) {
             dailyTotals[date] += amount;
         } else {

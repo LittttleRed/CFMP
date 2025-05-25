@@ -89,3 +89,40 @@ export const getAllLaunches=(token,id)=>{
         }
     })
 }
+export const createComplaint=(token,data)=>{
+    return http({
+        url:'/v1/user/complaint/',
+        method:'post',
+        headers:{
+            'Authorization':'Bearer '+token
+        },
+        data:data
+    })
+}
+export const followUser=(token,id)=>{
+    return http({
+        url:'/v1/user/follow/'+id+'/',
+        method:'post',
+        headers:{
+            'Authorization':'Bearer '+token
+        }
+    })
+}
+export const unfollowUser=(token,id)=>{
+    return http({
+        url:'/v1/user/follow/'+id+'/',
+        method:'delete',
+        headers:{
+            'Authorization':'Bearer '+token
+        }
+    })
+}
+export const getAllFollows=(token)=>{
+    return http({
+        url:'/v1/user/follow/',
+        method:'get',
+        headers:{
+            'Authorization':'Bearer '+token
+        }
+    })
+}

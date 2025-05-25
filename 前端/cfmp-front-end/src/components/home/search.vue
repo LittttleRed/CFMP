@@ -1,13 +1,12 @@
 <template>
-  <div class="xy-search-container">
+  <div class="xy-search-container" style="border-radius: 40px">
     <el-input
       v-model="keyword"
       class="xy-search-input"
       :placeholder="placeholder"
       clearable
-      @input="handleInput"
-      @focus="showSuggestions = true"
-      @clear="handleClear"
+      @keyup.enter="handleInput"
+      style="--el-input-border-radius: 40px;width: 800px;height:60px"
     >
       <template #prefix>
         <el-icon class="search-icon"><Search /></el-icon>
@@ -18,6 +17,7 @@
       v-show="showSuggestions && suggestions.length"
       class="suggestions-card"
       shadow="never"
+      style="border-radius: 60px"
     >
       <div v-for="(item, index) in suggestions"
            :key="index"
@@ -32,6 +32,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { Search } from '@element-plus/icons-vue'
+import {useRoute, useRouter} from "vue-router";
 
 const props = defineProps({
   placeholder: {
@@ -48,9 +49,13 @@ const emit = defineEmits(['search', 'clear', 'select'])
 
 const keyword = ref('')
 const showSuggestions = ref(false)
-
+const route=useRoute()
+const router=useRouter()
 const handleInput = () => {
-  emit('search', keyword.value)
+
+router.push({name:'search',query:{keyword:keyword.value}}).then(()=>router.go(0))
+  //刷新
+
 }
 
 const handleClear = () => {
@@ -87,15 +92,17 @@ watch(showSuggestions, (val) => {
   position: relative;
   max-width: 1000px;
   margin: 20px auto;
+  border-radius: 40px
 }
 
 .xy-search-input :deep(.el-input__inner) {
   height: 48px;
-  border-radius: 24px;
+  border-radius: 40px;
   padding-left: 50px;
   font-size: 16px;
   border-color: #ff5000;
   width: 500px;
+
 }
 
 .xy-search-input :deep(.el-input__wrapper) {
@@ -112,7 +119,9 @@ watch(showSuggestions, (val) => {
   position: absolute;
   width: 100%;
   margin-top: 8px;
-  border: none;
+  /* 原60px改为与容器一致的40px */
+  /* 添加顶部较小圆角避免直角 */
+  border-radius: 20px 20px 40px 40px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   z-index: 2000;
 }

@@ -60,9 +60,19 @@
           >
             提交修改
           </el-button>
+          <el-button @click="deletedialog = true" type="danger" >
+            删除商品
+          </el-button>
         </el-form-item>
       </el-form>
     </el-card>
+    <el-dialog title="删除商品" v-model="deletedialog">
+      确认要删除此商品吗？(删除后不可恢复)
+      <template #footer>
+        <el-button @click="deletedialog = false">取消</el-button>
+        <el-button type="danger" @click="deleteProduct">确认</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -70,7 +80,7 @@
 import { ref, reactive, onMounted,toRaw } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import {getAllImage, getProduct, updateImg, updateProduct} from '../../api/product';
+import {deletePro, getAllImage, getProduct, updateImg, updateProduct} from '../../api/product';
 import Head from '../../components/Head.vue';
 import {getToken, getUserId} from "../../utils/user-utils.js";
 
@@ -78,7 +88,7 @@ const route = useRoute();
 const router = useRouter();
 const formRef = ref(null);
 const submitting = ref(false);
-
+const deletedialog  = ref(false);
 // 表单数据
 const form = reactive({
   title: '',
@@ -124,6 +134,12 @@ onMounted(async () => {
     )
     console.log(list.value)
 });
+const deleteProduct=async ()=>{
+  await deletePro(route.query.product_id,getToken()).then(res => {
+      ElMessage.success("删除成功")
+      router.push({path:"/user/myrelease"})
+  })
+}
 async function urlToFile(url, filename, mimeType) {
   try {
     const response = await fetch(url);
@@ -192,6 +208,7 @@ const submitForm = async () => {
     await updateImg(route.query.product_id, mediaform, getToken())
 
     ElMessage.success('修改成功');
+    window.history.back()
     // router.push({
     //   name: 'product',
     //   query: { product_id: route.query.product_id }

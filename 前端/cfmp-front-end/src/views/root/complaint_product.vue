@@ -44,6 +44,7 @@
       <el-table-column label="操作">
         <template #default="{row}">
           <el-button type="primary" size=small @click="openHandleDialog(row)" v-if="row.status === 0">处理</el-button>
+          <el-button type="primary" size=small @click="handleDetail(row)" v-if="row.status === 0">详情</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -215,7 +216,7 @@ export default {
 
     },
     handleDetail(row) {
-      console.log('处理投诉：', row.id)
+
     },
      handlePageChange(page) {
        this.pagination.page = page

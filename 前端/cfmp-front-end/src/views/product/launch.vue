@@ -44,6 +44,34 @@
       >
       </el-input>
     </div>
+    <div class="form-section">
+  <el-select
+    v-model="selectedCategories"
+    multiple
+    filterable
+    default-first-option
+    placeholder="选择商品分类"
+    style="width: 100%"
+  >
+    <el-option
+      v-for="category in categoryList"
+      :key="category"
+      :label="category"
+      :value="category"
+    />
+  </el-select>
+  <div class="selected-tags" v-if="selectedCategories.length">
+    <el-tag
+      v-for="(tag, index) in selectedCategories"
+      :key="index"
+      style="margin: 4px"
+      closable
+      @close="removeCategory(index)"
+    >
+      {{ tag }}
+    </el-tag>
+  </div>
+</div>
 
     <!-- 价格输入 -->
     <div class="form-section">
@@ -63,7 +91,7 @@
 import {ref} from "vue";
 import {ElMessage} from "element-plus";
 import {getHeadImg, getToken, getUserId, getUserName} from "../../utils/user-utils.js";
-import {addProduct} from "../../api/product/index.js";
+import {addProduct, getAllCategory} from "../../api/product/index.js";
 import {useRoute, useRouter} from "vue-router";
 import Head from "../../components/Head.vue";
 
@@ -73,6 +101,21 @@ const shippingMethod = ref('')
 const imgList = ref([])
 const title = ref('')
 const router = useRouter()
+const selectedCategories = ref([])
+const categoryList = ref(['书籍教材', '电子数码', '服饰鞋包', '生活百货', '美妆个护', '运动户外', '其他'])
+const catagoryNumber = ref([])
+// 删除分类
+const getCategoryList = async () => {
+  console.log(categoryList.value)
+  categoryList.value=await getAllCategory()
+  catagoryNumber.value=categoryList.value.map(item=>item.category_id)
+  categoryList.value=categoryList.value.map(item=>item.name)
+  console.log(categoryList.value)
+}
+getCategoryList()
+const removeCategory = (index) => {
+  selectedCategories.value.splice(index, 1)
+}
 const handleFileChange=(file, fileList) => {
   console.log(fileList)
   imgList.value = fileList.map(f => f.raw);
@@ -127,7 +170,10 @@ const launch = async () => {
     imgList.value.forEach(file => {
       form.append('media', file); // 直接使用原始文件对象
     });
-
+    selectedCategories.value.forEach(category => {
+      console.log(categoryList.value.indexOf(category))
+      form.append('categories',catagoryNumber.value[categoryList.value.indexOf(category)])
+    })
     // 删除冗余的用户信息传递
     // ❌ 移除 form.append('user', ...)
 
