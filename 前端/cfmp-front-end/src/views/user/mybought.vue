@@ -10,7 +10,8 @@
       <el-main>
         <!-- 筛选标签 -->
         <div class="filter-tabs">
-          <el-tabs v-model="activeTab" @tab-click="handleTabClick">
+          <!-- 使用更可靠的方式处理标签切换 -->
+          <el-tabs v-model="activeTab" @tab-change="handleTabChange">
             <el-tab-pane label="全部" name="all"></el-tab-pane>
             <el-tab-pane label="待付款" name="pending_payment"></el-tab-pane>
             <el-tab-pane label="已付款" name="paid"></el-tab-pane>
@@ -58,30 +59,33 @@
                   <div class="order-time">
                     {{ formatDate(order.created_at) }}
                   </div>
-                </div>
-
-                <div class="order-content">
+                </div>                <div class="order-content">
                   <div class="product-info">
-                    <div
-                      v-for="item in order.items"
-                      :key="item.id"
-                      class="product-item"
-                    >
-                      <div class="product-image">
-                        <img
-                          :src="item.product_image || '/default-product.png'"
-                          :alt="item.product_name"
-                          @error="handleImageError"
-                        >
-                      </div>
-                      <div class="product-details">
-                        <h4 class="product-name">{{ item.product_name }}</h4>
-                        <p class="product-desc">{{ item.product_description }}</p>
-                        <div class="product-meta">
-                          <span class="price">¥{{ item.price }}</span>
-                          <span class="quantity">x{{ item.quantity }}</span>
+                    <div v-if="order.items && order.items.length > 0">
+                      <div
+                        v-for="item in order.items"
+                        :key="item.product_id"
+                        class="product-item"
+                      >
+                        <div class="product-image">
+                          <img
+                            :src="item.product_image"
+                            :alt="item.product_name"
+                            @error="handleImageError"
+                          >
+                        </div>
+                        <div class="product-details">
+                          <h4 class="product-name">{{ item.product_name }}</h4>
+                          <div class="product-meta">
+                            <span class="price">¥{{ item.price }}</span>
+                            <span class="quantity">x{{ item.quantity }}</span>
+                          </div>
                         </div>
                       </div>
+                    </div>
+                    <div v-else class="no-products">
+                      <p>订单商品信息缺失</p>
+                      <p class="order-id-text">订单号：{{ order.order_id }}</p>
                     </div>
                   </div>
 
@@ -187,7 +191,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getOrderList, cancelOrder, completeOrder } from '../../api/order/index.js'
@@ -209,7 +213,7 @@ const cancelReason = ref('')
 const cancelLoading = ref(false)
 const selectedOrder = ref(null)
 
-// 状态映射
+// 状态映射 - 数字状态码到中文显示文本的映射
 const statusMap = {
   0: '待付款',
   1: '已付款',
@@ -217,14 +221,37 @@ const statusMap = {
   3: '已取消'
 }
 
+// 反向映射 - 状态码到字符串状态名的映射
+const statusCodeToStringMap = {
+  0: 'pending_payment',
+  1: 'paid',
+  2: 'completed',
+  3: 'cancelled'
+}
+
 const paymentMethodMap = {
   0: '支付宝',
   1: '微信支付'
 }
 
-// 计算属性
+// 获取状态文本
 const getStatusText = (status) => {
   return statusMap[status] || '未知状态'
+}
+
+// 根据标签名获取状态文本
+const getStatusTextByTab = (tabName) => {
+  if (tabName === 'all') return '全部'
+
+  // 标签名本身就是状态字符串
+  const statusMap = {
+    'pending_payment': '待付款',
+    'paid': '已付款',
+    'completed': '已完成',
+    'cancelled': '已取消'
+  }
+
+  return statusMap[tabName] || '未知状态'
 }
 
 const getStatusTagType = (status) => {
@@ -241,39 +268,63 @@ const getPaymentMethodText = (method) => {
   return paymentMethodMap[method] || '未知支付方式'
 }
 
-// 方法
+// 加载订单列表方法
 const loadOrderList = async () => {
   loading.value = true
+
+  // 清空当前列表，避免数据混合
+  orderList.value = []
+
   try {
+    // 构建API请求参数
     const params = {
       page: currentPage.value,
       page_size: pageSize.value,
       sort: sortOption.value
     }
 
-    if (activeTab.value !== 'all') {
+    // 'all'标签不传status参数，其他标签直接传递标签名称作为状态参数
+    if (activeTab.value && activeTab.value !== 'all') {
       params.status = activeTab.value
     }
+      // 增强调试信息
+    console.log('正在获取订单列表，当前标签:', activeTab.value)
+    console.log('查询参数:', JSON.stringify(params))
 
+    // 发起API请求
     const response = await getOrderList(params)
+      // 处理响应数据
+    console.log('API响应:', response)
 
-    if (response.code === 200) {
-      orderList.value = response.results || response.data || []
-      total.value = response.count || orderList.value.length
-    } else {
-      ElMessage.error(response.message || '获取订单列表失败')
+    // 更新订单列表和总数
+    orderList.value = response.results || []
+    total.value = response.count || 0
+
+    // 如果列表为空且不是首页，可能是页码太大，自动回到第一页
+    if (orderList.value.length === 0 && currentPage.value > 1) {
+      currentPage.value = 1
+      await loadOrderList()
+      return
     }
   } catch (error) {
-    console.error('获取订单列表失败:', error)
-    ElMessage.error('网络错误，请稍后重试')
+    console.error('加载订单列表时出错:', error)
+    ElMessage.error('加载订单列表失败，请稍后重试')
+    orderList.value = [] // 出错时清空列表
+    total.value = 0
   } finally {
     loading.value = false
   }
 }
 
-const handleTabClick = (tab) => {
-  activeTab.value = tab.name
+// 使用更简单可靠的tab-change事件处理函数
+const handleTabChange = (tabName) => {
+  // tabName参数直接是选中标签的name值，不需要从复杂对象中提取
+  console.log('标签切换为:', tabName)
+
+  // 切换标签时重置到第一页
   currentPage.value = 1
+
+  // 直接加载订单列表
   loadOrderList()
 }
 
@@ -373,9 +424,38 @@ const handleImageError = (event) => {
   event.target.src = '/default-product.png'
 }
 
+// 初始化函数 - 确保标签状态是正确的
+const initOrderPage = () => {
+  // 首先重置所有状态，避免之前的状态影响
+  orderList.value = []
+  total.value = 0
+  currentPage.value = 1
+
+  // 从URL参数中获取初始标签，如果没有则默认为'all'
+  const urlParams = new URLSearchParams(window.location.search)
+  const tabParam = urlParams.get('tab')
+
+  // 验证标签是否有效
+  const validTabs = ['all', 'pending_payment', 'paid', 'completed', 'cancelled']
+  if (tabParam && validTabs.includes(tabParam)) {
+    activeTab.value = tabParam
+  } else {
+    activeTab.value = 'all'
+  }
+
+  console.log('初始化订单页面，设置选中标签为:', activeTab.value)
+
+  // 使用Vue的nextTick确保DOM已更新后再加载数据
+  // 这样可以确保标签选中状态已经在DOM中反映出来
+  nextTick(() => {
+    console.log('DOM更新完成，开始加载订单列表')
+    loadOrderList()
+  })
+}
+
 // 生命周期
 onMounted(() => {
-  loadOrderList()
+  initOrderPage()
 })
 </script>
 
@@ -561,6 +641,24 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+}
+
+.no-products {
+  padding: 20px;
+  text-align: center;
+  color: #909399;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px dashed #dcdfe6;
+}
+
+.no-products p {
+  margin: 5px 0;
+}
+
+.order-id-text {
+  font-size: 12px;
+  color: #666;
 }
 
 /* 响应式设计 */

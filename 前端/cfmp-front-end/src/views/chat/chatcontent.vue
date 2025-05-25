@@ -49,18 +49,16 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ChatContent',
-  data() {
-    return {
-      inputMessage: '',
-      currentUser: {
-        name: '测试用户',
-        avatar: 'https://via.placeholder.com/50'
-      },
-      selfAvatar: 'https://via.placeholder.com/50?text=Me',
-      messages: [
+<script setup>
+
+import {ref} from "vue";
+import {getHeadImg, getUserName} from "@/utils/user-utils.js";
+import {getUserById} from "@/api/user/index.js";
+
+const inputMessage= ref('')
+const currentUser=ref({ })
+const selfAvatar=getHeadImg()
+const messages=ref([
         {
           content: '你好呀！',
           time: new Date(Date.now() - 3600000),
@@ -71,11 +69,22 @@ export default {
           time: new Date(),
           isSelf: true
         }
-      ]
+      ])
+defineProps(
+    {
+      userId: {
+        type: String,
+        required: true
+      }
     }
-  },
-  methods: {
-    sendMessage() {
+)
+const getUser=async () => {
+  await getUserById().then(response => {
+    currentUser.value=response
+  })
+}
+
+const sendMessage=()=> {
       if (!this.inputMessage.trim()) return
 
       this.messages.push({
@@ -89,28 +98,24 @@ export default {
         this.scrollToBottom()
         this.adjustTextareaHeight()
       })
-    },
-    newLine() {
+    }
+const newLine=()=> {
       this.inputMessage += '\n'
       this.adjustTextareaHeight()
-    },
-    formatTime(time) {
+    }
+const  formatTime=(time)=> {
       return `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`
-    },
-    scrollToBottom() {
+    }
+const scrollToBottom=()=> {
       const container = this.$refs.messagesContainer
       container.scrollTop = container.scrollHeight
-    },
-    adjustTextareaHeight() {
+    }
+const adjustTextareaHeight=()=> {
       const textarea = this.$refs.textarea
       textarea.style.height = 'auto'
       textarea.style.height = textarea.scrollHeight + 'px'
     }
-  },
-  mounted() {
-    this.scrollToBottom()
-  }
-}
+scrollToBottom()
 </script>
 
 <style scoped>
@@ -118,7 +123,7 @@ export default {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 660px;
   background-color: #f0f0f0;
 }
 

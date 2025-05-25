@@ -1,5 +1,6 @@
 <template>
   <RightBar></RightBar>
+
   <div class="home-container">
     <!-- 顶部导航栏 -->
    <Head :show-search="true"></Head>
@@ -74,6 +75,7 @@
 
     <!-- 分页器 -->
   </div>
+
 </template>
 
 <script setup lang="ts">
@@ -100,6 +102,7 @@ const imageList=ref([ 'picture_1.png', 'picture_2.png', 'picture_3.png', 'pictur
 const imageList1=ref([ '制作商品宣传图片.png', '制作商品宣传图片1.png', '制作商品宣传图片2.png', '制作商品宣传图片3.png'])
 const currentIndex = ref(0)
 let timer = null
+const chating = ref(true)
 const getUserFollow=async()=> {
  await getAllFollows(getToken()).then(res => {
     myFollow.value=res.map(item => {

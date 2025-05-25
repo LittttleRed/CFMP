@@ -16,8 +16,15 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from .serializers import UserSerializer, PublicUserSerializer, FollowSerializer
 from .models import User, Follow
+from .serializers import UserSerializer, PublicUserSerializer
+from .models import User
+from .models import Captcha
 from minio import Minio
 from django.conf import settings
+from jwt import exceptions
+from django.core.mail import send_mail
+import random
+from config.authentication import JWTAuthentication
 from product.models import Product
 from product.serializers import ProductSerializer
 from root.serializers import ComplaintSerializer
@@ -27,21 +34,175 @@ import random
 import redis
 # Create your views here.
 
-class login(APIView):
-    authentication_classes = []
+def send_sms_code(to_email):
+    # 生成邮箱验证码
+    sms_code = '%06d' % random.randint(0, 999999)
+    EMAIL_FROM = "3417934680@qq.com"  # 邮箱来自
+    email_title = '邮箱激活'
+    email_body = "您的邮箱注册验证码为：{0}, 该验证码有效时间为两分钟，请及时进行验证。".format(sms_code)
+    send_status = send_mail(email_title, email_body, EMAIL_FROM, [to_email])
+    if send_status != 0:
+        # 存储验证码
+        captcha = Captcha.objects.create(
+            captcha=sms_code,
+            email=to_email
+        )
+        captcha.save()
+    return send_status
+
+def varify_captcha(email,captcha):
+    captchaObj = Captcha.objects.filter(email=email).last()
+    if  not captchaObj:  # 验证码不存在
+        return Response({
+            "fail_code":"CAPTCHA_NOT_FOUND",
+            "fail_msg":"验证码不存在"
+        },status=status.HTTP_400_BAD_REQUEST)
+    if captcha != captchaObj.captcha:
+        return Response({
+            "fail_code":"CAPTCHA_ERROR",
+            "fail_msg":"验证码错误"
+        },status=status.HTTP_400_BAD_REQUEST)
+    if captchaObj.created_at < datetime.now(timezone.utc) - timedelta(minutes=2):  # 验证码有效时间2分钟
+        return Response({
+            "fail_code":"CAPTCHA_EXPIRED",
+            "fail_msg":"验证码已过期"
+        },status=status.HTTP_400_BAD_REQUEST)
+    if captchaObj.is_used:  # 验证码已使用
+        return Response({
+            "fail_code":"CAPTCHA_ERROR",
+            "fail_msg":"验证码错误"
+        },status=status.HTTP_400_BAD_REQUEST)
+    captchaObj.is_used = True
+    captchaObj.save()
+    return 0
+
+class CaptchaView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        scene = request.data.get('scene')
+        if not all([email, scene]):
+            return Response({
+                "fail_code":"MISSING_PARAM",
+                "fail_msg":"缺少参数"
+            },status=status.HTTP_400_BAD_REQUEST)
+        common_scene = {'register','login','forget'}
+        need_token_scene = {'change_email','change_password'}
+        if scene in common_scene:
+            if send_sms_code(email) != 0:
+                return Response({
+                    "success":True,
+                    "msg":"发送成功"
+                })
+            else:
+                return Response({
+                    "success":False,
+                    "msg":"发送失败"
+                })
+        elif scene in need_token_scene:
+            auth = request.META.get('HTTP_AUTHORIZATION', '')
+            if  not auth:
+                return Response({
+                    "success":False,
+                    "msg":"验证失败"
+                })
+            JWTAuthentication.authenticate(self,request)
+            if send_sms_code(email) != 0:
+                return Response({
+                    "success":True,
+                    "msg":"发送成功"
+                })
+            else:
+                return Response({
+                    "success":False,
+                    "msg":"发送失败"
+                })
+        else:
+            return Response({
+                "success":False,
+                "msg":"参数错误"
+            })
+class RegisterView(APIView):
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        password_repeat = request.data.get('password_repeat')
+        email = request.data.get('email')
+        captcha = request.data.get('captcha')
+        #print(username,password,password_repeat,email,captcha)
+        if not all([username, password, password_repeat, email, captcha]):
+            return Response({
+                "fail_code":"MISSING_PARAM",
+                "fail_msg":"缺少参数"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        if password != password_repeat:
+            return Response({
+                "fail_code":"PASSWORD_NOT_MATCH",
+                "fail_msg":"密码不一致"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        #禁止空字符
+        if ' ' in username:
+            return Response({
+                "fail_code":"USERNAME_CONTAINS_SPACE",
+                "fail_msg":"用户名不能包含空字符"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        if ' ' in password:
+            return Response({
+                "fail_code":"PASSWORD_CONTAINS_SPACE",
+                "fail_msg":"密码不能包含空字符"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        #密码复杂性检查（长度6-18，包含数字、字母、特殊字符中的2种）
+        required_checks = [
+            any(char.isdigit() for char in password),  # 包含数字
+            any(char.isalpha() for char in password),  # 包含字母
+            any(not char.isalnum() for char in password)  # 包含特殊字符
+        ]
+        if not (6 <= len(password) <= 18 and sum(required_checks) >= 2):
+            return Response({
+                "fail_code":"PASSWORD_COMPLEXITY",
+                "fail_msg":"密码应满足:6-18位,包含数字、字母、特殊字符中的2种"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        user = User.objects.filter(email=email)
+        if user.exists():
+            return Response({
+                "fail_code":"USER_EXIST",
+                "fail_msg":"用户已存在"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        #验证码检查
+        if varify_captcha(email,captcha)!=0:
+            return varify_captcha(email,captcha)
+
+        #存入数据库
+        user = User.objects.create(
+            username=username,
+            password=password,
+            email=email
+        )
+        user.save()
+
+        #返回user_id
+        return Response({
+            "success":True,
+            "user_id":user.user_id
+        })
+
+class login_passwordView(APIView):
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
-
         if not all([email, password]):
             return Response({
                 "fail_code":"MISSING_PARAM",
-                "fail_msg":"邮箱和密码不能为空"
+                "fail_msg":"缺少参数"
             },status=status.HTTP_400_BAD_REQUEST)
 
         # user = authenticate(email=email, password=password)
         user = User.objects.filter(email=email,password=password)
-        # 反序列化user
         user = user.first()
         print(user)
         if user:
@@ -58,9 +219,9 @@ class login(APIView):
             }
 
             token = jwt.encode(payload = payload, key = salt, algorithm="HS256", headers=headers)
-            url= None
-            if user.avatar:
-                url = user.avatar.url
+            url= user.avatar
+            if not url:
+                url = None
             return Response({
                 "success":True,
                 "access_token":token,
@@ -83,6 +244,54 @@ class login(APIView):
                 "fail_msg": "用户不存在"
             }, status=status.HTTP_404_NOT_FOUND)
 
+class login_captchaView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        captcha = request.data.get('captcha')
+        if not all([email, captcha]):
+            return Response({
+                "fail_code":"MISSING_PARAM",
+                "fail_msg":"缺少参数"
+            },status=status.HTTP_400_BAD_REQUEST)
+        if  varify_captcha(email,captcha)!=0:
+            return varify_captcha(email,captcha)
+        # user = authenticate(email=email, password=password)
+        user = User.objects.filter(email=email)
+        user = user.first()
+        print(user)
+        if user:
+            salt = settings.SECRET_KEY
+            headers = {
+                'typ':'jwt',
+                'alg':'HS256'
+            }
+            print(user.username)
+            payload = {
+                'user_id': user.user_id,
+                'username': user.username,
+                'exp':datetime.now(timezone.utc) + timedelta(days=3)  # 延长token有效期为60分钟
+            }
+
+            token = jwt.encode(payload = payload, key = salt, algorithm="HS256", headers=headers)
+            url= user.avatar
+            if not url:
+                url = None
+            return Response({
+                "success":True,
+                "access_token":token,
+                "username":user.username,
+                "user_id":user.user_id,
+                "avatar":url
+            })
+
+        try:
+            User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({
+                "success": False,
+                "fail_code": "USER_NOT_FOUND",
+                "fail_msg": "用户不存在"
+            }, status=status.HTTP_404_NOT_FOUND)
 class UserIdViewSet(RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = PublicUserSerializer
@@ -95,8 +304,10 @@ class UserInfoView(ListCreateAPIView,RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         # 直接返回当前请求的用户对象（通过 Token 解析出的用户）
+        print(1)
         return self.request.user
     def get_queryset(self):
+        print(2)
         return User.objects.filter(user_id=self.request.user.user_id)
 
 
@@ -154,6 +365,33 @@ class FollowUserDetailsViewSet(ListCreateAPIView,  RetrieveUpdateDestroyAPIView)
     permission_classes = [IsAuthenticated]
     serializer_class = FollowSerializer
     lookup_field = 'followee_id'
+class modify_email(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        new_email = request.data.get('new_email')
+        captcha = request.data.get('captcha')
+        if not all([new_email, captcha]):
+            return Response({
+                "fail_code":"MISSING_PARAM",
+                "fail_msg":"缺少参数"
+            },status=status.HTTP_400_BAD_REQUEST)
+        if varify_captcha(new_email,captcha)!=0:
+            return varify_captcha(new_email,captcha)
+        #确定新邮箱不重复
+        if User.objects.filter(email=new_email).exists():
+            return Response({
+                "fail_code":"EMAIL_EXIST",
+                "fail_msg":"邮箱已存在"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        #修改邮箱
+        user = request.user
+        user.email = new_email
+        user.save()
+        return Response({
+            "success":True,
+            "user_id":user.user_id
+        })
 
     #  创建关注
     def create(self, request, *args, **kwargs):
@@ -170,10 +408,49 @@ class FollowUserDetailsViewSet(ListCreateAPIView,  RetrieveUpdateDestroyAPIView)
 class FollowUserViewSet(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = FollowSerializer
+    """
+    我关注的
+    """
     def get_queryset(self):
         user = self.request.user
         return Follow.objects.filter(follower=user)
 
+class FolloweeUserViewSet(ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = FollowSerializer
+    """
+    关注我的
+    """
+    def get_queryset(self):
+        user = self.request.user
+        return Follow.objects.filter(followee=user)
+
+class modify_password(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        new_password = request.data.get('new_password')
+        new_password_repeat = request.data.get('new_password_repeat')
+        captcha = request.data.get('captcha')
+        if not all([new_password, new_password_repeat,captcha]):
+            return Response({
+                "fail_code":"MISSING_PARAM",
+                "fail_msg":"缺少参数"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        if new_password  != new_password_repeat:
+            return Response({
+                "fail_code":"PASSWORD_NOT_MATCH",
+                "fail_msg":"密码不匹配"
+            },status=status.HTTP_400_BAD_REQUEST)
+        user = request.user
+        if varify_captcha(request.user.email,captcha)!=0:
+            return varify_captcha(request.user.email,captcha)
+        user.password = new_password
+        user.save()
+        return Response({
+            "success":True,
+            "user_id":user.user_id
+        })
 
 
 

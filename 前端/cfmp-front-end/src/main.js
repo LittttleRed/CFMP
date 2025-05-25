@@ -10,13 +10,13 @@ import pinia from './stores/index.js'
 import { ParticlesComponent } from 'particles.vue3'
 
 const app = createApp(App)
-
 app.use(ElementPlus, {
     locale: zhCn,
 })
+
+
 app.use(router)
 app.use(pinia)
 
 
 app.mount('#app')
-

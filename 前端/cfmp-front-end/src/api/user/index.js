@@ -133,3 +133,12 @@ export const getAllFollows=(token)=>{
         }
     })
 }
+export const getAllFollowees=(token)=>{
+    return http({
+        url:'/v1/user/followee/',
+        method:'get',
+        headers:{
+            'Authorization':'Bearer '+token
+        }
+    })
+}
