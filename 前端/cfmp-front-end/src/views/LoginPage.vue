@@ -156,7 +156,7 @@ const handleLogin = async () => {
        setUserId(res["user_id"])
        setUserName(res["username"])
        setHeadImg(res["avatar"])
-       // window.location.href = '/'
+        window.location.href = '/'
      }
 }).catch(e=>{
      fail_msg.value = e.response.data.fail_msg
