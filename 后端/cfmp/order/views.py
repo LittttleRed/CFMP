@@ -43,6 +43,7 @@ class OrderListCreateAPIView(ListCreateAPIView):
         """根据状态筛选订单"""
         user = self.request.user
         status_filter = self.request.query_params.get('status')
+        print(f"[OrderListCreateAPIView] status_filter: {status_filter}")  # 调试输出
 
         queryset = Order.objects.filter(buyer=user)
 
@@ -55,6 +56,10 @@ class OrderListCreateAPIView(ListCreateAPIView):
             }
             if status_filter in status_map:
                 queryset = queryset.filter(status=status_map[status_filter])
+            else:
+                # 对于无效的状态过滤器，当前行为是不应用状态过滤
+                # 如果需要，可以引发错误或返回空查询集
+                pass
 
         # 处理排序
         sort = self.request.query_params.get('sort', 'created_desc')

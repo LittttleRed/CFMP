@@ -18,7 +18,7 @@
         <el-menu-item index="/user/mybought" v-if="isMyHome">我买到的</el-menu-item>
       </el-sub-menu>
 
-      <el-menu-item  index="mycollection" v-if="isMyHome">我的收藏</el-menu-item>
+      <el-menu-item index="/user/mycollection" v-if="isMyHome">我的收藏</el-menu-item>
 
 
       <!-- 账户设置 -->
@@ -53,6 +53,14 @@ const handleSelect = (index) => {
   console.log('选中菜单:', index)
   // 这里可以添加路由跳转逻辑
   // 例如：router.push({ path: 对应路径 })
+}
+
+const handleOpen = (key, keyPath) => {
+  console.log('打开菜单:', key, keyPath)
+}
+
+const handleClose = (key, keyPath) => {
+  console.log('关闭菜单:', key, keyPath)
 }
 </script>
 
