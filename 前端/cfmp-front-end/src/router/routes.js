@@ -145,6 +145,17 @@ export const constRoutes =   [
       title: '订单详情',
       requiresAuth: true
     }
-  }
+  },
+  {
+    path: '/test',
+    name: 'test',
+    component: () => import('../views/test.vue'),
+    meta: { title: '测试' }
+  },{
+    path: '/search',
+    name: 'search',
+    component: () => import('../views/search.vue'),
+    meta:{title: '搜索'}
+    }
   ]
 

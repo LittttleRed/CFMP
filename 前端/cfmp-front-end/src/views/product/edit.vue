@@ -39,7 +39,7 @@
         <el-form-item label="商品图片">
           <el-upload
             list-type="picture-card"
-            :file-list="list"
+            :file-list="list.map(f => ({ url: f.media || f.url ,name: f.media_id }))"
             :on-change="handleChange"
             :on-remove="handleRemove"
             multiple
@@ -60,17 +60,27 @@
           >
             提交修改
           </el-button>
+          <el-button @click="deletedialog = true" type="danger" >
+            删除商品
+          </el-button>
         </el-form-item>
       </el-form>
     </el-card>
+    <el-dialog title="删除商品" v-model="deletedialog">
+      确认要删除此商品吗？(删除后不可恢复)
+      <template #footer>
+        <el-button @click="deletedialog = false">取消</el-button>
+        <el-button type="danger" @click="deleteProduct">确认</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted,toRaw } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import {getProduct, updateImg, updateProduct} from '../../api/product';
+import {deletePro, getAllImage, getProduct, updateImg, updateProduct} from '../../api/product';
 import Head from '../../components/Head.vue';
 import {getToken, getUserId} from "../../utils/user-utils.js";
 
@@ -78,7 +88,7 @@ const route = useRoute();
 const router = useRouter();
 const formRef = ref(null);
 const submitting = ref(false);
-
+const deletedialog  = ref(false);
 // 表单数据
 const form = reactive({
   title: '',
@@ -115,32 +125,60 @@ onMounted(async () => {
           form.price = Number(product.price);
           form.description = product.description;
           form.media = product.media.map(m => m.media);
-          list.value = product.media.map((m, index) => ({
-      name: `product_img_${index + 1}`,
-      url: m.media,
-            file: m.raw || m,
-    }));
-          console.log(list.value)
         }
     );
+    list.value=await getAllImage(route.query.product_id,getToken()).then(
+        img => {
+          return prepareMediaFiles(img)
+        }
+    )
+    console.log(list.value)
 });
+const deleteProduct=async ()=>{
+  await deletePro(route.query.product_id,getToken()).then(res => {
+      ElMessage.success("删除成功")
+      router.push({path:"/user/myrelease"})
+  })
+}
+async function urlToFile(url, filename, mimeType) {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new File([blob], filename, { type: mimeType || blob.type });
+  } catch (error) {
+    console.error('转换失败:', url, error);
+    return null;
+  }
+}
+async function prepareMediaFiles(mediaList) {
+  return await Promise.all(
+    mediaList.map(async (item) => {
+      // 如果已有 File 对象则跳过
+      if (item.file instanceof File) return item;
 
+      // 从 URL 创建 File
+      const file = await urlToFile(
+        item.media,
+        `media_${item.media_id}.jpg`, // 自定义文件名
+        'image/jpeg'
+      );
+
+      return { ...item, file };
+    })
+  );
+}
 // 处理图片上传成功
 const handleChange = (file, fileList) => {
-  console.log(file, fileList);
-   list.value = fileList.map((m, index) => ({
-    name: `product_img_${index + 1}`,
-    file: m.raw || m,    // 保留原始文件对象
-    url: m.url || URL.createObjectURL(m.raw || m)
-  }));
-  console.log(list)
+  list.value.push(file)
+  console.log(list.value)
 };
 
 // 处理图片删除
 const handleRemove = (file) => {
-  const index = list.value.findIndex(f => f.url === file.url);
+  console.log(file)
+  console.log(list.value[0])
+  const index = list.value.findIndex(f => f.media === file.url);
   if (index !== -1) {
-    form.media.splice(index, 1);
     list.value.splice(index, 1);
   }
   console.log(list.value)
@@ -164,13 +202,13 @@ const submitForm = async () => {
     },getToken());
     let mediaform = new FormData();
      console.log(list.value)
-    list.value.forEach(item => {
-  // 确保添加的是File对象而不是普通对象
-  mediaform.append('media', item.file); // 第三个参数指定文件名
+  list.value.forEach(item => {
+  mediaform.append('media', item.file||item.raw)
 });
     await updateImg(route.query.product_id, mediaform, getToken())
 
     ElMessage.success('修改成功');
+    window.history.back()
     // router.push({
     //   name: 'product',
     //   query: { product_id: route.query.product_id }

@@ -4,6 +4,7 @@
     <!-- 商品主内容卡片 -->
     <el-card shadow="hover" class="product-card">
       <!-- 商品图片和基本信息 -->
+
       <div class="main-content">
         <!-- 商品主图 -->
         <el-button class="btn" style="margin: auto;font-size: 20px;font-weight: bold"
@@ -42,29 +43,17 @@
             >
               立即购买
             </el-button>
-            <el-button
-            type="warning"
-            size="large"
-            v-if="productData.user.user_id==getUserId()"
-            @click="change"
-            >
+            <el-button type="warning" size="large" v-if="productData.user.user_id==getUserId()" @click="change">
               修改
             </el-button>
-             <el-button
-            type="warning"
-            size="large"
-            v-if="productData.user.user_id!=getUserId()&&!isCollected"
-            @click="collect"
-            >
+             <el-button type="warning" size="large" v-if="productData.user.user_id!=getUserId()&&!isCollected" @click="collect">
               收藏
             </el-button>
-            <el-button
-            type="warning"
-            size="large"
-            v-if="productData.user.user_id!=getUserId()&&isCollected"
-            @click="uncollect"
-            >
+            <el-button type="warning" size="large" v-if="productData.user.user_id!=getUserId()&&isCollected" @click="uncollect">
               取消收藏
+            </el-button>
+            <el-button type="danger" size="large" v-if="productData.user.user_id!=getUserId()" @click="complaintdialog = true">
+              举报
             </el-button>
           </div>
         </div>
@@ -116,6 +105,25 @@
         <el-divider />      </div>
       <div class="comment-item" v-else></div>
     </el-card>
+
+    <!-- 举报 -->
+    <el-dialog v-model="complaintdialog" title="举报">
+      <el-form>
+        <el-form-item label="举报类型">
+          <el-select v-model="complaintType" placeholder="请选择举报类型">
+            <el-option label="商品信息错误" value="商品信息错误"></el-option>
+            <el-option label="商品价格低" value="商品价格低"></el-option>
+            <el-option label="商品质量差" value="商品质量差"></el-option>
+            <el-option label="其他" value="其他"></el-option>
+          </el-select>
+          <el-form-item v-if="complaintType==='其他'"  style="margin-top:20px;width: 100%;height: 200px">
+              <el-input type="textarea" :rows="6" v-model="complaintOther" placeholder="请输入举报内容"></el-input>
+            </el-form-item>
+        </el-form-item>
+        <el-button type="primary" @click="complaintdialog = false">取消</el-button>
+        <el-button type="primary" @click="complaint">提交</el-button>
+      </el-form>
+    </el-dialog>
   </div>
 </template>
 
@@ -123,16 +131,20 @@
 import { ref, reactive } from 'vue'
 import { ShoppingCart } from '@element-plus/icons-vue'
 import {useRoute} from "vue-router";
-import {checkCollection, getProduct} from "../../api/product/index.js";
+import {addCollection, checkCollection, getProduct, removeCollection} from "../../api/product/index.js";
 import {getToken, getUserId} from "../../utils/user-utils.js";
 import Head from "../../components/Head.vue";
 import {ElMessage} from "element-plus";
 import router from "../../router/index.js";
+import {createComplaint} from "../../api/user/index.js";
 const route = useRoute()
 const product_id = route.query.product_id
 const imgindex = ref(0)
 const isMyProduct  = ref(false)
 const isCollected = ref(false)
+const complaintdialog = ref(false)
+const complaintType = ref('其他')
+const complaintOther = ref('')
 const initProduct=async (id) => {
   await getProduct(id).then(res => {
     console.log(res)
@@ -156,13 +168,47 @@ const change = () => {
     query: { product_id: productData.product_id }
   });
   //刷新
-
 };
-checkCollection(product_id,getToken()).then(
-        res=>{
-          isCollected.value = res.is_collected
-        }
-    )
+const complaint= async () => {
+  let message = ''
+  if (complaintType.value === '其他') {
+    message = complaintOther.value
+  } else {
+    message = complaintType.value
+  }
+  let data = {
+    complainer_id: getUserId(),
+    target_type: 0,
+    target_id: productData.product_id,
+    reason: message,
+    status: 0
+  }
+  await createComplaint(getToken(),data).then(res => {
+    ElMessage.success('举报成功')
+    complaintdialog.value = false
+  })
+}
+const checkCollect=async () => {
+  await checkCollection(product_id, getToken()).then(
+      res => {
+        isCollected.value = res.is_collected
+        console.log("收藏"+res.is_collected)
+      }
+  )
+}
+checkCollect()
+const collect = async () => {
+  ElMessage.success('收藏成功')
+  await addCollection(productData.product_id, getToken()).then(res => {
+    isCollected.value = true
+  })
+}
+const uncollect = async () => {
+  ElMessage.success('取消收藏成功')
+  await removeCollection(productData.product_id, getToken()).then(res => {
+    isCollected.value = false
+  })
+}
 initProduct(product_id)
 // 模拟商品数据
 const productData = reactive({
@@ -194,12 +240,7 @@ const productData = reactive({
 // 交互状态
 const showCommentDialog = ref(false)
 
-const collect = () => {
-  ElMessage.success('收藏成功')
-}
-const uncollect = () => {
-  ElMessage.success('取消收藏成功')
-}
+
 
 // 立即购买 - 直接跳转到支付页面
 const handleBuyNow = () => {

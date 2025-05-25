@@ -3,8 +3,46 @@
   <div class="home-container">
     <!-- 顶部导航栏 -->
    <Head :show-search="true"></Head>
+    <el-card class="goods-container" style="border-radius: 30px;" shadow="never">
+      <div class="home-head" style="border-radius: 30px;margin: 0 auto" >
+        <Category style="width: 15%;margin: 0 15px;"></Category>
+      <el-card style="width: 30%;margin: 10px;--el-card-border-radius: 20px;" shadow="never">
+        <div class="slider-container">
+        <div
+          class="slider-content"
+          :style="{ transform: `translateX(-${currentIndex * 100}%)` }"
+            @mouseenter="stopAutoPlay"
+            @mouseleave="startAutoPlay"
+        >
+          <img
+            :src="getImageUrl(img)"
+            v-for="(img, index) in imageList"
+            :key="index"
+            class="slider-image"
+           alt="商品图片"/>
+        </div>
+      </div>
+      </el-card>
+        <el-card style="width: 45%;margin: 10px;--el-card-border-radius: 20px;" shadow="never">
+        <div class="slider-container">
+        <div
+          class="slider-content"
+          :style="{ transform: `translateX(-${currentIndex * 100}%)` }"
+            @mouseenter="stopAutoPlay"
+            @mouseleave="startAutoPlay"
+        >
+          <img
+            :src="getImageUrl(img)"
+            v-for="(img, index) in imageList1"
+            :key="index"
+            class="slider-image"
+           alt="商品图片"/>
+        </div>
+      </div>
+      </el-card>
+      </div>
+    </el-card>
 
-    <Category style="width: 60%;margin: 10px auto"></Category>
     <!-- 商品展示区 -->
     <el-card class="goods-container" shadow="never">
       <div v-if="loading" class="loading-wrapper">
@@ -26,7 +64,9 @@
                     :username="product.user.username"
                     :user_id="product.user.user_id"
                     :product_id="product.product_id"
-                    :media="product.media[0]?product.media[0]['media']:''"></Product>
+                    :media="product.media[0]?product.media[0]['media']:''"
+                    :myfollow="myFollow.indexOf(product.user.user_id)!==-1">
+           </Product>
           </el-col>
         </el-row>
       </div>
@@ -40,19 +80,57 @@
 import {ref, onMounted, provide, onUnmounted} from 'vue'
 import { Search, Loading } from '@element-plus/icons-vue'
 import {onBeforeRouteLeave, useRouter} from 'vue-router'
-import { useUserStore } from '../stores/user'
+import { useUserStore } from '../stores/user.js'
 import GoodsItem from '../components/GoodsItem.vue'
 import Product from "../components/product.vue";
 import Head from "../components/Head.vue";
 import Category from "../components/home/category.vue";
 import RightBar from "./RightBar.vue";
 import {getProducts} from "../api/product";
+import {getToken} from "../utils/user-utils";
+import {getAllFollows} from "../api/user"
 
 const productList = ref([])
 const loading = ref(true)
 const isUpdating = ref(false)
 const page = ref(1)
 const isMax=ref(false)
+const myFollow=ref([])
+const imageList=ref([ 'picture_1.png', 'picture_2.png', 'picture_3.png', 'picture_4.png'])
+const imageList1=ref([ '制作商品宣传图片.png', '制作商品宣传图片1.png', '制作商品宣传图片2.png', '制作商品宣传图片3.png'])
+const currentIndex = ref(0)
+let timer = null
+const getUserFollow=async()=> {
+ await getAllFollows(getToken()).then(res => {
+    myFollow.value=res.map(item => {
+      return item.followee
+    })
+  })
+  console.log(myFollow.value)
+}
+getUserFollow()
+onMounted(() => {
+  startAutoPlay()
+})
+
+onUnmounted(() => {
+  stopAutoPlay()
+})
+const getImageUrl = (name) => {
+        return new URL(`../assets/${name}`, import.meta.url).href
+    }
+const startAutoPlay = () => {
+  timer = setInterval(() => {
+    currentIndex.value = (currentIndex.value + 1) % imageList.value.length
+  }, 5000) // 3秒切换一次
+}
+
+const stopAutoPlay = () => {
+  clearInterval(timer)
+}
+
+
+
 const updateProductList=async()=>{
   let page_size=10
   //根据页码获取商品列表
@@ -131,6 +209,36 @@ onBeforeRouteLeave(
 </script>
 
 <style scoped lang="scss">
+.slider-container {
+  width: 100%;
+  height: 40vh;/* 根据需求调整高度 */
+  overflow: hidden;
+  position: relative;
+}
+
+.slider-content {
+  display: flex;
+  height: 100%;
+  transition: transform 0.5s ease-in-out; /* 取消过渡效果实现立即切换 */
+}
+
+.slider-image {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 保持图片比例填充容器 */
+  border-radius: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.home-head  {
+  display: flex;
+  align-items: center;
+  background: white;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+  max-width: 1600px;
+  margin: 20px auto;
+}
 .home-container {
   min-height: 100vh;
   background-color: #f5f7fa;

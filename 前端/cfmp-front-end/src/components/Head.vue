@@ -7,7 +7,7 @@
         校园跳蚤市场
       </h1>
     </div>
-<Search v-if="showSearch===true" ></Search>
+<Search v-if="showSearch===true" style="border-radius: 40px" ></Search>
   <div class="right">
 
     <el-col :span="12">
@@ -49,6 +49,7 @@
   }
   let toHomePage = () => {
     console.log("toHomePage")
+
     window.location.href = "/"
   }
   defineProps({
@@ -68,6 +69,7 @@ const initUserInfo = () => {
   justify-content: space-between;
   align-items: center;
   background: yellow;
+  height: 35%;
 }
 .username{
   font-size: 20px;
@@ -77,13 +79,13 @@ const initUserInfo = () => {
   width: 300px;
 }
  .left {
-   margin-left: 80px;
+   margin-left: 15%;
    display: flex;
    flex-direction: row;
   }
   .right {
     display: flex;
-    margin-right: 10px;
+    margin-right: 10%;
     flex-direction: row-reverse;
   }
   .title{

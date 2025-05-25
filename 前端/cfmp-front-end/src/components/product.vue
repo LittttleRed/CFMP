@@ -17,7 +17,7 @@
      <el-avatar  :size="40" :src="avatar" v-if="avatar!==null"/>
       <el-avatar :size="40"  src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" v-else></el-avatar>
       <a style="margin: auto;padding-left: 20px;font-size: 15px;font-weight: bold">{{ username }}</a>
-
+      <el-button @click="" v-if="myfollow" class="follow"  >已关注</el-button>
     </div>
 
   </el-card>
@@ -39,12 +39,20 @@ defineProps({
   username: String,
   avatar: String,
   media: String,
+  myfollow: Boolean
 })
 
 </script>
 
 <style scoped>
-
+.follow{
+  height:25px;
+  width:50px;
+  margin:auto 20px auto 20px;
+  background: #ffd299;
+  --el-button-border-color: #ffd299;
+  color: #ff6a21
+}
 
 .image-container {
   width: 100%; /* 容器宽度为card的60% */

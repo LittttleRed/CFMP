@@ -12,5 +12,8 @@ urlpatterns += [
     path('auth/login-with-password',views.login.as_view(),name='login'),
     path('user/<int:user_id>/', views.UserIdViewSet.as_view(), name='user'),
     path('user/me/',  views.UserInfoView.as_view(), name='update_user'),
-    path('user/me/products/<int:user_id>/', views.UserProductsViewSet.as_view())
+    path('user/me/products/<int:user_id>/', views.UserProductsViewSet.as_view()),
+    path('user/complaint/',views.UserComplaintViewSet.as_view()),
+    path('user/follow/<int:followee_id>/',views.FollowUserDetailsViewSet.as_view()),
+    path('user/follow/',views.FollowUserViewSet.as_view()),
 ]

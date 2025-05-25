@@ -6,6 +6,7 @@ from django.shortcuts import render
 from rest_framework.decorators import api_view, action
 from rest_framework import generics, mixins, viewsets, filters, status
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from . import models
@@ -82,6 +83,7 @@ class ComplaintView(StandartView):
     serializer_class = serializers.ComplaintSerializer
     lookup_field = 'complaint_id'
     pagination_class = StandardPagination
+
 
     filter_backends = [DjangoFilterBackend,filters.OrderingFilter]
     filterset_fields = ['complainer_id','target_id','target_type','status','complainer_id']

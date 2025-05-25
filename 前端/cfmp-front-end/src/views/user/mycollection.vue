@@ -22,11 +22,13 @@
 import Product from "../../components/product.vue";
 import {getToken} from "../../utils/user-utils.js";
 import {getMyCollections} from "../../api/product/index.js";
-const productList=[];
+import {ref} from "vue";
+const productList=ref([]);
 const getCollections=async()=>{
   const res=await getMyCollections(getToken()).then(
       res=>{
-        productList.push(...res.results)
+        console.log(res.results);
+        productList.value.push(...res.results.map(item => item.collection))
       }
   );
 

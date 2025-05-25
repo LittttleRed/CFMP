@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { getLogin } from '../api/user/index'
 import {
-  getHeadImg,
+  getHeadImg, getStaff,
   getToken,
   getUserId,
   getUserName, removeHeadImg,
@@ -18,8 +18,8 @@ export const useUserStore = defineStore('userInfo', {
     username: getUserName(),
     user_id: getUserId(),
     avatar: getHeadImg(),
+      is_staff:getStaff()
   }),
-
 	actions: {
     // 登陆的异步action
     async login (loginForm) {
@@ -44,6 +44,7 @@ export const useUserStore = defineStore('userInfo', {
       removeUserName()
       removeUserId()
       removeHeadImg()
+
       console.log('1111111111');
     }
 

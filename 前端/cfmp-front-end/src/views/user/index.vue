@@ -13,11 +13,24 @@
             <el-avatar  :size="120" v-else src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"></el-avatar>
             <div class="info" style="margin-top: 20px;margin-bottom: 30px;margin-left: 50px;font-weight: bold;font-size: 30px">
               {{ username }}
-              <el-button style="margin: 20px auto" v-if="!isMyHome">关注</el-button>
+              <div>
+                <el-button style="margin: 20px auto" v-if="!isMyHome&&!hadfollowed" @click="follow">关注</el-button>
+                <el-button style="margin-left: 20px;" type="danger" v-if="!isMyHome&&hadfollowed" @click="unfollow">取消关注</el-button>
+                <el-button style="margin-left: 20px;" type="danger" v-if="!isMyHome" @click="complaintdialog = true">举报</el-button>
+              </div>
             </div>
           </div>
         <router-view />
       </main>
+ <el-dialog v-model="complaintdialog" title="举报">
+      <el-form>
+          <el-form-item  style="width: 100%;height: 200px">
+              <el-input type="textarea" :rows="6" v-model="complaintContent" placeholder="请输入举报内容"></el-input>
+            </el-form-item>
+        <el-button type="primary" @click="complaintdialog = false">取消</el-button>
+        <el-button type="primary" @click="complaint">提交</el-button>
+      </el-form>
+    </el-dialog>
 </div>
 
 </template>
@@ -27,18 +40,43 @@ import Head from '../../components/Head.vue'
 import {ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import {getHeadImg, getToken, getUserId} from "../../utils/user-utils.js";
-import {getMe, getUserById} from "../../api/user/index.js";
+import {createComplaint, followUser, getAllFollows, getMe, getUserById, unfollowUser} from "../../api/user/index.js";
+import {ElMessage} from "element-plus";
 const username = ref('123214213123')
 const avatar = ref('')
 const route = useRoute()
 const touter = useRouter()
 const isMyHome = ref(false)
-
+const hadfollowed  = ref(false)
+const complaintdialog = ref(false)
+const complaintContent = ref('')
 if(route.query.user_id === getUserId() || route.query.user_id === undefined){
   isMyHome.value = true
 }
-
-
+const isfollowee = async() =>{
+ await getAllFollows(getToken()).then(res => {
+   console.log(res)
+   for(let i=0;i<res.length;i++){
+     if(res[i]["followee"]==route.query.user_id){
+       hadfollowed.value = true
+       break
+     }
+   }
+ })
+}
+isfollowee()
+const follow = async () => {
+  await followUser(getToken(),route.query.user_id).then(res => {
+    ElMessage.success('关注成功')
+    hadfollowed.value = true
+  })
+}
+const unfollow = async () => {
+  await unfollowUser(getToken(),route.query.user_id).then(res => {
+    ElMessage.success('取消关注成功')
+    hadfollowed.value = false
+  })
+}
 const getOtherUser=async ()=>{
 let response = await getUserById(route.query.user_id).then(
     (response) => {
@@ -50,6 +88,19 @@ let response = await getUserById(route.query.user_id).then(
 ).catch((error)=>{
 
 })
+}
+const complaint=async ()=>{
+   let data = {
+    complainer_id: getUserId(),
+    target_type: 1,
+    target_id: route.query.user_id,
+    reason: complaintContent.value,
+    status: 0
+  }
+  await createComplaint(getToken(),data).then(res => {
+    ElMessage.success('举报成功')
+    complaintdialog.value = false
+  })
 }
 const getMySelf=async ()=>{
 let token = getToken()
