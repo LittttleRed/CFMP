@@ -14,6 +14,13 @@ export const getRegister=(data)=>{
         data:data,
     })
 }
+export const sendEmailCaptcha=(data)=>{
+    return http({
+        url:'/v1/auth/send-email-captcha',
+        method:'post',
+        data:data,
+    })
+}
 export const loginWithCaptcha=(data)=>{
     return http({
         url:'/v1/auth/login-with-captcha',

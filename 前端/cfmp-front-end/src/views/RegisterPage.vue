@@ -43,25 +43,8 @@
                 </el-button>
               </div>
 
-              <h2>注册账号
-                 <span class ="switch-type">
-              <router-link
-                to="/register/email"
-                class="switch-link"
-                :class="{ 'active': $route.path === '/register/email' }"
-                >邮箱注册
-              </router-link>
-               <span class="divider">|</span>
-               <router-link
-                 to="/register/phone"
-                 class="switch-link"
-                 :class="{ 'active': $route.path === '/register/phone' }"
-               >
-                 手机号注册
-               </router-link>
-            </span>
-              </h2>
-           
+              <h2>注册账号</h2>
+
           </div>
 
           <el-form
@@ -87,14 +70,33 @@
             <el-form-item prop="message">
               <el-input
                 v-model="registerForm.message"
-                :placeholder="SelectWays"
+                placeholder="邮箱"
                 class="mail-input"
                 tabindex="1"
+                @blur="handleEmailBlur"
               >
                 <template #prefix>
                   <span class="input-label">账号</span>
                 </template>
               </el-input>
+            </el-form-item>
+
+            <el-form-item prop="captcha" v-if="/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(registerForm.message)">
+              <el-input
+                v-model="registerForm.captcha"
+                placeholder="验证码"
+                class="mail-input"
+                tabindex="2"
+                style="width: 60%; display: inline-block;"
+              />
+              <el-button
+                style="margin-left: 10px;"
+                :disabled="captchaCountdown > 0"
+                @click="sendCaptcha"
+              >
+              <span v-if="captchaCountdown === 0">发送验证码</span>
+              <span v-else>{{ captchaCountdown }}秒后重试</span>
+              </el-button>
             </el-form-item>
 
             <el-form-item prop="password">
@@ -151,6 +153,7 @@ import { ref, reactive, computed } from 'vue'
 import type { FormInstance } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { getRegister } from '../api/user'
+import { sendEmailCaptcha } from '../api/user'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { ParticlesComponent } from 'particles.vue3';
 import { loadSlim } from 'tsparticles-slim'
@@ -160,6 +163,9 @@ const router = useRouter()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
 const rememberMe = ref(false)
+const canSendCaptcha = ref(false)
+const captchaCountdown = ref(0)
+let timer: any = null
 
 const registerForm = reactive({
   username: '',
@@ -195,10 +201,16 @@ const rules = {
         trigger: ['blur', 'input']
       }
     }
+  ],
+  message: [
+    { required: true, message: '邮箱不能为空', trigger: 'blur' },
+    { type: 'email', message: '请输入有效的邮箱地址', trigger: ['blur', 'input'] }
   ]
+
 }
 
 const handleRegister = async () => {
+  //localStorage Need
   try{
     loading
     await formRef.value?.validate()
@@ -220,16 +232,34 @@ const handleRegister = async () => {
 const handleBack = () => {
   router.push('/login')
 }
-const SelectWays = computed (() =>{
-  if(router.currentRoute.value.path === '/register/email') {
-    return 'email'
-  } else if (router.currentRoute.value.path === '/register/phone') {
-    return 'phone'
+
+function handleEmailBlur() {
+  const valid = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(registerForm.message)
+  canSendCaptcha.value = valid
+}
+async function sendCaptcha(){
+  if(!canSendCaptcha.value || captchaCountdown.value > 0)return
+  try{
+    await sendEmailCaptcha({email: registerForm.message}).then(res =>{
+      if(res.status === 200){
+        console.log('验证码发送成功')
+      }else{
+        console.error('验证码发送失败', res.data)
+      }
+    })
+   captchaCountdown.value = 60
+   canSendCaptcha.value = false
+   timer = setInterval(() =>{
+    captchaCountdown.value--
+    if(captchaCountdown.value <= 0){
+      clearInterval(timer)
+      canSendCaptcha.value = true
+    }
+   },1000)
+  }catch (error) {
+    console.error('发送验证码失败', error)
   }
-  return '未知'
-})
-
-
+}
 </script>
 
 <style scoped lang="scss">

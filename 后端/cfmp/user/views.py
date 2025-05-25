@@ -21,6 +21,10 @@ from django.conf import settings
 from product.models import Product
 from product.serializers import ProductSerializer
 from root.serializers import ComplaintSerializer
+from django.core.mail import send_mail
+
+import random
+import redis
 # Create your views here.
 
 class login(APIView):
@@ -169,3 +173,35 @@ class FollowUserViewSet(ListCreateAPIView):
     def get_queryset(self):
         user = self.request.user
         return Follow.objects.filter(follower=user)
+
+
+
+
+r = redis.Redis(host='localhost',port=6379, db=0, decode_responses=True)
+class SendEmailCaptchaView(APIView):
+    authentication_classes=[]
+
+    def post(self, request):
+        email = request.data.get('email')
+        # 1. 校验邮箱格式
+        if not email or '@' not in email:
+            return Response({'success': False, 'fail_code': 'INVALID_EMAIL', 'fail_msg': 'Invalid email address'}, status=status.HTTP_400_BAD_REQUEST)
+        # 2. 生成6位验证码
+        code = str(random.randint(100000, 999999))
+
+        # 3. 存入Redis，有效期1分钟
+        r.setex(f'email_captcha:{email}', 60, code)
+
+        # 4. 发送邮件
+        try:
+            send_mail(
+                subject='您的注册验证码',
+                message=f'您的验证码是: {code},有效期为1分钟',
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[email],
+                fail_silently=False,
+            )
+        except Exception as e:
+            return Response({'success': False, 'fail_code': 'EMAIL_SEND_FAILED', 'fail_msg': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        return Response({'success': True, 'message': '验证码已发送'}, status=status.HTTP_200_OK)

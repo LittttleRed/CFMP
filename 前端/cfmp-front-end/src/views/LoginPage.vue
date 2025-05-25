@@ -40,7 +40,7 @@
             <el-form-item prop="email">
               <el-input
                 v-model="loginForm.email"
-                placeholder="邮箱/手机号"
+                placeholder="邮箱"
                 class="mail-input"
                 tabindex="1"
               >
@@ -86,7 +86,7 @@
 
           <div class="register-section">
             <el-button type="text" class="register-btn">
-              还没有账号？<span class="emphasize" @click="router.push('/register/email')">立即注册</span>
+              还没有账号？<span class="emphasize" @click="router.push('/register')">立即注册</span>
             </el-button>
           </div>
         </div>
@@ -157,7 +157,7 @@ const handleLogin = async () => {
        setUserName(res["username"])
        setHeadImg(res["avatar"])
        setStaff(res["is_staff"])
-       // window.location.href = '/'
+       window.location.href = '/'
      }
 }).catch(e=>{
      fail_msg.value = e.response.data.fail_msg

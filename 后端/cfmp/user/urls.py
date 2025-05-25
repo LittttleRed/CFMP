@@ -16,4 +16,5 @@ urlpatterns += [
     path('user/complaint/',views.UserComplaintViewSet.as_view()),
     path('user/follow/<int:followee_id>/',views.FollowUserDetailsViewSet.as_view()),
     path('user/follow/',views.FollowUserViewSet.as_view()),
+    path('auth/send-email-captcha',views.SendEmailCaptchaView.as_view(),name='send_email_captcha'),
 ]
