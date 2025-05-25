@@ -61,6 +61,24 @@ export const checkCollection=(id,token)=>{
         }
     })
 }
+export const addCollection=(id,token)=>{
+    return http({
+        url:'/product/'+id+'/collection/',
+        method:'post',
+        headers:{
+            'Authorization':'Bearer '+token,
+        }
+    })
+}
+export const removeCollection=(id,token)=>{
+    return http({
+        url:'/product/'+id+'/collection/',
+        method:'delete',
+        headers:{
+            'Authorization':'Bearer '+token,
+        }
+    })
+}
 export const updateImg=(id,data,token)=>{
     return http({
         url:'/product/'+id+'/media/bulk/',

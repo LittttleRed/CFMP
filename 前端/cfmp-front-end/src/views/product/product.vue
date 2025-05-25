@@ -127,7 +127,7 @@
 import { ref, reactive } from 'vue'
 import { ShoppingCart } from '@element-plus/icons-vue'
 import {useRoute} from "vue-router";
-import {checkCollection, getProduct} from "../../api/product/index.js";
+import {addCollection, checkCollection, getProduct, removeCollection} from "../../api/product/index.js";
 import {getToken, getUserId} from "../../utils/user-utils.js";
 import Head from "../../components/Head.vue";
 import {ElMessage} from "element-plus";
@@ -184,11 +184,27 @@ const complaint= async () => {
     complaintdialog.value = false
   })
 }
-checkCollection(product_id,getToken()).then(
-        res=>{
-          isCollected.value = res.is_collected
-        }
-    )
+const checkCollect=async () => {
+  await checkCollection(product_id, getToken()).then(
+      res => {
+        isCollected.value = res.is_collected
+        console.log("收藏"+res.is_collected)
+      }
+  )
+}
+checkCollect()
+const collect = async () => {
+  ElMessage.success('收藏成功')
+  await addCollection(productData.product_id, getToken()).then(res => {
+    isCollected.value = true
+  })
+}
+const uncollect = async () => {
+  ElMessage.success('取消收藏成功')
+  await removeCollection(productData.product_id, getToken()).then(res => {
+    isCollected.value = false
+  })
+}
 initProduct(product_id)
 // 模拟商品数据
 const productData = reactive({
@@ -222,12 +238,7 @@ const showPurchaseDialog = ref(false)
 const purchaseQuantity = ref(1)
 const showCommentDialog = ref(false)
 
-const collect = () => {
-  ElMessage.success('收藏成功')
-}
-const uncollect = () => {
-  ElMessage.success('取消收藏成功')
-}
+
 const handlePurchase = () => {
   showPurchaseDialog.value = false
   ElMessage.success('购买成功')

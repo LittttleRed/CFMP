@@ -141,14 +141,16 @@ export const constRoutes =   [
   component: () => import('../views/product/edit.vue'),
   meta: { requiresAuth: true } // 如果需要登录权限
   },
-
-
   {
     path: '/test',
     name: 'test',
     component: () => import('../views/test.vue'),
     meta: { title: '测试' }
-  }
-
+  },{
+    path: '/search',
+    name: 'search',
+    component: () => import('../views/search.vue'),
+    meta:{title: '搜索'}
+    }
   ]
 

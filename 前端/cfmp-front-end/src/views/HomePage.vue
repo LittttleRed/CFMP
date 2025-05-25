@@ -108,6 +108,7 @@ const getUserFollow=async()=> {
   })
   console.log(myFollow.value)
 }
+getUserFollow()
 onMounted(() => {
   startAutoPlay()
 })
@@ -129,7 +130,7 @@ const stopAutoPlay = () => {
 }
 
 
-getUserFollow()
+
 const updateProductList=async()=>{
   let page_size=10
   //根据页码获取商品列表

@@ -5,9 +5,7 @@
       class="xy-search-input"
       :placeholder="placeholder"
       clearable
-      @input="handleInput"
-      @focus="showSuggestions = true"
-      @clear="handleClear"
+      @keyup.enter="handleInput"
       style="--el-input-border-radius: 40px;width: 800px;height:60px"
     >
       <template #prefix>
@@ -34,6 +32,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { Search } from '@element-plus/icons-vue'
+import {useRoute, useRouter} from "vue-router";
 
 const props = defineProps({
   placeholder: {
@@ -50,9 +49,13 @@ const emit = defineEmits(['search', 'clear', 'select'])
 
 const keyword = ref('')
 const showSuggestions = ref(false)
-
+const route=useRoute()
+const router=useRouter()
 const handleInput = () => {
-  emit('search', keyword.value)
+
+router.push({name:'search',query:{keyword:keyword.value}}).then(()=>router.go(0))
+  //刷新
+
 }
 
 const handleClear = () => {
