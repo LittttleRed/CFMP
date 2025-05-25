@@ -69,7 +69,7 @@
                       >
                         <div class="product-image">
                           <img
-                            :src="item.product_image || '/default-product.png'"
+                            :src="item.product_image"
                             :alt="item.product_name"
                             @error="handleImageError"
                           >

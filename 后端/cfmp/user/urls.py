@@ -16,4 +16,5 @@ urlpatterns += [
     path('user/complaint/',views.UserComplaintViewSet.as_view()),
     path('user/follow/<int:followee_id>/',views.FollowUserDetailsViewSet.as_view()),
     path('user/follow/',views.FollowUserViewSet.as_view()),
+    path('user/followee/',views.FolloweeUserViewSet.as_view())
 ]

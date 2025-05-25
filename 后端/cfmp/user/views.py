@@ -166,6 +166,19 @@ class FollowUserDetailsViewSet(ListCreateAPIView,  RetrieveUpdateDestroyAPIView)
 class FollowUserViewSet(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = FollowSerializer
+    """
+    我关注的
+    """
     def get_queryset(self):
         user = self.request.user
         return Follow.objects.filter(follower=user)
+
+class FolloweeUserViewSet(ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = FollowSerializer
+    """
+    关注我的
+    """
+    def get_queryset(self):
+        user = self.request.user
+        return Follow.objects.filter(followee=user)
