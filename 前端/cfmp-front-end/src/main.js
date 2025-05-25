@@ -9,9 +9,6 @@ import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import pinia from './stores/index.js'
 import { ParticlesComponent } from 'particles.vue3'
 
-import Particles from "particles.vue3";
-import { loadFull } from 'tsparticles'
-
 const app = createApp(App)
 
 app.use(ElementPlus, {
@@ -20,8 +17,6 @@ app.use(ElementPlus, {
 app.use(router)
 app.use(pinia)
 
-app.use(ParticlesComponent)
-app.use(Particles)
 
 app.mount('#app')
 
