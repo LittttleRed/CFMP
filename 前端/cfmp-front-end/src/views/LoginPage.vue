@@ -86,7 +86,7 @@
 
           <div class="register-section">
             <el-button type="text" class="register-btn">
-              还没有账号？<span class="emphasize" @click="router.push('/register/email')">立即注册</span>
+              还没有账号？<span class="emphasize" @click="router.push('/register')">立即注册</span>
             </el-button>
           </div>
         </div>
@@ -144,7 +144,7 @@ email: [
 }
 
 const handleLogin = async () => {
-
+    console.log(loginForm)
    await getLogin(loginForm).then((res) => {
      //如果状态码是404,提示用户未注册
      if (res["success"] === false) {

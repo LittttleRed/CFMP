@@ -61,6 +61,7 @@ import {ref} from "vue";
 import ChatContent from "@/views/chat/chatcontent.vue";
 import {getHeadImg, getToken, getUserName} from "@/utils/user-utils.js";
 import {getAllFollowees, getAllFollows} from "@/api/user/index.js";
+import {ElMessage} from "element-plus";
 
 const chating = ref(false);
 const follower = ref([]);//我关注的
@@ -82,12 +83,16 @@ const getFollowee = async () => {
   )
 }
 const chat= async ()=>{
-  chating.value=true
-  await getFollowee();
-  await getFollower();
-  chatList.value = follower.value
-  console.log(chatList.value)
-  console.log(followee.value)
+  if(getToken()) {
+    chating.value = true
+    await getFollowee();
+    await getFollower();
+    chatList.value = follower.value
+    console.log(chatList.value)
+    console.log(followee.value)
+  }else{
+    ElMessage("请先登录")
+  }
 }
 const toFollower=()=>{
   chatList.value = follower.value
@@ -105,7 +110,11 @@ const toTop = () => {
   window.scrollTo(0, 0);
 };
 const toLaunch = () => {
-  window.location.href = "/product/launch"
+  if(getToken()){
+  window.location.href = "/product/launch"}
+  else{
+    ElMessage("请先登录")
+  }
 };
 </script>
 

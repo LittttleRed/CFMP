@@ -104,14 +104,16 @@ const currentIndex = ref(0)
 let timer = null
 const chating = ref(true)
 const getUserFollow=async()=> {
- await getAllFollows(getToken()).then(res => {
-    myFollow.value=res.map(item => {
-      return item.followee
+  if(getToken()) {
+    await getAllFollows(getToken()).then(res => {
+      myFollow.value = res.map(item => {
+        return item.followee
+      })
     })
-  })
+  }
   console.log(myFollow.value)
 }
-getUserFollow()
+
 onMounted(() => {
   startAutoPlay()
 })

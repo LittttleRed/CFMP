@@ -188,6 +188,7 @@ class RegisterView(APIView):
         })
 
 class login_passwordView(APIView):
+    authentication_classes = []
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
@@ -215,9 +216,9 @@ class login_passwordView(APIView):
             }
 
             token = jwt.encode(payload = payload, key = salt, algorithm="HS256", headers=headers)
-            url= user.avatar
-            if not url:
-                url = None
+            url= None
+            if user.avatar:
+                url = user.avatar.url
             return Response({
                 "success":True,
                 "access_token":token,
@@ -420,30 +421,3 @@ class FolloweeUserViewSet(ListCreateAPIView):
     def get_queryset(self):
         user = self.request.user
         return Follow.objects.filter(followee=user)
-
-class modify_password(APIView):
-    permission_classes = [IsAuthenticated]
-    def post(self, request):
-        new_password = request.data.get('new_password')
-        new_password_repeat = request.data.get('new_password_repeat')
-        captcha = request.data.get('captcha')
-        if not all([new_password, new_password_repeat,captcha]):
-            return Response({
-                "fail_code":"MISSING_PARAM",
-                "fail_msg":"缺少参数"
-            },status=status.HTTP_400_BAD_REQUEST)
-
-        if new_password  != new_password_repeat:
-            return Response({
-                "fail_code":"PASSWORD_NOT_MATCH",
-                "fail_msg":"密码不匹配"
-            },status=status.HTTP_400_BAD_REQUEST)
-        user = request.user
-        if varify_captcha(request.user.email,captcha)!=0:
-            return varify_captcha(request.user.email,captcha)
-        user.password = new_password
-        user.save()
-        return Response({
-            "success":True,
-            "user_id":user.user_id
-        })

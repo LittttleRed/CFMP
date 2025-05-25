@@ -2,14 +2,21 @@ import http from "../../utils/request.js";
 
 export const getLogin=(data)=>{
     return http({
-        url:'/v1/auth/login-with-password',
+        url:'/v1/auth/login-with-password/',
         method:'post',
         data:data,
     })
 }
 export const getRegister=(data)=>{
     return http({
-        url:'/v1/auth/register',
+        url:'/v1/auth/register/',
+        method:'post',
+        data:data,
+    })
+}
+export const sendCaptcha=(data)=>{
+    return http({
+        url:'/v1/captcha/',
         method:'post',
         data:data,
     })

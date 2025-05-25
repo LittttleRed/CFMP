@@ -45,20 +45,6 @@
 
               <h2>注册账号
                  <span class ="switch-type">
-              <router-link
-                to="/register/email"
-                class="switch-link"
-                :class="{ 'active': $route.path === '/register/email' }"
-                >邮箱注册
-              </router-link>
-               <span class="divider">|</span>
-               <router-link
-                 to="/register/phone"
-                 class="switch-link"
-                 :class="{ 'active': $route.path === '/register/phone' }"
-               >
-                 手机号注册
-               </router-link>
             </span>
               </h2>
            
@@ -86,13 +72,13 @@
 
             <el-form-item prop="message">
               <el-input
-                v-model="registerForm.message"
-                :placeholder="SelectWays"
+                v-model="registerForm.email"
+                placeholder="请输入邮箱"
                 class="mail-input"
                 tabindex="1"
               >
                 <template #prefix>
-                  <span class="input-label">账号</span>
+                  <span class="input-label">邮箱</span>
                 </template>
               </el-input>
             </el-form-item>
@@ -125,7 +111,24 @@
                 </template>
               </el-input>
             </el-form-item>
-
+            <el-form-item prop="captcha" style="display: flex;flex-direction: column">
+              <el-input
+                v-model="registerForm.captcha"
+                placeholder="请输入验证码"
+                class="mail-input"
+                tabindex="2"
+                style="width: 250px"
+              >
+                <template #prefix>
+                  <span class="input-label">验证码</span>
+                </template>
+              </el-input>
+              <el-button style="margin-left: 20px;height: 48px" v-if="!hassend"
+              @click="sendCap">发送验证码</el-button>
+              <el-button style="margin-left: 20px;height: 48px" v-else
+              >已发送</el-button>
+            </el-form-item>
+            <div>{{ fail_msg }}</div>
             <el-button
               class="mail-login-btn"
               type="primary"
@@ -148,27 +151,39 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
-import type { FormInstance } from 'element-plus'
+import {ElMessage, FormInstance} from 'element-plus'
 import { useRouter } from 'vue-router'
-import { getRegister } from '../api/user'
+import { getRegister,sendCaptcha } from '../api/user'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { ParticlesComponent } from 'particles.vue3';
 import { loadSlim } from 'tsparticles-slim'
 import { particles_config } from '../components/background/particles-config'
-
+const fail_msg = ref('')
 const router = useRouter()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
 const rememberMe = ref(false)
-
+const emailregister = ref(false)
+const hassend = ref(false)
 const registerForm = reactive({
   username: '',
   password: '',
   password_repeat: '',
-  message: '',
+  email: '',
   captcha: ''
 })
-
+const sendCap=async () => {
+  if(!registerForm.email){
+      ElMessage.error('请输入邮箱')
+  }else if(!registerForm.username){
+    ElMessage.error('请输入用户名')
+  }else if (registerForm.password !== registerForm.password_repeat||!registerForm.password){
+    ElMessage.error('密码有误')
+  }else{
+   await sendCaptcha({scene:  'register', email: registerForm.email})
+    hassend.value = true
+  }
+}
 const particlesInit = async engine => {
     //await loadFull(engine);
     await loadSlim(engine);
@@ -199,23 +214,21 @@ const rules = {
 }
 
 const handleRegister = async () => {
-  try{
-    loading
-    await formRef.value?.validate()
-    const res = await getRegister(registerForm)
-
-    if (res.status === 200){
-      console.log('注册成功')
-      router.push('/login')
-  }else{
-      console.error('注册失败', res.data)
-      loading.value = false
-  }
-  }catch (error) {
-    // 处理验证失败的情况  res.status === 400 or others
-  }finally {
-    loading.value = false
-  }
+   if(!registerForm.email){
+      ElMessage.error('请输入邮箱')
+  }else if(!registerForm.username){
+    ElMessage.error('请输入用户名')
+  }else if (registerForm.password !== registerForm.password_repeat||!registerForm.password){
+    ElMessage.error('密码有误')
+  }else {
+    await getRegister(registerForm).then(
+        res=>{
+          router.push('/login')
+        }
+    ).catch(e=>{
+      fail_msg.value = e.response.data.fail_msg
+    })
+   }
 }
 const handleBack = () => {
   router.push('/login')

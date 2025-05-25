@@ -46,13 +46,13 @@
             <el-button type="warning" size="large" v-if="productData.user.user_id==getUserId()" @click="change">
               修改
             </el-button>
-             <el-button type="warning" size="large" v-if="productData.user.user_id!=getUserId()&&!isCollected" @click="collect">
+             <el-button type="warning" size="large" v-if="getToken()&&productData.user.user_id!=getUserId()&&!isCollected" @click="collect">
               收藏
             </el-button>
             <el-button type="warning" size="large" v-if="productData.user.user_id!=getUserId()&&isCollected" @click="uncollect">
               取消收藏
             </el-button>
-            <el-button type="danger" size="large" v-if="productData.user.user_id!=getUserId()" @click="complaintdialog = true">
+            <el-button type="danger" size="large" v-if="getToken()&&productData.user.user_id!=getUserId()" @click="complaintdialog = true">
               举报
             </el-button>
           </div>

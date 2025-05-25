@@ -53,7 +53,7 @@ const route=useRoute()
 const router=useRouter()
 const handleInput = () => {
 
-router.push({name:'search',query:{keyword:keyword.value}}).then(()=>router.go(0))
+router.push({name:'search',query:{search:keyword.value}}).then(()=>router.go(0))
   //刷新
 
 }
