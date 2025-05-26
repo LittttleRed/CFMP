@@ -57,7 +57,8 @@ const isfollowee = async() =>{
  await getAllFollows(getToken()).then(res => {
    console.log(res)
    for(let i=0;i<res.length;i++){
-     if(res[i]["followee"]==route.query.user_id){
+     if(res[i]["followee"].user_id==route.query.user_id){
+       console.log(res)
        hadfollowed.value = true
        break
      }
