@@ -24,8 +24,8 @@
 
   <!-- 消息标题（固定高度） -->
   <div style="display: flex;flex-direction: row">
-  <div style="font-size: 20px; margin: 20px 0 10px 10px" @click="toFollower">我关注的</div>
-  <div style="font-size: 20px; margin: 20px 0 10px 20px" @click="toFollowee">关注我的</div>
+  <div style="cursor: pointer;font-size: 20px; margin: 20px 0 10px 10px" @click="toFollower">我关注的</div>
+  <div style="cursor: pointer;font-size: 20px; margin: 20px 0 10px 20px" @click="toFollowee">关注我的</div>
     </div>
   <hr>
 
@@ -38,6 +38,7 @@
           v-for="item in chatList"
           :key="item.user_id"
           style="margin-bottom: 10px"
+          @click="Chater = item.user_id"
         >
           <div class="user">
             <el-avatar :size="50" :src="item.avatar" shape="square"></el-avatar>
@@ -49,8 +50,8 @@
   </div>
 </el-dialog>
 
-  <el-dialog class="chat" draggable v-model="chating" style="height: 900px;width: 900px">
-      <chat-content :user-id="Chater||follower[0].user_id" style="margin-bottom: 0"></chat-content>
+  <el-dialog class="chat" draggable v-model="Chater" style="height: 900px;width: 900px">
+      <chat-content v-if="Chater" :user-id="Chater" style="margin-bottom: 0"></chat-content>
   </el-dialog>
 
   <!-- 占位容器（仅演示用） -->
@@ -67,7 +68,7 @@ const chating = ref(false);
 const follower = ref([]);//我关注的
 const followee = ref([]);//关注我的
 const  chatList = ref([]);
-const Chater = ref('1');
+const Chater = ref();
 const getFollower = async () => {
   await getAllFollows(getToken()).then(ref => {
     follower.value = ref.map(item =>item.followee)

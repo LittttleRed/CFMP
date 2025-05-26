@@ -3,6 +3,7 @@ import jwt
 import datetime
 from datetime import datetime, timedelta, timezone
 from django.core.files.storage import default_storage
+from django.db.models import Q
 from django.shortcuts import render
 from django.contrib.auth import authenticate
 from minio_storage import MinioMediaStorage
@@ -14,8 +15,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
-from .serializers import UserSerializer, PublicUserSerializer, FollowSerializer
-from .models import User, Follow
+from .serializers import UserSerializer, PublicUserSerializer, FollowSerializer, ChatLogSerializer
+from .models import User, Follow, ChatLog
 from .serializers import UserSerializer, PublicUserSerializer
 from .models import User
 from .models import Captcha
@@ -30,6 +31,10 @@ from product.serializers import ProductSerializer
 from root.serializers import ComplaintSerializer
 # Create your views here.
 import re
+
+from .pagination import StandardResultsSetPagination
+
+
 def send_sms_code(to_email):
     # 生成邮箱验证码
     sms_code = '%06d' % random.randint(0, 999999)
@@ -436,3 +441,37 @@ class FolloweeUserViewSet(ListCreateAPIView):
     def get_queryset(self):
         user = self.request.user
         return Follow.objects.filter(followee=user)
+
+
+class SenderChatLogViewSet(ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ChatLogSerializer
+    pagination_class = StandardResultsSetPagination
+    def get(self,  request, *args, **kwargs):
+        """获取所有我发送给receiver的消息"""
+        user = self.request.user
+        return ChatLog.objects.filter(sender=user,receiver=request.data.get('receiver')).order_by('-send_at')
+
+    def create(self, request, *args, **kwargs):
+        sender = self.request.user
+        receiver = User.objects.get(user_id=request.data.get('receiver'))
+        content = request.data.get('content')
+        if not all([content]):
+            return Response({
+                "fail_code":"MISSING_PARAM",
+                "fail_msg":"缺少参数"
+            })
+        ChatLog.objects.create(sender=sender, receiver=receiver, content=content)
+        return Response({
+            "success":True,
+        })
+
+class ReceiverChatLogViewSet(ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ChatLogSerializer
+    pagination_class = StandardResultsSetPagination
+    def get(self , request, *args, **kwargs):
+        """获取所有他发送给我的消息"""
+        user = self.request.user
+        return ChatLog.objects.filter(receiver=user, sender=request.data.get('sender')).order_by('-send_at')
+

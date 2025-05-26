@@ -25,4 +25,7 @@ urlpatterns += [
     path('user/follow/',views.FollowUserViewSet.as_view()),
     path('user/followee/',views.FolloweeUserViewSet.as_view()),
     path('user/me/products/<int:user_id>/', views.UserProductsViewSet.as_view()),
+
+    #ws.value = new WebSocket(`wss://localhost:8000/ws/chat/${props.userId}/`)
+
 ]

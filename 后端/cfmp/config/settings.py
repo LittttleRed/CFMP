@@ -54,9 +54,10 @@ INSTALLED_APPS = [
     "root",
     "user",
     "order",
+    'channels',
 #     python manage.py migrate --fake django_apscheduler zero
 ]# 指定媒体文件的URL前缀（相对路径）
-
+ASGI_APPLICATION = 'config.routing.application'
 # 允许的HOST（替换为你的IP或域名）
 
 #自己写自己的分页器,不要全局配置
