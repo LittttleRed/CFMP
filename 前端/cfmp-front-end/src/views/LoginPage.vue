@@ -144,7 +144,7 @@ email: [
 }
 
 const handleLogin = async () => {
-
+    console.log(loginForm)
    await getLogin(loginForm).then((res) => {
      //如果状态码是404,提示用户未注册
      if (res["success"] === false) {

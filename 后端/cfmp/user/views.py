@@ -34,7 +34,7 @@ import random
 # import redis
 
 # Create your views here.
-
+import re
 def send_sms_code(to_email):
     # 生成邮箱验证码
     sms_code = '%06d' % random.randint(0, 999999)
@@ -88,6 +88,17 @@ class CaptchaView(APIView):
             },status=status.HTTP_400_BAD_REQUEST)
         common_scene = {'register','login','forget'}
         need_token_scene = {'change_email','change_password'}
+        user = User.objects.filter(email=email)
+        if user.exists():
+            return Response({
+                "fail_code": "USER_EXIST",
+                "fail_msg": "用户已存在"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if not re.match(r'^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$', email):
+            return Response({
+                "fail_code": "EMAIL_FORMAT_ERROR",
+                "fail_msg": "邮箱格式错误"
+            }, status=status.HTTP_400_BAD_REQUEST)
         if scene in common_scene:
             if send_sms_code(email) != 0:
                 return Response({
@@ -123,6 +134,7 @@ class CaptchaView(APIView):
                 "msg":"参数错误"
             })
 class RegisterView(APIView):
+
     def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
@@ -193,6 +205,7 @@ class RegisterView(APIView):
         })
 
 class login_passwordView(APIView):
+    authentication_classes = []
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
@@ -220,9 +233,9 @@ class login_passwordView(APIView):
             }
 
             token = jwt.encode(payload = payload, key = salt, algorithm="HS256", headers=headers)
-            url= user.avatar
-            if not url:
-                url = None
+            url= None
+            if user.avatar:
+                url = user.avatar.url
             return Response({
                 "success":True,
                 "access_token":token,
@@ -426,33 +439,6 @@ class FolloweeUserViewSet(ListCreateAPIView):
     def get_queryset(self):
         user = self.request.user
         return Follow.objects.filter(followee=user)
-
-class modify_password(APIView):
-    permission_classes = [IsAuthenticated]
-    def post(self, request):
-        new_password = request.data.get('new_password')
-        new_password_repeat = request.data.get('new_password_repeat')
-        captcha = request.data.get('captcha')
-        if not all([new_password, new_password_repeat,captcha]):
-            return Response({
-                "fail_code":"MISSING_PARAM",
-                "fail_msg":"缺少参数"
-            },status=status.HTTP_400_BAD_REQUEST)
-
-        if new_password  != new_password_repeat:
-            return Response({
-                "fail_code":"PASSWORD_NOT_MATCH",
-                "fail_msg":"密码不匹配"
-            },status=status.HTTP_400_BAD_REQUEST)
-        user = request.user
-        if varify_captcha(request.user.email,captcha)!=0:
-            return varify_captcha(request.user.email,captcha)
-        user.password = new_password
-        user.save()
-        return Response({
-            "success":True,
-            "user_id":user.user_id
-        })
 
 
 

@@ -11,6 +11,10 @@ class Product(models.Model):
         (ON_SALE, '上架'),
         (OFF_SALE, '下架'),
     ]
+    FUNCTION_CHOICES = [
+        (0, '包邮'),
+        (1, '自提'),
+    ]
     """Product
 
     Attributes:
@@ -35,6 +39,7 @@ class Product(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     categories = models.ManyToManyField("Category", related_name="products")
+    function = models.SmallIntegerField(choices=FUNCTION_CHOICES, default=0)
 
     class Meta:
         db_table = "product"

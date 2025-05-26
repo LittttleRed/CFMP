@@ -7,7 +7,7 @@
 
     <div class="header" style="cursor: pointer" @click="()=>{router.push({name:'product',query:{product_id:product_id}})}">
       <div class="title">
-        <span class="tag">包邮</span>
+        <span class="tag" v-if="functions===0">包邮</span>
         <h3 class="title-text" >{{ title.length>12 ? title.substring(0,12)+'...' : title }}</h3>
         <div class="price" style="margin-left: 10px">{{ price }}</div>
       </div>
@@ -39,7 +39,8 @@ defineProps({
   username: String,
   avatar: String,
   media: String,
-  myfollow: Boolean
+  myfollow: Boolean,
+  functions: Number,
 })
 
 </script>

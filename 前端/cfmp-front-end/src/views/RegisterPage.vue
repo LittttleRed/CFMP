@@ -43,6 +43,11 @@
                 </el-button>
               </div>
 
+              <h2>注册账号
+                 <span class ="switch-type">
+            </span>
+              </h2>
+           
               <h2>注册账号</h2>
 
           </div>
@@ -70,13 +75,13 @@
             <el-form-item prop="email">
               <el-input
                 v-model="registerForm.email"
-                placeholder="邮箱"
+                placeholder="请输入邮箱"
                 class="mail-input"
                 tabindex="1"
                 @blur="handleEmailBlur"
               >
                 <template #prefix>
-                  <span class="input-label">账号</span>
+                  <span class="input-label">邮箱</span>
                 </template>
               </el-input>
             </el-form-item>
@@ -159,7 +164,7 @@ import { ArrowLeft } from '@element-plus/icons-vue'
 import { ParticlesComponent } from 'particles.vue3';
 import { loadSlim } from 'tsparticles-slim'
 import { particles_config } from '../components/background/particles-config'
-
+const fail_msg = ref('')
 const router = useRouter()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
@@ -168,6 +173,8 @@ const canSendCaptcha = ref(false)
 const captchaCountdown = ref(0)
 let timer: any = null
 
+const emailregister = ref(false)
+const hassend = ref(false)
 const registerForm = reactive({
   username: '',
   password: '',
@@ -260,6 +267,24 @@ const handleRegister = async () => {
     loading.value = false
   }
 }
+
+// const handleRegister = async () => {
+//    if(!registerForm.email){
+//       ElMessage.error('请输入邮箱')
+//   }else if(!registerForm.username){
+//     ElMessage.error('请输入用户名')
+//   }else if (registerForm.password !== registerForm.password_repeat||!registerForm.password){
+//     ElMessage.error('密码有误')
+//   }else {
+//     await getRegister(registerForm).then(
+//         res=>{
+//           router.push('/login')
+//         }
+//     ).catch(e=>{
+//       fail_msg.value = e.response.data.fail_msg
+//     })
+//    }
+// }
 const handleBack = () => {
   router.push('/login')
 }

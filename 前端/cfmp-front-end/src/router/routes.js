@@ -53,6 +53,7 @@ export const constRoutes =   [
     component: () => (import('../views/user/index.vue')),
     name: 'user',
     redirect: '/user/MyRelease',
+        meta: { requiresAuth: true }, // 添加这里
     children: [
       {
         path:'MyRelease',

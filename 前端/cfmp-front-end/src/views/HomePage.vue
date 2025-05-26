@@ -66,7 +66,8 @@
                     :user_id="product.user.user_id"
                     :product_id="product.product_id"
                     :media="product.media[0]?product.media[0]['media']:''"
-                    :myfollow="myFollow.indexOf(product.user.user_id)!==-1">
+                    :myfollow="myFollow.indexOf(product.user.user_id)!==-1"
+                    :functions="product.function">
            </Product>
           </el-col>
         </el-row>
@@ -104,14 +105,16 @@ const currentIndex = ref(0)
 let timer = null
 const chating = ref(true)
 const getUserFollow=async()=> {
- await getAllFollows(getToken()).then(res => {
-    myFollow.value=res.map(item => {
-      return item.followee
+  if(getToken()) {
+    await getAllFollows(getToken()).then(res => {
+      myFollow.value = res.map(item => {
+        return item.followee
+      })
     })
-  })
+  }
   console.log(myFollow.value)
 }
-getUserFollow()
+
 onMounted(() => {
   startAutoPlay()
 })

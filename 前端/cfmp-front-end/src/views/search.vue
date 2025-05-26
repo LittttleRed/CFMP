@@ -48,22 +48,24 @@ const loading = ref(true)
 const isUpdating = ref(false)
 const noProduct = ref(false)
 const getUserFollow=async()=> {
- await getAllFollows(getToken()).then(res => {
-    myFollow.value=res.map(item => {
-      return item.followee
+ if(getToken()) {
+    await getAllFollows(getToken()).then(res => {
+      myFollow.value = res.map(item => {
+        return item.followee
+      })
     })
-  })
+  }
   console.log(myFollow.value)
 }
 getUserFollow()
 const updateProductList=async()=>{
-  let page_size=10
+  let page_size=20
   //根据页码获取商品列表
   let data={
     page: page.value,
     page_size: page_size,
   }
-  const queryFields = ['keyword', 'category', 'min_price', 'max_price'];
+  const queryFields = ['search', 'category', 'min_price', 'max_price'];
 
 queryFields.forEach(field => {
   if (route.query[field]) {
