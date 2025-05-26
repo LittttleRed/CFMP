@@ -140,7 +140,7 @@ const getUser = async () => {
     currentUser.value = response
   })
 }
-
+getUser()
 const sendMessage = () => {
   if (!inputMessage.value.trim()) return
   // 先本地显示

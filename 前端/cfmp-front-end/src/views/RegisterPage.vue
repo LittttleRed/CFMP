@@ -84,7 +84,7 @@
               </el-input>
             </el-form-item>
 
-           <el-form-item prop="captcha" style="display: flex;flex-direction: column">
+           <el-form-item  v-if="isEmailValid" prop="captcha" style="display: flex;flex-direction: column">
           <el-input
           v-model="registerForm.captcha"
           placeholder="请输入验证码"
@@ -99,7 +99,6 @@
   <!-- 只有邮箱格式正确时才显示按钮 -->
         <el-button
           style="margin-left: 20px;height: 48px"
-          v-if="/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(registerForm.email)"
           :disabled="captchaCountdown > 0"
           @click="handleSendCaptcha"
           >
@@ -296,7 +295,9 @@ const handleRegister = async () => {
 const handleBack = () => {
   router.push('/login')
 }
-
+const isEmailValid = computed(() =>
+  /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(registerForm.email)
+)
 function handleEmailBlur() {
   const valid = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(registerForm.email)
   canSendCaptcha.value = valid
