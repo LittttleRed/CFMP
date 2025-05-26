@@ -85,25 +85,6 @@
                 </template>
               </el-input>
             </el-form-item>
-
-            <el-form-item prop="captcha" v-if="/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(registerForm.email)">
-              <el-input
-                v-model="registerForm.captcha"
-                placeholder="验证码"
-                class="mail-input"
-                tabindex="2"
-                style="width: 60%; display: inline-block;"
-              />
-              <el-button
-                style="margin-left: 10px;"
-                :disabled="captchaCountdown > 0"
-                @click="handleSendCaptcha"
-              >
-              <span v-if="captchaCountdown === 0">发送验证码</span>
-              <span v-else>{{ captchaCountdown }}秒后重试</span>
-              </el-button>
-            </el-form-item>
-
             <el-form-item prop="password">
               <el-input
                 v-model="registerForm.password"
@@ -239,52 +220,52 @@ const handleSendCaptcha = async () => {
     ElMessage.error(error?.response?.data?.msg || error?.response?.data?.fail_msg || '验证码发送异常')
   }
 }
-const handleRegister = async () => {
-  //localStorage Need
-  try{
-    loading.value = true
-    await formRef.value?.validate()
-    // 构造注册数据
-    const registerData = {
-      username: registerForm.username,
-      password: registerForm.password,
-      password_repeat: registerForm.password_repeat,
-      email: registerForm.email,
-      captcha: registerForm.captcha
-    }
-    const res = await getRegister(registerData)
-
-    if (res && res['success']) {
-      // 注册成功，跳转到登录页面
-      router.push('/login')
-    } else {
-      // 处理注册失败的情况
-      ElMessage.error(res?.['fail_msg'] || '注册失败')
-    }
-  } catch (error: any) {
-    ElMessage.error(error?.response?.data?.fail_msg || '注册异常')
-  } finally {
-    loading.value = false
-  }
-}
-
 // const handleRegister = async () => {
-//    if(!registerForm.email){
-//       ElMessage.error('请输入邮箱')
-//   }else if(!registerForm.username){
-//     ElMessage.error('请输入用户名')
-//   }else if (registerForm.password !== registerForm.password_repeat||!registerForm.password){
-//     ElMessage.error('密码有误')
-//   }else {
-//     await getRegister(registerForm).then(
-//         res=>{
-//           router.push('/login')
-//         }
-//     ).catch(e=>{
-//       fail_msg.value = e.response.data.fail_msg
-//     })
-//    }
+//   //localStorage Need
+//   try{
+//     loading.value = true
+//     await formRef.value?.validate()
+//     // 构造注册数据
+//     const registerData = {
+//       username: registerForm.username,
+//       password: registerForm.password,
+//       password_repeat: registerForm.password_repeat,
+//       email: registerForm.email,
+//       captcha: registerForm.captcha
+//     }
+//     const res = await getRegister(registerData)
+
+//     if (res && res['success']) {
+//       // 注册成功，跳转到登录页面
+//       router.push('/login')
+//     } else {
+//       // 处理注册失败的情况
+//       ElMessage.error(res?.['fail_msg'] || '注册失败')
+//     }
+//   } catch (error: any) {
+//     ElMessage.error(error?.response?.data?.fail_msg || '注册异常')
+//   } finally {
+//     loading.value = false
+//   }
 // }
+
+const handleRegister = async () => {
+   if(!registerForm.email){
+      ElMessage.error('请输入邮箱')
+  }else if(!registerForm.username){
+    ElMessage.error('请输入用户名')
+  }else if (registerForm.password !== registerForm.password_repeat||!registerForm.password){
+    ElMessage.error('密码有误')
+  }else {
+    await getRegister(registerForm).then(
+        res=>{
+          router.push('/login')
+        }
+    ).catch(e=>{
+      fail_msg.value = e.response.data.fail_msg
+    })
+   }
+}
 const handleBack = () => {
   router.push('/login')
 }
