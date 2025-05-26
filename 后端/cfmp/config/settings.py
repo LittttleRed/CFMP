@@ -40,6 +40,7 @@ MINIO_STORAGE_MEDIA_BUCKET_NAME = 'img'    # 存储媒体文件的 Bucket 名称
 MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET = True     # 自动创建 Bucket
 DEFAULT_FILE_STORAGE = 'minio_storage.storage.MinioMediaStorage'
 INSTALLED_APPS = [
+    'channels',
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -57,6 +58,12 @@ INSTALLED_APPS = [
 #     python manage.py migrate --fake django_apscheduler zero
 ]# 指定媒体文件的URL前缀（相对路径）
 
+ASGI_APPLICATION = 'config.asgi.application'  # 指定ASGI入口
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"  # 使用内存通道
+    }
+}
 # 允许的HOST（替换为你的IP或域名）
 
 #自己写自己的分页器,不要全局配置
@@ -165,11 +172,3 @@ EMAIL_USE_TLS = True       # 一般都为False
 EMAIL_FROM = "qq账号@qq.com"      # 邮箱来自
 email_title = '邮箱激活'
 
-# 邮箱发送相关配置
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.qq.com'      # 例如 smtp.qq.com、smtp.163.com、smtp.gmail.com
-# EMAIL_PORT = 465                          # 常用端口465(SSL)或587(TLS)
-# EMAIL_HOST_USER = '2698425919@qq.com' # 你的发件邮箱
-# EMAIL_HOST_PASSWORD = 'egmontoxnhzldgif'         # 你的邮箱密码
-# EMAIL_USE_SSL = True                      # 如果用465端口，通常为True
-# EMAIL_USE_TLS = False                     # 如果用587端口，通常为True

@@ -23,5 +23,5 @@ urlpatterns += [
     path('user/followee/',views.FolloweeUserViewSet.as_view()),
     path('captcha/', views.CaptchaView.as_view(), name='captcha'),
     path('user/me/products/<int:user_id>/', views.UserProductsViewSet.as_view()),
-    path('auth/send-email-captcha',views.SendEmailCaptchaView.as_view(),name='send_email_captcha'),
+
 ]

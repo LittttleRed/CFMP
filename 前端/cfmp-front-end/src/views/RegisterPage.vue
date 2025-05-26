@@ -67,9 +67,9 @@
               </el-input>
             </el-form-item>
 
-            <el-form-item prop="message">
+            <el-form-item prop="email">
               <el-input
-                v-model="registerForm.message"
+                v-model="registerForm.email"
                 placeholder="邮箱"
                 class="mail-input"
                 tabindex="1"
@@ -81,7 +81,7 @@
               </el-input>
             </el-form-item>
 
-            <el-form-item prop="captcha" v-if="/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(registerForm.message)">
+            <el-form-item prop="captcha" v-if="/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(registerForm.email)">
               <el-input
                 v-model="registerForm.captcha"
                 placeholder="验证码"
@@ -92,7 +92,7 @@
               <el-button
                 style="margin-left: 10px;"
                 :disabled="captchaCountdown > 0"
-                @click="sendCaptcha"
+                @click="handleSendCaptcha"
               >
               <span v-if="captchaCountdown === 0">发送验证码</span>
               <span v-else>{{ captchaCountdown }}秒后重试</span>
@@ -151,9 +151,10 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
 import type { FormInstance } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { getRegister } from '../api/user'
-import { sendEmailCaptcha } from '../api/user'
+import { sendCaptcha } from '../api/user'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { ParticlesComponent } from 'particles.vue3';
 import { loadSlim } from 'tsparticles-slim'
@@ -171,9 +172,10 @@ const registerForm = reactive({
   username: '',
   password: '',
   password_repeat: '',
-  message: '',
+  email: '',
   captcha: ''
 })
+
 
 const particlesInit = async engine => {
     //await loadFull(engine);
@@ -202,30 +204,59 @@ const rules = {
       }
     }
   ],
-  message: [
+  email: [
     { required: true, message: '邮箱不能为空', trigger: 'blur' },
     { type: 'email', message: '请输入有效的邮箱地址', trigger: ['blur', 'input'] }
   ]
 
 }
-
+const handleSendCaptcha = async () => {
+  if (captchaCountdown.value > 0) return
+  const email = registerForm.email
+  captchaCountdown.value = 120
+  timer = setInterval(() =>{
+        captchaCountdown.value--
+        if (captchaCountdown.value <= 0){
+          clearInterval(timer)
+        }
+      },1000)
+  try{
+    const res = await sendCaptcha({ email, scene:'register'})
+    console.log(res)
+    if (res && res['success'] === true){
+      ElMessage.success(res['msg']|| '验证码已发送，请查收邮箱')
+    }else{
+      ElMessage.error(res?.['msg'] || res?.['fail_msg'] || '验证码发送失败，请重试')
+    }
+  }catch (error: any) {
+    ElMessage.error(error?.response?.data?.msg || error?.response?.data?.fail_msg || '验证码发送异常')
+  }
+}
 const handleRegister = async () => {
   //localStorage Need
   try{
-    loading
+    loading.value = true
     await formRef.value?.validate()
-    const res = await getRegister(registerForm)
+    // 构造注册数据
+    const registerData = {
+      username: registerForm.username,
+      password: registerForm.password,
+      password_repeat: registerForm.password_repeat,
+      email: registerForm.email,
+      captcha: registerForm.captcha
+    }
+    const res = await getRegister(registerData)
 
-    if (res.status === 200){
-      console.log('注册成功')
+    if (res && res['success']) {
+      // 注册成功，跳转到登录页面
       router.push('/login')
-  }else{
-      console.error('注册失败', res.data)
-      loading.value = false
-  }
-  }catch (error) {
-    // 处理验证失败的情况  res.status === 400 or others
-  }finally {
+    } else {
+      // 处理注册失败的情况
+      ElMessage.error(res?.['fail_msg'] || '注册失败')
+    }
+  } catch (error: any) {
+    ElMessage.error(error?.response?.data?.fail_msg || '注册异常')
+  } finally {
     loading.value = false
   }
 }
@@ -234,32 +265,10 @@ const handleBack = () => {
 }
 
 function handleEmailBlur() {
-  const valid = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(registerForm.message)
+  const valid = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(registerForm.email)
   canSendCaptcha.value = valid
 }
-async function sendCaptcha(){
-  if(!canSendCaptcha.value || captchaCountdown.value > 0)return
-  try{
-    await sendEmailCaptcha({email: registerForm.message}).then(res =>{
-      if(res.status === 200){
-        console.log('验证码发送成功')
-      }else{
-        console.error('验证码发送失败', res.data)
-      }
-    })
-   captchaCountdown.value = 60
-   canSendCaptcha.value = false
-   timer = setInterval(() =>{
-    captchaCountdown.value--
-    if(captchaCountdown.value <= 0){
-      clearInterval(timer)
-      canSendCaptcha.value = true
-    }
-   },1000)
-  }catch (error) {
-    console.error('发送验证码失败', error)
-  }
-}
+
 </script>
 
 <style scoped lang="scss">
