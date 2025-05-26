@@ -379,7 +379,17 @@ class UserComplaintViewSet(ListCreateAPIView):
 class FollowUserDetailsViewSet(ListCreateAPIView,  RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = FollowSerializer
-    lookup_field = 'followee_id'
+    lookup_field = 'followee'
+
+    def perform_create(self, serializer):
+        followee = self.request.user
+        follower = User.objects.get(user_id=self.request.user.user_id)
+        Follow.objects.create(followee=followee, follower=follower)
+        return Response({
+            "success":True,
+            "followee":followee.user_id,
+            "follower":follower.user_id
+        })
 class modify_email(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
