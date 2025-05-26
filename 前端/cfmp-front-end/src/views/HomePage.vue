@@ -66,7 +66,8 @@
                     :user_id="product.user.user_id"
                     :product_id="product.product_id"
                     :media="product.media[0]?product.media[0]['media']:''"
-                    :myfollow="myFollow.indexOf(product.user.user_id)!==-1">
+                    :myfollow="myFollow.indexOf(product.user.user_id)!==-1"
+                    :functions="product.function">
            </Product>
           </el-col>
         </el-row>

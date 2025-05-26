@@ -81,6 +81,17 @@
         </template>
       </el-input>
     </div>
+    <!-- 配送方式 -->
+    <div class="form-section">
+      <el-select
+        v-model="shippingMethod"
+        placeholder="请选择配送方式"
+        style="width: 100%"
+      >
+        <el-option label="包邮" value="0"></el-option>
+        <el-option label="自提" value="1"></el-option>
+      </el-select>
+    </div>
     <!-- 发布按钮 -->
     <div class="submit-section">
       <el-button type="primary" round class="submit-btn" @click="launch">发布</el-button>
@@ -164,9 +175,8 @@ const launch = async () => {
     form.append('description', description.value);
     form.append('price', parseFloat(price.value)); // 转换为数字
     form.append('status', '0'); // 确保字符串类型
-
-    // 修正文件上传逻辑
-    console.log(imgList.value)
+    form.append('function',shippingMethod.value)
+    console.log(form)
     imgList.value.forEach(file => {
       form.append('media', file); // 直接使用原始文件对象
     });

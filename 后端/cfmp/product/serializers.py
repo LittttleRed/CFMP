@@ -41,6 +41,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "created_at",
             "categories",
             "media",
+            "function",
         ]
 
 

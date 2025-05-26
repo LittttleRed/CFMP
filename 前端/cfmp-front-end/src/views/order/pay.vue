@@ -44,7 +44,7 @@
           </el-form-item>
           <el-form-item label="收货地址" required>
             <el-input
-              v-model="addressForm.shipping_address"
+            v-model="addressForm.shipping_address"
               type="textarea"
               placeholder="请输入详细地址"
               :rows="3"
@@ -114,6 +114,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { getToken, getUserId } from '../../utils/user-utils.ts'
 import { getProduct } from '../../api/product/index.js'
 import { createOrder, createPayment } from '../../api/order/index.js'
+import {getMe} from "@/api/user/index.js";
 
 const route = useRoute()
 const router = useRouter()
@@ -144,7 +145,13 @@ const addressForm = reactive({
   shipping_address: '',
   shipping_postal_code: ''
 })
-
+const getMyAddress = async () => {
+await getMe(getToken()).then((response) => {
+  let user=response[0]
+  addressForm.shipping_address = user["address"]
+})
+}
+getMyAddress()
 // 计算总金额
 const totalAmount = computed(() => {
   return productInfo.price * productInfo.quantity

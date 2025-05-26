@@ -29,7 +29,7 @@ from product.models import Product
 from product.serializers import ProductSerializer
 from root.serializers import ComplaintSerializer
 # Create your views here.
-
+import re
 def send_sms_code(to_email):
     # 生成邮箱验证码
     sms_code = '%06d' % random.randint(0, 999999)
@@ -83,6 +83,17 @@ class CaptchaView(APIView):
             },status=status.HTTP_400_BAD_REQUEST)
         common_scene = {'register','login','forget'}
         need_token_scene = {'change_email','change_password'}
+        user = User.objects.filter(email=email)
+        if user.exists():
+            return Response({
+                "fail_code": "USER_EXIST",
+                "fail_msg": "用户已存在"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if not re.match(r'^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$', email):
+            return Response({
+                "fail_code": "EMAIL_FORMAT_ERROR",
+                "fail_msg": "邮箱格式错误"
+            }, status=status.HTTP_400_BAD_REQUEST)
         if scene in common_scene:
             if send_sms_code(email) != 0:
                 return Response({
@@ -118,6 +129,7 @@ class CaptchaView(APIView):
                 "msg":"参数错误"
             })
 class RegisterView(APIView):
+
     def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')

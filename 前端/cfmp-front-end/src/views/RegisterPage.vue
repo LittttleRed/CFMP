@@ -128,7 +128,7 @@
               <el-button style="margin-left: 20px;height: 48px" v-else
               >已发送</el-button>
             </el-form-item>
-            <div>{{ fail_msg }}</div>
+            <div style="color: red">{{ fail_msg }}</div>
             <el-button
               class="mail-login-btn"
               type="primary"
@@ -180,7 +180,9 @@ const sendCap=async () => {
   }else if (registerForm.password !== registerForm.password_repeat||!registerForm.password){
     ElMessage.error('密码有误')
   }else{
-   await sendCaptcha({scene:  'register', email: registerForm.email})
+   await sendCaptcha({scene:  'register', email: registerForm.email}).catch(e=>{
+      fail_msg.value = e.response.data.fail_msg
+    })
     hassend.value = true
   }
 }
