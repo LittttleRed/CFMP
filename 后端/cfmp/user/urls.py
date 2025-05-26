@@ -25,5 +25,5 @@ urlpatterns += [
     path('user/follow/',views.FollowUserViewSet.as_view()),
     path('user/followee/',views.FolloweeUserViewSet.as_view()),
     path('user/me/products/<int:user_id>/', views.UserProductsViewSet.as_view()),
-
+    path('user/chat/<int:user_id>/',  views.ChatLogViewSet.as_view())
 ]

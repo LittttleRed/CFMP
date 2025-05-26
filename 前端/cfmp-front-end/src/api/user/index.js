@@ -142,3 +142,12 @@ export const getAllFollowees=(token)=>{
         }
     })
 }
+export const getHistory=(token,id,pageconfig)=>{
+    return http({
+        url:'/v1/user/chat/'+id+'/',
+        method:'get',
+        headers:{
+            'Authorization':'Bearer '+token
+        },params:pageconfig
+    })
+}
