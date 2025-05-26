@@ -40,6 +40,7 @@ MINIO_STORAGE_MEDIA_BUCKET_NAME = 'img'    # 存储媒体文件的 Bucket 名称
 MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET = True     # 自动创建 Bucket
 DEFAULT_FILE_STORAGE = 'minio_storage.storage.MinioMediaStorage'
 INSTALLED_APPS = [
+    'channels',
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -54,10 +55,15 @@ INSTALLED_APPS = [
     "root",
     "user",
     "order",
-    'channels',
 #     python manage.py migrate --fake django_apscheduler zero
 ]# 指定媒体文件的URL前缀（相对路径）
-ASGI_APPLICATION = 'config.routing.application'
+
+ASGI_APPLICATION = 'config.asgi.application'  # 指定ASGI入口
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"  # 使用内存通道
+    }
+}
 # 允许的HOST（替换为你的IP或域名）
 
 #自己写自己的分页器,不要全局配置

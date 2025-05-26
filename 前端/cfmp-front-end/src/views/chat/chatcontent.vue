@@ -3,399 +3,308 @@
     <!-- 聊天内容区域 -->
     <div class="chat-messages" ref="messagesContainer">
       <div
-        v-for="(message, index) in formattedMessages"
-        :key="message.id || index"
+        v-for="(message, index) in messages"
+        :key="index"
         class="message-item"
+        :class="{ 'self-message': message.isSelf }"
       >
-        <!-- 消息内容 -->
-        <div :class="['message-wrapper', message.isSelf ? 'self' : 'other']">
-          <!-- 对方头像 -->
-          <img v-if="!message.isSelf"
-               :src="currentUser.avatar"
-               class="avatar"
-               alt="头像">
+        <!-- 对方消息 -->
+        <div v-if="!message.isSelf" class="other-message">
+          <img :src="currentUser.avatar" class="avatar" alt="头像">
+          <div class="message-content">
+            <div class="message-bubble">
+              {{ message.content }}
+            </div>
+            <span class="time">{{ formatTime(message.time) }}</span>
+          </div>
+        </div>
 
-          <!-- 消息主体 -->
-          <div class="message-body">
-            <!-- 消息气泡 -->
-            <div :class="['message-bubble', message.isSelf ? 'self' : 'other']">
-              <div class="content">{{ message.content }}</div>
-              <div class="meta">
-                <span class="time">{{ formatMessageTime(message.timestamp) }}</span>
-                <span v-if="message.isSelf" class="status">
-                  <span v-if="message.status === 'sending'">🕗</span>
-                  <span v-else-if="message.status === 'sent'">✓</span>
-                  <span v-else-if="message.status === 'error'">⚠</span>
-                </span>
-              </div>
+        <!-- 自己发送的消息 -->
+        <div v-if="message.isSelf" class="self-message">
+          <div class="message-content">
+            <span class="time">{{ formatTime(message.time) }}</span>
+            <div class="message-bubble">
+              {{ message.content }}
             </div>
           </div>
-
-          <!-- 自己头像 -->
-          <img v-if="message.isSelf"
-               :src="selfAvatar"
-               class="avatar"
-               alt="我的头像">
+          <img :src="selfAvatar" class="avatar" alt="我的头像">
         </div>
       </div>
     </div>
 
-    <!-- 输入区域 -->
+    <!-- 输入框区域 -->
     <div class="input-area">
       <div class="input-box">
         <textarea
           v-model="inputMessage"
           @keydown.enter.exact.prevent="sendMessage"
           @keydown.ctrl.enter.exact="newLine"
-          @input="adjustTextareaHeight"
-          placeholder="输入消息..."
+          placeholder="请输入内容"
           rows="1"
           ref="textarea"
         ></textarea>
       </div>
-      <button
-        class="send-button"
-        @click="sendMessage"
-        :disabled="isSending"
-      >
-        {{ isSending ? '发送中...' : '发送' }}
-      </button>
+      <button class="send-button" @click="sendMessage">发送</button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import {getHeadImg, getUserId} from "@/utils/user-utils.js"
-// import { getUserById, getChatHistory, sendChatMessage } from "@/api/chat/index.js"
-
+import { ref, defineProps, nextTick } from 'vue'
+import {getHeadImg} from "@/utils/user-utils.js";
+import {getUserById} from "@/api/user/index.js";
+import { getUserId } from "@/utils/user-utils.js";
+import { onMounted, onBeforeUnmount } from 'vue'
 const props = defineProps({
   userId: {
     type: String,
     required: true
   }
-})
+}
+)
 
-// 状态管理
 const inputMessage = ref('')
-const messages = ref([])
 const currentUser = ref({})
 const selfAvatar = ref(getHeadImg())
 const messagesContainer = ref(null)
 const textarea = ref(null)
 const ws = ref(null)
-const isSending = ref(false)
+const wsConnected = ref(false)
 
-// 格式化后的消息列表
-const formattedMessages = computed(() => {
-  return messages.value.map(msg => ({
-    ...msg,
-    isSelf: msg.sender === 'me' // 根据实际用户ID判断
-  }))
-})
-
-// 初始化
-onMounted(async () => {
-  await loadUser()
-  await loadHistory()
-  initWebSocket()
-  adjustTextareaHeight()
-})
-
-// 清理
-onUnmounted(() => {
-  if (ws.value) {
-    ws.value.close()
+const messages = ref([
+  {
+    content: '你好呀！',
+    time: new Date(Date.now() - 3600000),
+    isSelf: false
+  },
+  {
+    content: '你好！有什么可以帮助你的？',
+    time: new Date(),
+    isSelf: true
   }
-})
+])
 
-// 加载用户信息
-const loadUser = async () => {
-  // try {
-  //   const response = await getUserById(props.userId)
-  //   currentUser.value = response.data
-  // } catch (error) {
-  //   console.error('加载用户信息失败:', error)
-  // }
+const myUserId = getUserId() 
+const targetUserId = props.userId
+
+
+const getMyMessage= ()=>{
+
 }
 
-// 加载历史消息
-const loadHistory = async () => {
-  try {
-    // const response = await getChatHistory(props.userId)
-    // messages.value = response.data.map(msg => ({
-    //   ...msg,
-    //   timestamp: new Date(msg.timestamp),
-    //   status: 'sent'
-    // }))
-    scrollToBottom()
-  } catch (error) {
-    console.error('加载历史消息失败:', error)
-  }
-}
-
-// 初始化WebSocket
-const initWebSocket = () => {
-  ws.value = new WebSocket(`wss://localhost:8000/ws/chat/${props.userId}/`)
+onMounted(() => {
+  console.log('start')
+  ws.value = new WebSocket('ws://localhost:8000/ws/chat/')
   ws.value.onopen = () => {
-    console.log('WebSocket连接已打开')
+    wsConnected.value = true
+    messages.value.push({ time: new Date(), content: 'WebSocket连接成功', isSelf: false })
+    console.log('WebSocket连接成功')
   }
-  ws.value.onmessage = (event) => {
-    const data = JSON.parse(event.data)
-    handleReceivedMessage(data)
-  }
-
-  ws.value.onerror = (error) => {
-    console.error('WebSocket错误:', error)
-  }
-
   ws.value.onclose = () => {
+    wsConnected.value = false
+    messages.value.push({ time: new Date(), content: 'WebSocket连接关闭', isSelf: false })
     console.log('WebSocket连接关闭')
   }
-}
-
-// 处理接收消息
-const handleReceivedMessage = (message) => {
-  messages.value.push({
-    ...message,
-    timestamp: new Date(message.timestamp),
-    status: 'sent'
-  })
-  scrollToBottom()
-}
-
-// 发送消息
-const sendMessage = async () => {
-  const content = inputMessage.value.trim()
-  if (!content) return
-
-  const tempId = Date.now() // 临时ID用于本地显示
-  const newMessage = {
-    id: tempId,
-    content,
-    timestamp: new Date(),
-    sender: 'me',
-    status: 'sending'
+  ws.value.onerror = () => {
+    wsConnected.value = false
+    messages.value.push({ time: new Date(), content: 'WebSocket连接出错', isSelf: false })
+    console.log('WebSocket连接出错')
   }
-
-  try {
-    messages.value.push(newMessage)
-    inputMessage.value = ''
-    adjustTextareaHeight()
-    scrollToBottom()
-
-    // 通过WebSocket发送
-    ws.value.send(JSON.stringify({
-      receiver: props.userId,
-      sender: getUserId(),
-      content
-    }))
-
-    // 通过API保存到数据库
-    // const response = await sendChatMessage({
-    //   receiver: props.userId,
-    //   sender: getUserId(),
-    //   content
-    // })
-
-    // 更新消息状态
-    const index = messages.value.findIndex(msg => msg.id === tempId)
-    if (index !== -1) {
-      messages.value[index] = {
-        ...messages.value[index],
-        id: response.data.id,
-        status: 'sent'
+  ws.value.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data)
+      if (data.error) {
+        messages.value.push({ time: new Date(), content: '错误: ' + data.error, isSelf: false })
+      } else {
+        messages.value.push({
+          time: new Date(),
+          content: data.content,
+          isSelf: data.sender_id == myUserId // 注意类型一致
+        })
+        nextTick(scrollToBottom)
       }
+    } catch {
+      messages.value.push({ time: new Date(), content: event.data, isSelf: false })
     }
-  } catch (error) {
-    console.error('发送消息失败:', error)
-    const index = messages.value.findIndex(msg => msg.id === tempId)
-    if (index !== -1) {
-      messages.value[index].status = 'error'
-    }
-  } finally {
-    isSending.value = false
   }
-}
+})
 
-// 时间格式化
-const formatMessageTime = (date) => {
-  const now = new Date()
-  const msgDate = new Date(date)
+onBeforeUnmount(() => {
+  if (ws.value) ws.value.close()
+})
 
-  if (now.toDateString() === msgDate.toDateString()) {
-    return msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }
 
-  const yesterday = new Date(now)
-  yesterday.setDate(now.getDate() - 1)
-  if (yesterday.toDateString() === msgDate.toDateString()) {
-    return '昨天 ' + msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }
-
-  return msgDate.toLocaleDateString() + ' ' + msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-}
-
-// 文本框高度调整
-const adjustTextareaHeight = () => {
-  nextTick(() => {
-    if (textarea.value) {
-      textarea.value.style.height = 'auto'
-      textarea.value.style.height = `${Math.min(textarea.value.scrollHeight, 150)}px`
-    }
+const getUser = async () => {
+  await getUserById(props.userId).then(response => {
+    currentUser.value = response
   })
 }
 
-// 滚动到底部
-const scrollToBottom = () => {
+const sendMessage = () => {
+  if (!inputMessage.value.trim()) return
+  // 先本地显示
+  messages.value.push({
+    content: inputMessage.value,
+    time: new Date(),
+    isSelf: true
+  })
+  // 通过WebSocket发送
+  console.log(ws.value, ws.value.readyState)
+  if (ws.value && ws.value.readyState === 1) {
+      ws.value.send(JSON.stringify({
+      receiver_id: targetUserId,
+      content: inputMessage.value
+    }))
+  }
+  inputMessage.value = ''
   nextTick(() => {
-    if (messagesContainer.value) {
-      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
-    }
+    scrollToBottom()
+    adjustTextareaHeight()
   })
 }
 
-// 换行处理
 const newLine = () => {
   inputMessage.value += '\n'
   adjustTextareaHeight()
 }
+
+const formatTime = (time) => {
+  return `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`
+}
+
+const scrollToBottom = () => {
+  const container = messagesContainer.value
+  if (container) {
+    container.scrollTop = container.scrollHeight
+  }
+}
+
+const adjustTextareaHeight = () => {
+  const ta = textarea.value
+  if (ta) {
+    ta.style.height = 'auto'
+    ta.style.height = ta.scrollHeight + 'px'
+  }
+}
+
+// 初始化滚动到底部
+nextTick(() => {
+  scrollToBottom()
+})
 </script>
 
 <style scoped>
-/* 容器样式 */
+/* 原有样式保持不变 */
 .chat-container {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  background: #f0f2f5;
+  height: 860px;
+  background-color: #f0f0f0;
 }
 
-/* 消息区域 */
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 20px;
   padding-bottom: 0;
 }
 
-/* 消息项 */
 .message-item {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
-/* 消息包装器 */
-.message-wrapper {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  max-width: 80%;
-}
-
-.message-wrapper.self {
-  flex-direction: row-reverse;
-  margin-left: auto;
-}
-
-/* 头像 */
 .avatar {
   width: 40px;
   height: 40px;
-  border-radius: 6px;
-  flex-shrink: 0;
+  border-radius: 5px;
+  margin: 0 10px;
 }
 
-/* 消息主体 */
-.message-body {
-  max-width: calc(100% - 92px);
+.other-message {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
 }
 
-/* 消息气泡 */
+.self-message {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+
+.message-content {
+  max-width: 60%;
+  display: flex;
+  flex-direction: column;
+}
+
 .message-bubble {
+  padding: 10px 15px;
+  border-radius: 5px;
   position: relative;
-  padding: 12px 16px;
-  border-radius: 6px;
   line-height: 1.5;
   word-break: break-word;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.message-bubble.self {
+.other-message .message-bubble {
+  background: white;
+  border: 1px solid #e5e5e5;
+}
+
+.self-message .message-bubble {
   background: #95ec69;
-  border-radius: 16px 16px 4px 16px;
+  order: 1;
 }
 
-.message-bubble.other {
-  background: white;
-  border-radius: 16px 16px 16px 4px;
-  border: 1px solid #eee;
-}
-
-/* 消息元信息 */
-.meta {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 4px;
+.time {
   font-size: 12px;
-  color: #666;
+  color: #999;
+  margin: 5px 8px;
 }
 
-.message-bubble.self .meta {
-  color: rgba(0, 0, 0, 0.6);
-}
-
-/* 输入区域 */
 .input-area {
-  display: flex;
-  gap: 12px;
-  padding: 16px;
+  padding: 15px;
   background: white;
-  border-top: 1px solid #eee;
+  border-top: 1px solid #e5e5e5;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
 }
 
 .input-box {
   flex: 1;
-  position: relative;
+  display: flex;
+  align-items: center;
 }
 
 textarea {
-  width: 100%;
-  min-height: 40px;
-  max-height: 150px;
-  padding: 10px 16px;
-  border: 1px solid #ddd;
-  border-radius: 20px;
+  flex: 1;
+  border: 1px solid #e5e5e5;
+  border-radius: 5px;
+  padding: 10px;
   resize: none;
+  max-height: 150px;
+  font-family: inherit;
   font-size: 14px;
-  line-height: 1.5;
-  transition: border-color 0.2s;
 }
 
 textarea:focus {
   outline: none;
   border-color: #07c160;
-  box-shadow: 0 0 0 2px rgba(7, 193, 96, 0.1);
 }
 
 .send-button {
-  flex-shrink: 0;
-  padding: 8px 24px;
   background: #07c160;
   color: white;
   border: none;
-  border-radius: 20px;
+  padding: 8px 20px;
+  border-radius: 5px;
   cursor: pointer;
   transition: background 0.2s;
 }
 
 .send-button:hover {
   background: #06ad54;
-}
-
-.send-button:disabled {
-  background: #b2b2b2;
-  cursor: not-allowed;
 }
 </style>
