@@ -2,6 +2,13 @@
   <div class="chat-container">
     <!-- 聊天内容区域 -->
     <div class="chat-messages" ref="messagesContainer">
+       <div v-if="isLoading" class="loading-indicator">
+      <span class="loader"></span>
+      加载中...
+    </div>
+    <div v-else-if="!canLoadMore" class="no-more-messages">
+      —— 已经到达历史消息尽头 ——
+    </div>
       <div
         v-for="(message, index) in messages"
         :key="index"
@@ -15,14 +22,14 @@
             <div class="message-bubble">
               {{ message.content }}
             </div>
-            <span class="time">{{ formatTime(message.time) }}</span>
+            <span class="time">{{ typeof message.time === 'string'?  message.time.slice(0,10) : message.time.toISOString().split('T')[0] }}</span>
           </div>
         </div>
 
         <!-- 自己发送的消息 -->
         <div v-if="message.isSelf" class="self-message">
           <div class="message-content">
-            <span class="time">{{ formatTime(message.time) }}</span>
+            <span class="time">{{ typeof message.time === 'string'?  message.time.slice(0,10) : message.time.toISOString().split('T')[0] }}</span>
             <div class="message-bubble">
               {{ message.content }}
             </div>
@@ -50,80 +57,234 @@
 </template>
 
 <script setup>
+import { ref, defineProps, nextTick } from 'vue'
+import {getHeadImg} from "@/utils/user-utils.js";
+import {getHistory, getUserById} from "@/api/user/index.js";
+import { getUserId } from "@/utils/user-utils.js";
+import { onMounted, onBeforeUnmount } from 'vue'
+import { getToken } from '../../utils/user-utils';
+import { watchEffect } from 'vue'
 
-import {ref} from "vue";
-import {getHeadImg, getUserName} from "@/utils/user-utils.js";
-import {getUserById} from "@/api/user/index.js";
-
-const inputMessage= ref('')
-const currentUser=ref({ })
-const selfAvatar=getHeadImg()
-const messages=ref([
-        {
-          content: '你好呀！',
-          time: new Date(Date.now() - 3600000),
-          isSelf: false
-        },
-        {
-          content: '你好！有什么可以帮助你的？',
-          time: new Date(),
-          isSelf: true
-        }
-      ])
-defineProps(
-    {
-      userId: {
-        type: String,
-        required: true
-      }
-    }
+const props = defineProps({
+  userId: {
+    type: String,
+    required: true
+  }
+}
 )
-const getUser=async () => {
-  await getUserById().then(response => {
-    currentUser.value=response
+
+const inputMessage = ref('')
+const currentUser = ref({})
+const selfAvatar = ref(getHeadImg())
+const messagesContainer = ref(null)
+const textarea = ref(null)
+const ws = ref(null)
+const wsConnected = ref(false)
+
+const messages = ref([
+
+])
+
+const myUserId = getUserId() 
+const targetUserId = props.userId
+
+// 新增状态
+const currentPage = ref(1)
+const totalPages = ref(1)
+const isLoading = ref(false)
+const canLoadMore = ref(true)
+const isInitialLoad = ref(true)
+
+const getAllHistory = async () => {
+  if (!canLoadMore.value || isLoading.value) return
+
+  isLoading.value = true
+  try {
+    const pageconfig = {
+      page: currentPage.value,
+      page_size: 20
+    }
+
+    const response = await getHistory(getToken(), targetUserId, pageconfig).catch(error => {canLoadMore.value = false})
+    totalPages.value = response.total_pages
+
+    if (response.results.length === 0) {
+      canLoadMore.value = false
+      return
+    }
+
+    // 记录原始滚动信息
+    const prevScrollHeight = messagesContainer.value?.scrollHeight || 0
+    const prevScrollTop = messagesContainer.value?.scrollTop || 0
+
+    // 插入新消息到列表头部
+    const newMessages = response.results.map(message => ({
+      content: message.content,
+      time: message.send_at,
+      isSelf: message.sender == getUserId()
+    })).reverse()
+
+    messages.value = [...newMessages, ...messages.value]
+
+    // 等待DOM更新
+    await nextTick()
+
+    // 调整滚动位置
+    if (messagesContainer.value) {
+      const newScrollHeight = messagesContainer.value.scrollHeight
+      const heightDiff = newScrollHeight - prevScrollHeight
+      messagesContainer.value.scrollTop = prevScrollTop + heightDiff
+    }
+
+    currentPage.value++
+
+    // 首次加载后滚动到底部
+    if (isInitialLoad.value) {
+      scrollToBottom()
+      isInitialLoad.value = false
+    }
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// 修改滚动处理逻辑
+const handleScroll = (() => {
+  if (isInitialLoad.value) return
+
+  const container = messagesContainer.value
+  if (!container) return
+
+  // 触发加载的阈值（距离顶部100px）
+  if (container.scrollTop < 100 && canLoadMore.value) {
+    loadMoreMessages()
+  }
+})
+
+
+// 优化后的加载方法
+const loadMoreMessages = async () => {
+  if (isLoading.value) return
+
+  // 记录当前滚动位置
+  const prevScrollHeight = messagesContainer.value.scrollHeight
+
+  await getAllHistory()
+
+  // 保持滚动位置
+  nextTick(() => {
+    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight - prevScrollHeight
   })
 }
 
-const sendMessage=()=> {
-      if (!this.inputMessage.trim()) return
+// 在组件挂载时添加滚动监听
+onMounted(() => {
 
-      this.messages.push({
-        content: this.inputMessage,
-        time: new Date(),
-        isSelf: true
-      })
+  messagesContainer.value?.addEventListener('scroll', handleScroll)
+})
 
-      this.inputMessage = ''
-      this.$nextTick(() => {
-        this.scrollToBottom()
-        this.adjustTextareaHeight()
-      })
+// 在组件卸载时移除监听
+onBeforeUnmount(() => {
+  messagesContainer.value?.removeEventListener('scroll', handleScroll)
+})
+onMounted(async () => {
+  await getAllHistory()  // 确保先加载历史消息
+  console.log('start')
+  ws.value = new WebSocket('ws://localhost:8000/ws/chat/' + "?token=" + getToken())
+  ws.value.onopen = () => {
+    wsConnected.value = true
+  }
+  ws.value.onclose = () => {
+    wsConnected.value = false
+  }
+  ws.value.onerror = () => {
+    wsConnected.value = false
+  }
+  ws.value.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data)
+      if (data.error) {
+        messages.value.push({time: new Date(), content: '错误: ' + data.error, isSelf: false})
+      } else {
+        messages.value.push({
+          time: new Date(),
+          content: data.content,
+          isSelf: data.sender_id == myUserId // 注意类型一致
+        })
+        nextTick(scrollToBottom)
+      }
+    } catch {
+      messages.value.push({time: new Date(), content: event.data, isSelf: false})
     }
-const newLine=()=> {
-      this.inputMessage += '\n'
-      this.adjustTextareaHeight()
-    }
-const  formatTime=(time)=> {
-      return `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`
-    }
-const scrollToBottom=()=> {
-      const container = this.$refs.messagesContainer
-      container.scrollTop = container.scrollHeight
-    }
-const adjustTextareaHeight=()=> {
-      const textarea = this.$refs.textarea
-      textarea.style.height = 'auto'
-      textarea.style.height = textarea.scrollHeight + 'px'
-    }
+  }
+})
+
+onBeforeUnmount(() => {
+  if (ws.value) ws.value.close()
+})
+
+
+const getUser = async () => {
+  await getUserById(props.userId).then(response => {
+    currentUser.value = response
+  })
+}
+
+const sendMessage = () => {
+  if (!inputMessage.value.trim()) return
+  // 先本地显示
+  messages.value.push({
+    content: inputMessage.value,
+    time: new Date(),
+    isSelf: true
+  })
+  // 通过WebSocket发送
+  console.log(ws.value, ws.value.readyState)
+  if (ws.value && ws.value.readyState === 1) {
+      ws.value.send(JSON.stringify({
+      receiver_id: targetUserId,
+      content: inputMessage.value
+    }))
+  }
+  inputMessage.value = ''
+  nextTick(() => {
+    scrollToBottom()
+    adjustTextareaHeight()
+  })
+}
+
+const newLine = () => {
+  inputMessage.value += '\n'
+  adjustTextareaHeight()
+}
+
+
+
+const scrollToBottom = () => {
+  const container = messagesContainer.value
+  if (container) {
+    container.scrollTop = container.scrollHeight
+  }
+}
+
+const adjustTextareaHeight = () => {
+  const ta = textarea.value
+  if (ta) {
+    ta.style.height = 'auto'
+    ta.style.height = ta.scrollHeight + 'px'
+  }
+}
+
 scrollToBottom()
 </script>
 
 <style scoped>
+/* 原有样式保持不变 */
 .chat-container {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 660px;
+  height: 860px;
   background-color: #f0f0f0;
 }
 

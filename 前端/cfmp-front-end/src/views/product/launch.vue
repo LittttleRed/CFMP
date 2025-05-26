@@ -190,7 +190,7 @@ const launch = async () => {
     await addProduct(form, getToken());
     ElMessage.success("发布成功！");
     //返回首页
-    //  await router.push('/')
+     await router.push('/')
   } catch (error) {
     ElMessage.error(error.response?.data?.message || "发布失败，请重试");
   }

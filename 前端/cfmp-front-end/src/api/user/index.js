@@ -23,14 +23,14 @@ export const sendCaptcha=(data)=>{
 }
 export const loginWithCaptcha=(data)=>{
     return http({
-        url:'/v1/auth/login-with-captcha',
+        url:'/v1/auth/login-with-captcha/',
         method:'post',
         data:data,
     })
 }
 export const getUserInfo=(token)=>{
     return http({
-        url:'/v1/user/info',
+        url:'/v1/user/info/',
         method:'get',
         headers:{
             'Authorization':token
@@ -39,7 +39,7 @@ export const getUserInfo=(token)=>{
 }
 export const updateUserName=(token,name)=>{
     return http({
-        url:'/v1/user/username',
+        url:'/v1/user/username/',
         method:'patch',
         headers:{
             'Authorization':token
@@ -140,5 +140,14 @@ export const getAllFollowees=(token)=>{
         headers:{
             'Authorization':'Bearer '+token
         }
+    })
+}
+export const getHistory=(token,id,pageconfig)=>{
+    return http({
+        url:'/v1/user/chat/'+id+'/',
+        method:'get',
+        headers:{
+            'Authorization':'Bearer '+token
+        },params:pageconfig
     })
 }

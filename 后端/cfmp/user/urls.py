@@ -21,8 +21,9 @@ urlpatterns += [
     path('user/me/',  views.UserInfoView.as_view(), name='update_user'),
     path('user/me/products/<int:user_id>/', views.UserProductsViewSet.as_view()),
     path('user/complaint/',views.UserComplaintViewSet.as_view()),
-    path('user/follow/<int:followee_id>/',views.FollowUserDetailsViewSet.as_view()),
+    path('user/follow/<int:followee>/',views.FollowUserDetailsViewSet.as_view()),
     path('user/follow/',views.FollowUserViewSet.as_view()),
     path('user/followee/',views.FolloweeUserViewSet.as_view()),
     path('user/me/products/<int:user_id>/', views.UserProductsViewSet.as_view()),
+    path('user/chat/<int:user_id>/',  views.ChatLogViewSet.as_view())
 ]

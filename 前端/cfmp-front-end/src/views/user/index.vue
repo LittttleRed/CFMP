@@ -39,10 +39,10 @@ import  LeftBar  from '../../components/user/leftbar.vue'
 import Head from '../../components/Head.vue'
 import {ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
-import {getHeadImg, getToken, getUserId} from "../../utils/user-utils.js";
+import {getHeadImg, getToken, getUserId, getUserName} from "../../utils/user-utils.js";
 import {createComplaint, followUser, getAllFollows, getMe, getUserById, unfollowUser} from "../../api/user/index.js";
 import {ElMessage} from "element-plus";
-const username = ref('123214213123')
+const username = ref(getUserName())
 const avatar = ref('')
 const route = useRoute()
 const touter = useRouter()
@@ -57,7 +57,8 @@ const isfollowee = async() =>{
  await getAllFollows(getToken()).then(res => {
    console.log(res)
    for(let i=0;i<res.length;i++){
-     if(res[i]["followee"]==route.query.user_id){
+     if(res[i]["followee"].user_id==route.query.user_id){
+       console.log(res)
        hadfollowed.value = true
        break
      }

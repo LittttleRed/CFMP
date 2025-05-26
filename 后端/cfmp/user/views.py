@@ -3,19 +3,20 @@ import jwt
 import datetime
 from datetime import datetime, timedelta, timezone
 from django.core.files.storage import default_storage
+from django.db.models import Q
 from django.shortcuts import render
 from django.contrib.auth import authenticate
 from minio_storage import MinioMediaStorage
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view
-from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView
+from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, get_object_or_404
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
-from .serializers import UserSerializer, PublicUserSerializer, FollowSerializer
-from .models import User, Follow
+from .serializers import UserSerializer, PublicUserSerializer, FollowSerializer, ChatLogSerializer
+from .models import User, Follow, ChatLog
 from .serializers import UserSerializer, PublicUserSerializer
 from .models import User
 from .models import Captcha
@@ -28,8 +29,17 @@ from config.authentication import JWTAuthentication
 from product.models import Product
 from product.serializers import ProductSerializer
 from root.serializers import ComplaintSerializer
+from django.core.mail import send_mail
+
+import random
+# import redis
+
 # Create your views here.
 import re
+
+from .pagination import StandardResultsSetPagination
+
+
 def send_sms_code(to_email):
     # 生成邮箱验证码
     sms_code = '%06d' % random.randint(0, 999999)
@@ -301,6 +311,7 @@ class login_captchaView(APIView):
                 "fail_code": "USER_NOT_FOUND",
                 "fail_msg": "用户不存在"
             }, status=status.HTTP_404_NOT_FOUND)
+        
 class UserIdViewSet(RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = PublicUserSerializer
@@ -373,7 +384,19 @@ class UserComplaintViewSet(ListCreateAPIView):
 class FollowUserDetailsViewSet(ListCreateAPIView,  RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = FollowSerializer
-    lookup_field = 'followee_id'
+    lookup_field = 'followee'
+    def create(self, request, *args, **kwargs):
+        follower = self.request.user
+        followee = User.objects.get(user_id=self.kwargs.get("followee"))
+        Follow.objects.create(follower=follower, followee=followee)
+        return Response(status=status.HTTP_201_CREATED)
+
+    def delete(self, request, *args, **kwargs):
+        follower = self.request.user
+        followee = User.objects.get(user_id=self.kwargs.get("followee"))
+        Follow.objects.filter(follower=follower, followee=followee).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 class modify_email(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
@@ -403,16 +426,7 @@ class modify_email(APIView):
         })
 
     #  创建关注
-    def create(self, request, *args, **kwargs):
-        follower = self.request.user
-        followee = User.objects.get(user_id=self.kwargs.get("followee_id"))
-        Follow.objects.create(follower=follower, followee=followee)
-        return Response(status=status.HTTP_201_CREATED)
-    def delete(self, request, *args, **kwargs):
-        follower = self.request.user
-        followee = User.objects.get(user_id=self.kwargs.get("followee_id"))
-        Follow.objects.filter(follower=follower, followee=followee).delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class FollowUserViewSet(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
@@ -433,3 +447,32 @@ class FolloweeUserViewSet(ListCreateAPIView):
     def get_queryset(self):
         user = self.request.user
         return Follow.objects.filter(followee=user)
+
+
+class ChatLogViewSet(ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ChatLogSerializer
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        # 获取当前用户和聊天对象
+        me = self.request.user
+        chater = get_object_or_404(User, user_id=self.kwargs.get("user_id"))
+
+        # 构建查询条件
+        return ChatLog.objects.filter(
+            Q(sender=me, receiver=chater) |
+            Q(sender=chater, receiver=me)
+        ).order_by('-send_at')  # 添加排序确保分页稳定
+
+    def list(self, request, *args, **kwargs):
+        # 调用父类方法获取分页响应
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)

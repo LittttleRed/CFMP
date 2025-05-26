@@ -150,7 +150,7 @@ export const constRoutes =   [
   {
     path: '/test',
     name: 'test',
-    component: () => import('../views/test.vue'),
+    component: () => import('../views/chat/test.vue'),
     meta: { title: '测试' }
   },{
     path: '/search',

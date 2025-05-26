@@ -40,7 +40,7 @@
             <el-form-item prop="email">
               <el-input
                 v-model="loginForm.email"
-                placeholder="邮箱/手机号"
+                placeholder="邮箱"
                 class="mail-input"
                 tabindex="1"
               >
