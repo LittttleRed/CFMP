@@ -29,8 +29,8 @@ class Captcha(models.Model):
         db_table = "captcha"
 class ChatLog(models.Model):
     chat_id = models.BigAutoField(primary_key=True)
-    sender_id = models.IntegerField()
-    receiver_id = models.IntegerField()
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sender")
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name="receiver")
     content = models.TextField()
     send_at = models.DateTimeField(auto_now_add=True)
     read = models.BooleanField(default=False)

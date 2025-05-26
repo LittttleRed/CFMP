@@ -17,11 +17,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
             data = json.loads(text_data)
+            print(data)
             receiver_id = data['receiver_id']
             content = data['content']
 
             # 关注关系?
-
             await self.save_message(self.user.user_id, receiver_id, content)
             
             # 推送消息给接收者

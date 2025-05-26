@@ -16,3 +16,9 @@ class FollowSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Follow
         fields = '__all__'
+
+class ChatLogSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.ChatLog
+        fields = '__all__'
