@@ -28,7 +28,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
+ASGI_APPLICATION = 'config.asgi.application'  # 指定ASGI入口
 # Application definition
 
 # python3 manage.py migrate
@@ -58,7 +58,7 @@ INSTALLED_APPS = [
 #     python manage.py migrate --fake django_apscheduler zero
 ]# 指定媒体文件的URL前缀（相对路径）
 
-ASGI_APPLICATION = 'config.asgi.application'  # 指定ASGI入口
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels.layers.InMemoryChannelLayer"  # 使用内存通道
