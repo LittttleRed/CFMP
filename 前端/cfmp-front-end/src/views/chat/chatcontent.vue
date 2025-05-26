@@ -53,19 +53,23 @@
 import { ref, defineProps, nextTick } from 'vue'
 import {getHeadImg} from "@/utils/user-utils.js";
 import {getUserById} from "@/api/user/index.js";
-
+import { getUserId } from "@/utils/user-utils.js";
+import { onMounted, onBeforeUnmount } from 'vue'
 const props = defineProps({
   userId: {
     type: String,
     required: true
   }
-})
+}
+)
 
 const inputMessage = ref('')
 const currentUser = ref({})
 const selfAvatar = ref(getHeadImg())
 const messagesContainer = ref(null)
 const textarea = ref(null)
+const ws = ref(null)
+const wsConnected = ref(false)
 
 const messages = ref([
   {
@@ -80,6 +84,56 @@ const messages = ref([
   }
 ])
 
+const myUserId = getUserId() 
+const targetUserId = props.userId
+
+
+const getMyMessage= ()=>{
+
+}
+
+onMounted(() => {
+  console.log('start')
+  ws.value = new WebSocket('ws://localhost:8000/ws/chat/')
+  ws.value.onopen = () => {
+    wsConnected.value = true
+    messages.value.push({ time: new Date(), content: 'WebSocket连接成功', isSelf: false })
+    console.log('WebSocket连接成功')
+  }
+  ws.value.onclose = () => {
+    wsConnected.value = false
+    messages.value.push({ time: new Date(), content: 'WebSocket连接关闭', isSelf: false })
+    console.log('WebSocket连接关闭')
+  }
+  ws.value.onerror = () => {
+    wsConnected.value = false
+    messages.value.push({ time: new Date(), content: 'WebSocket连接出错', isSelf: false })
+    console.log('WebSocket连接出错')
+  }
+  ws.value.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data)
+      if (data.error) {
+        messages.value.push({ time: new Date(), content: '错误: ' + data.error, isSelf: false })
+      } else {
+        messages.value.push({
+          time: new Date(),
+          content: data.content,
+          isSelf: data.sender_id == myUserId // 注意类型一致
+        })
+        nextTick(scrollToBottom)
+      }
+    } catch {
+      messages.value.push({ time: new Date(), content: event.data, isSelf: false })
+    }
+  }
+})
+
+onBeforeUnmount(() => {
+  if (ws.value) ws.value.close()
+})
+
+
 const getUser = async () => {
   await getUserById(props.userId).then(response => {
     currentUser.value = response
@@ -88,13 +142,20 @@ const getUser = async () => {
 
 const sendMessage = () => {
   if (!inputMessage.value.trim()) return
-
+  // 先本地显示
   messages.value.push({
     content: inputMessage.value,
     time: new Date(),
     isSelf: true
   })
-
+  // 通过WebSocket发送
+  console.log(ws.value, ws.value.readyState)
+  if (ws.value && ws.value.readyState === 1) {
+      ws.value.send(JSON.stringify({
+      receiver_id: targetUserId,
+      content: inputMessage.value
+    }))
+  }
   inputMessage.value = ''
   nextTick(() => {
     scrollToBottom()

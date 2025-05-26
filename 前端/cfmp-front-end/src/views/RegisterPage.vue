@@ -86,31 +86,31 @@
 
            <el-form-item prop="captcha" style="display: flex;flex-direction: column">
           <el-input
-           v-model="registerForm.captcha"
-    placeholder="请输入验证码"
-    class="mail-input"
-    tabindex="2"
-    style="width: 250px"
+          v-model="registerForm.captcha"
+          placeholder="请输入验证码"
+          class="mail-input"
+          tabindex="2"
+          style="width: 250px"
   >
-    <template #prefix>
-      <span class="input-label">验证码</span>
-    </template>
-  </el-input>
+        <template #prefix>
+           <span class="input-label">验证码</span>
+        </template>
+        </el-input>
   <!-- 只有邮箱格式正确时才显示按钮 -->
-  <el-button
-    style="margin-left: 20px;height: 48px"
-    v-if="/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(registerForm.email)"
-    :disabled="captchaCountdown > 0"
-    @click="handleSendCaptcha"
-  >
-    <span v-if="captchaCountdown <= 0">
-      发送验证码
-    </span>
-    <span v-else>
-      {{ captchaCountdown }}秒后重新发送
-    </span>
-  </el-button>
-</el-form-item>
+        <el-button
+          style="margin-left: 20px;height: 48px"
+          v-if="/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(registerForm.email)"
+          :disabled="captchaCountdown > 0"
+          @click="handleSendCaptcha"
+          >
+          <span v-if="captchaCountdown <= 0">
+          发送验证码
+          </span>
+          <span v-else>
+            {{ captchaCountdown }}秒后重新发送
+          </span>
+        </el-button>
+      </el-form-item>
 
             <el-form-item prop="password">
               <el-input
