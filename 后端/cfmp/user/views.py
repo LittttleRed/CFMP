@@ -373,7 +373,19 @@ class UserComplaintViewSet(ListCreateAPIView):
 class FollowUserDetailsViewSet(ListCreateAPIView,  RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = FollowSerializer
-    lookup_field = 'followee_id'
+    lookup_field = 'followee'
+    def create(self, request, *args, **kwargs):
+        follower = self.request.user
+        followee = User.objects.get(user_id=self.kwargs.get("followee"))
+        Follow.objects.create(follower=follower, followee=followee)
+        return Response(status=status.HTTP_201_CREATED)
+
+    def delete(self, request, *args, **kwargs):
+        follower = self.request.user
+        followee = User.objects.get(user_id=self.kwargs.get("followee"))
+        Follow.objects.filter(follower=follower, followee=followee).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 class modify_email(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
@@ -403,16 +415,7 @@ class modify_email(APIView):
         })
 
     #  创建关注
-    def create(self, request, *args, **kwargs):
-        follower = self.request.user
-        followee = User.objects.get(user_id=self.kwargs.get("followee_id"))
-        Follow.objects.create(follower=follower, followee=followee)
-        return Response(status=status.HTTP_201_CREATED)
-    def delete(self, request, *args, **kwargs):
-        follower = self.request.user
-        followee = User.objects.get(user_id=self.kwargs.get("followee_id"))
-        Follow.objects.filter(follower=follower, followee=followee).delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class FollowUserViewSet(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
