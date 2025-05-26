@@ -50,80 +50,95 @@
 </template>
 
 <script setup>
-
-import {ref} from "vue";
-import {getHeadImg, getUserName} from "@/utils/user-utils.js";
+import { ref, defineProps, nextTick } from 'vue'
+import {getHeadImg} from "@/utils/user-utils.js";
 import {getUserById} from "@/api/user/index.js";
 
-const inputMessage= ref('')
-const currentUser=ref({ })
-const selfAvatar=getHeadImg()
-const messages=ref([
-        {
-          content: '你好呀！',
-          time: new Date(Date.now() - 3600000),
-          isSelf: false
-        },
-        {
-          content: '你好！有什么可以帮助你的？',
-          time: new Date(),
-          isSelf: true
-        }
-      ])
-defineProps(
-    {
-      userId: {
-        type: String,
-        required: true
-      }
-    }
-)
-const getUser=async () => {
-  await getUserById().then(response => {
-    currentUser.value=response
+const props = defineProps({
+  userId: {
+    type: String,
+    required: true
+  }
+})
+
+const inputMessage = ref('')
+const currentUser = ref({})
+const selfAvatar = ref(getHeadImg())
+const messagesContainer = ref(null)
+const textarea = ref(null)
+
+const messages = ref([
+  {
+    content: '你好呀！',
+    time: new Date(Date.now() - 3600000),
+    isSelf: false
+  },
+  {
+    content: '你好！有什么可以帮助你的？',
+    time: new Date(),
+    isSelf: true
+  }
+])
+
+const getUser = async () => {
+  await getUserById(props.userId).then(response => {
+    currentUser.value = response
   })
 }
 
-const sendMessage=()=> {
-      if (!this.inputMessage.trim()) return
+const sendMessage = () => {
+  if (!inputMessage.value.trim()) return
 
-      this.messages.push({
-        content: this.inputMessage,
-        time: new Date(),
-        isSelf: true
-      })
+  messages.value.push({
+    content: inputMessage.value,
+    time: new Date(),
+    isSelf: true
+  })
 
-      this.inputMessage = ''
-      this.$nextTick(() => {
-        this.scrollToBottom()
-        this.adjustTextareaHeight()
-      })
-    }
-const newLine=()=> {
-      this.inputMessage += '\n'
-      this.adjustTextareaHeight()
-    }
-const  formatTime=(time)=> {
-      return `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`
-    }
-const scrollToBottom=()=> {
-      const container = this.$refs.messagesContainer
-      container.scrollTop = container.scrollHeight
-    }
-const adjustTextareaHeight=()=> {
-      const textarea = this.$refs.textarea
-      textarea.style.height = 'auto'
-      textarea.style.height = textarea.scrollHeight + 'px'
-    }
-scrollToBottom()
+  inputMessage.value = ''
+  nextTick(() => {
+    scrollToBottom()
+    adjustTextareaHeight()
+  })
+}
+
+const newLine = () => {
+  inputMessage.value += '\n'
+  adjustTextareaHeight()
+}
+
+const formatTime = (time) => {
+  return `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`
+}
+
+const scrollToBottom = () => {
+  const container = messagesContainer.value
+  if (container) {
+    container.scrollTop = container.scrollHeight
+  }
+}
+
+const adjustTextareaHeight = () => {
+  const ta = textarea.value
+  if (ta) {
+    ta.style.height = 'auto'
+    ta.style.height = ta.scrollHeight + 'px'
+  }
+}
+
+// 初始化滚动到底部
+nextTick(() => {
+  scrollToBottom()
+})
 </script>
 
 <style scoped>
+/* 原有样式保持不变 */
 .chat-container {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 660px;
+  height: 860px;
   background-color: #f0f0f0;
 }
 

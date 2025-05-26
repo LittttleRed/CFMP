@@ -49,7 +49,7 @@
   </div>
 </el-dialog>
 
-  <el-dialog class="chat" draggable v-model="chating" style="height: 700px;width: 700px">
+  <el-dialog class="chat" draggable v-model="chating" style="height: 900px;width: 900px">
       <chat-content :user-id="Chater||follower[0].user_id" style="margin-bottom: 0"></chat-content>
   </el-dialog>
 
@@ -67,7 +67,7 @@ const chating = ref(false);
 const follower = ref([]);//我关注的
 const followee = ref([]);//关注我的
 const  chatList = ref([]);
-const Chater = ref('');
+const Chater = ref('1');
 const getFollower = async () => {
   await getAllFollows(getToken()).then(ref => {
     follower.value = ref.map(item =>item.followee)
