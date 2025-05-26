@@ -55,6 +55,7 @@ import {getHeadImg} from "@/utils/user-utils.js";
 import {getUserById} from "@/api/user/index.js";
 import { getUserId } from "@/utils/user-utils.js";
 import { onMounted, onBeforeUnmount } from 'vue'
+import { getToken } from '../../utils/user-utils';
 const props = defineProps({
   userId: {
     type: String,
@@ -94,7 +95,7 @@ const getMyMessage= ()=>{
 
 onMounted(() => {
   console.log('start')
-  ws.value = new WebSocket('ws://localhost:8000/ws/chat/')
+  ws.value = new WebSocket('ws://localhost:8000/ws/chat/'+"?token=" + getToken())
   ws.value.onopen = () => {
     wsConnected.value = true
     messages.value.push({ time: new Date(), content: 'WebSocket连接成功', isSelf: false })

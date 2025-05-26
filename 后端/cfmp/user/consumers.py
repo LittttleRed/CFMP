@@ -5,9 +5,10 @@ from .models import ChatLog, User
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
+    
     async def connect(self):
         self.user = self.scope["user"]
-        self.room_group_name = f"user_{self.user.user_id}"
+        self.room_group_name = f"user_{self.user.user_id}"  # 使用用户ID作为组名
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
 
