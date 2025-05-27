@@ -22,7 +22,7 @@ class ProductFilter(django_filters.FilterSet):
     
     # 状态过滤
     status = django_filters.NumberFilter(field_name='status')
-    
+    user_status = django_filters.NumberFilter(field_name='user__status')
     # 搜索字段 (同时搜索标题和描述)
     search = django_filters.CharFilter(method='filter_search')
     
@@ -37,4 +37,4 @@ class ProductFilter(django_filters.FilterSet):
     
     class Meta:
         model = Product
-        fields = ['title', 'description', 'min_price', 'max_price', 'category', 'status', 'search'] 
+        fields = ['title', 'description', 'min_price', 'max_price', 'category', 'status', 'search','user_status']

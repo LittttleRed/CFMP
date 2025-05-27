@@ -26,6 +26,7 @@
   <div style="display: flex;flex-direction: row">
   <div style="cursor: pointer;font-size: 20px; margin: 20px 0 10px 10px" @click="toFollower">我关注的</div>
   <div style="cursor: pointer;font-size: 20px; margin: 20px 0 10px 20px" @click="toFollowee">关注我的</div>
+    <div style="cursor: pointer;font-size: 20px; margin: 20px 0 10px 20px" @click="toSystem">系统通知</div>
     </div>
   <hr>
 
@@ -53,7 +54,9 @@
   <el-dialog class="chat" draggable v-model="Chater" style="height: 900px;width: 900px">
       <chat-content v-if="Chater" :user-id="Chater" style="margin-bottom: 0"></chat-content>
   </el-dialog>
-
+  <el-dialog class="chat" draggable v-model="System" style="height: 900px;width: 900px;--el-dialog-border-radius: 20px">
+     <Systemchat  v-if="System" style="margin-bottom: 0"></Systemchat>
+  </el-dialog>
   <!-- 占位容器（仅演示用） -->
 </template>
 
@@ -63,12 +66,14 @@ import ChatContent from "@/views/chat/chatcontent.vue";
 import {getHeadImg, getToken, getUserName} from "@/utils/user-utils.js";
 import {getAllFollowees, getAllFollows} from "@/api/user/index.js";
 import {ElMessage} from "element-plus";
+import Systemchat from "./chat/systemchat.vue"
 
 const chating = ref(false);
 const follower = ref([]);//我关注的
 const followee = ref([]);//关注我的
 const  chatList = ref([]);
 const Chater = ref();
+const System = ref(false);
 const getFollower = async () => {
   await getAllFollows(getToken()).then(ref => {
     follower.value = ref.map(item =>item.followee)
@@ -100,6 +105,9 @@ const toFollower=()=>{
 }
 const toFollowee=()=>{
   chatList.value = followee.value
+}
+const toSystem=()=>{
+  System.value = true
 }
 const buildWenSocket = () => {
 
