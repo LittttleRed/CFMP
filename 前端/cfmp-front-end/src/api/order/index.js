@@ -77,6 +77,22 @@ export const cancelPayment = (paymentId) => {
     })
 }
 
+// 模拟支付完成的API
+export const simulatePaymentSuccess = (orderId, paymentMethod = 'alipay') => {
+    return http({
+        url: `payment/callback/${paymentMethod}/`,
+        method: 'post',
+        params: {
+            order_id: orderId,
+            payment_id: orderId,  // 简化处理，实际可能不同
+            transaction_id: Date.now(),
+            status: 'success',
+            total_amount: 0,  // 实际金额会在后端查询
+            sign: 'simulated_signature'
+        }
+    })
+}
+
 // 通知相关API
 export const getNotifications = (params = {}) => {
     return http({
