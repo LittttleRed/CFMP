@@ -253,15 +253,11 @@ const handleBuyNow = () => {
     router.push('/login')
     return
   }
-
-  // 跳转到支付页面，携带商品信息
+  // 跳转到支付页面，只携带商品ID
   router.push({
     name: 'pay',
     query: {
-      product_id: productData.product_id,
-      quantity: 1, // 默认数量为1
-      price: productData.price,
-      seller_id: productData.user.user_id
+      product_id: productData.product_id
     }
   })
 }
