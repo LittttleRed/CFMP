@@ -15,8 +15,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
-from .serializers import UserSerializer, PublicUserSerializer, FollowSerializer, ChatLogSerializer
-from .models import User, Follow, ChatLog
+from .serializers import UserSerializer, PublicUserSerializer, FollowSerializer, ChatLogSerializer, MessagesSerializer
+from .models import User, Follow, ChatLog, Messages
 from .serializers import UserSerializer, PublicUserSerializer
 from .models import User
 from .models import Captcha
@@ -476,3 +476,10 @@ class ChatLogViewSet(ListCreateAPIView):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+class MessageViewSet(ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = MessagesSerializer
+    pagination_class = StandardResultsSetPagination
+    def get_queryset(self):
+        pass

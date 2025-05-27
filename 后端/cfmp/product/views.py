@@ -5,6 +5,8 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework_extensions.cache.mixins import ListCacheResponseMixin
+
 from .pagination import StandardResultsSetPagination
 from .permissions import IsOwnerOrReadOnly, IsAdmin
 from rest_framework.response import Response
@@ -32,7 +34,7 @@ from .filters import ProductFilter
 
 
 # 商品相关视图
-class ProductListCreateAPIView(ListCreateAPIView):
+class ProductListCreateAPIView(ListCacheResponseMixin,ListCreateAPIView):
     queryset = Product.objects.all().order_by("-created_at")
     serializer_class = ProductSerializer
     pagination_class = StandardResultsSetPagination
