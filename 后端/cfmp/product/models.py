@@ -40,6 +40,13 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     categories = models.ManyToManyField("Category", related_name="products")
     function = models.SmallIntegerField(choices=FUNCTION_CHOICES, default=0)
+    visit_count = models.PositiveIntegerField(default=0)
+    rating_avg = models.DecimalField(
+        max_digits=2,
+        decimal_places=1,
+        default=0.0,
+        help_text="平均评分"
+    )
 
     class Meta:
         db_table = "product"
