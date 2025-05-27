@@ -29,15 +29,38 @@ from .serializers import (
     ProductMediaSerializer,
 )
 from .filters import ProductFilter
-
+from django.db.models import Avg
 
 # 商品相关视图
 class ProductListCreateAPIView(ListCreateAPIView):
-    queryset = Product.objects.all().order_by("-created_at")
     serializer_class = ProductSerializer
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = ProductFilter
+    
+
+    def get_queryset(self, ):
+        """
+            sort_by = 0 表示按创建时间倒序
+            sort_by = 1 表示按热度倒序
+            sort_by = 2 表示按价格升序
+            sort_by = 3 表示按价格降序
+            sort_by = 4 表示按评分倒序
+        """
+        # 如果查询参数sort_by存在，则按指定字段排序
+        sort_by = self.request.query_params.get("sort_by")
+        if sort_by is not None:
+            if sort_by == "0":
+                return Product.objects.all().order_by("-created_at")
+            elif sort_by == "1":
+                return Product.objects.all().order_by("-visit_count")
+            elif sort_by == "2":
+                return Product.objects.all().order_by("price")
+            elif sort_by == "3":
+                return Product.objects.all().order_by("-price")
+            elif sort_by == "4":
+                return Product.objects.all().order_by("-rating_avg")
+        return Product.objects.all().order_by("-created_at")
 
     def perform_create(self, serializer):
         # 保存商品基本信息
@@ -79,7 +102,6 @@ class ProductListCreateAPIView(ListCreateAPIView):
                 # 更新标志
                 if is_first:
                     is_first = False
-
 
 # 商品图片相关视图
 class ProductMediaListView(APIView):
@@ -318,6 +340,15 @@ class ProductDetailAPIView(RetrieveUpdateDestroyAPIView):
             return []
         return [IsOwnerOrReadOnly()]
 
+    def retrieve(self, request, *args, **kwargs):
+        """获取商品详情并增加访问次数"""
+        instance = self.get_object()
+        # 增加访问次数
+        instance.visit_count += 1
+        instance.save(update_fields=['visit_count'])
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
     def perform_update(self, serializer):
         # 保存商品基本信息
         product = serializer.save()
@@ -366,7 +397,13 @@ class ProductReviewListCreateAPIView(ListCreateAPIView):
             from rest_framework.exceptions import ValidationError
             raise ValidationError({"detail": "您已经评论过该商品"})
             
-        serializer.save(user=self.request.user, product=product)
+        # 保存评论
+        review = serializer.save(user=self.request.user, product=product)
+        
+        # 更新商品平均评分
+        avg_rating = ProductReview.objects.filter(product=product).aggregate(Avg('rating'))['rating__avg']
+        product.rating_avg = round(avg_rating, 1) if avg_rating else 0.0
+        product.save(update_fields=['rating_avg'])
 
 
 class ProductReviewDetailAPIView(RetrieveUpdateDestroyAPIView):
@@ -487,7 +524,25 @@ class ProductByCategoryAPIView(ListAPIView):
     filterset_class = ProductFilter
 
     def get_queryset(self):
+        """
+            sort_by = 0 表示按创建时间倒序
+            sort_by = 1 表示按热度倒序
+            sort_by = 2 表示按价格升序
+            sort_by = 3 表示按价格降序
+            sort_by = 4 表示按评分倒序
+        """
         category_id = self.kwargs.get("category_id")
-        return Product.objects.filter(categories__category_id=category_id).order_by(
-            "-created_at"
-        )
+        # 如果查询参数sort_by存在，则按指定字段排序
+        sort_by = self.request.query_params.get("sort_by")
+        if sort_by is not None:
+            if sort_by == "0":
+                return Product.objects.filter(categories__category_id=category_id).order_by("-created_at")
+            elif sort_by == "1":
+                return Product.objects.filter(categories__category_id=category_id).order_by("-visit_count")
+            elif sort_by == "2":
+                return Product.objects.filter(categories__category_id=category_id).order_by("price")
+            elif sort_by == "3":
+                return Product.objects.filter(categories__category_id=category_id).order_by("-price")
+            elif sort_by == "4":
+                return Product.objects.filter(categories__category_id=category_id).order_by("-rating_avg")
+        return Product.objects.filter(categories__category_id=category_id).order_by("-created_at")
