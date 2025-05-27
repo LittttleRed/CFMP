@@ -223,8 +223,10 @@ const fetchOrderDetail = async () => {
     }
 
     const res = await getOrderDetail(orderId)
+    console.log()
     if (res.code === 200) {
       Object.assign(orderDetail, res.data)
+      console.log(orderDetail)
     } else {
       ElMessage.error(res.message || '获取订单详情失败')
     }
@@ -350,7 +352,7 @@ const simulatePayment = async () => {
       type: 'info'
     }).then(async () => {
       const paymentMethod = orderDetail.payment_method === 0 ? 'alipay' : 'wechat_pay'
-
+      console.log(orderDetail.order_id)
       const res = await simulatePaymentSuccess(orderDetail.order_id, paymentMethod)
 
       if (res.status === 'success') {

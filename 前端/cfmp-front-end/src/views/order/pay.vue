@@ -223,7 +223,7 @@ const submitOrder = async () => {
     }
 
     const paymentRes = await createPayment(paymentParams)
-
+      console.log(paymentRes)
     if (paymentRes.code === 200) {
       // 跳转到支付结果页面
       router.push({

@@ -353,7 +353,7 @@ class PaymentCallbackAPIView(APIView):
 
         # 假设支付已成功
         try:
-            payment = Payment.objects.get(payment_id=payment_id)
+            payment = Payment.objects.get(order_id=order_id)
             order = payment.order
 
             # 更新支付状态
