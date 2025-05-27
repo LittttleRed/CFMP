@@ -400,11 +400,11 @@ class ProductReviewListCreateAPIView(ListCreateAPIView):
             raise ValidationError({"detail": "您已经评论过该商品"})
             
         # 保存评论
-        review = serializer.save(user=self.request.user, product=product)
+        serializer.save(user=self.request.user, product=product)
         
         # 更新商品平均评分
-        avg_rating = ProductReview.objects.filter(product=product).aggregate(Avg('rating'))['rating__avg']
-        product.rating_avg = round(avg_rating, 1) if avg_rating else 0.0
+        rating_avg = ProductReview.objects.filter(product=product).aggregate(Avg('rating'))['rating__avg']
+        product.rating_avg = round(rating_avg, 1) if rating_avg else 0.0
         product.save(update_fields=['rating_avg'])
 
 
@@ -416,6 +416,26 @@ class ProductReviewDetailAPIView(RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         product_id = self.kwargs.get("product_id")
         return ProductReview.objects.filter(product_id=product_id)
+    def perform_update(self, serializer):
+        """更新评论时，重新计算商品的平均评分"""
+        review = serializer.save()
+        
+        # 获取评论对应的商品
+        product = review.product
+        
+        # 重新计算平均评分
+        rating_avg = ProductReview.objects.filter(product=product).aggregate(Avg('rating'))['rating__avg']
+        product.rating_avg = round(rating_avg, 1) if rating_avg else 0.0
+        product.save(update_fields=['rating_avg'])
+    def perform_destroy(self, instance):
+        """删除评论时，重新计算商品的平均评分"""
+        product = instance.product
+        super().perform_destroy(instance)
+        
+        # 重新计算平均评分
+        rating_avg = ProductReview.objects.filter(product=product).aggregate(Avg('rating'))['rating__avg']
+        product.rating_avg = round(rating_avg, 1) if rating_avg else 0.0
+        product.save(update_fields=['rating_avg'])
 
 
 # 收藏相关视图
