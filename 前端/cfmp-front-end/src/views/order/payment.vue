@@ -105,6 +105,14 @@
 
         <el-button
           v-if="orderDetail.status === 0"
+          type="success"
+          @click="simulatePayment"
+        >
+          模拟支付完成
+        </el-button>
+
+        <el-button
+          v-if="orderDetail.status === 0"
           type="danger"
           @click="cancelOrder"
         >
@@ -131,6 +139,7 @@
         <p class="amount-tip">支付金额：¥{{ orderDetail.total_amount }}</p>
         <div class="dialog-actions">
           <el-button @click="showPaymentDialog = false">取消</el-button>
+          <el-button type="success" @click="simulatePayment">模拟支付完成</el-button>
           <el-button type="primary" @click="checkPaymentStatus">查看支付状态</el-button>
         </div>
       </div>
@@ -148,7 +157,8 @@ import {
   cancelOrder as cancelOrderApi,
   completeOrder,
   createPayment,
-  queryPayment
+  queryPayment,
+  simulatePaymentSuccess
 } from '../../api/order/index.js'
 
 const route = useRoute()
@@ -328,6 +338,35 @@ const checkPaymentStatus = async () => {
   } catch (error) {
     ElMessage.error('查询支付状态失败')
     console.error(error)
+  }
+}
+
+// 模拟支付完成
+const simulatePayment = async () => {
+  try {
+    ElMessageBox.confirm('确定要模拟完成支付吗？这将把订单状态更新为已支付', '模拟支付', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'info'
+    }).then(async () => {
+      const paymentMethod = orderDetail.payment_method === 0 ? 'alipay' : 'wechat_pay'
+
+      const res = await simulatePaymentSuccess(orderDetail.order_id, paymentMethod)
+
+      if (res.status === 'success') {
+        ElMessage.success('模拟支付成功！')
+        // 更新订单状态
+        orderDetail.status = 1
+        orderDetail.payment_time = new Date().toISOString()
+      } else {
+        ElMessage.error('模拟支付失败：' + (res.message || '未知错误'))
+      }
+    }).catch(() => {
+      // 用户取消操作
+    })
+  } catch (error) {
+    ElMessage.error('模拟支付过程发生错误')
+    console.error('模拟支付错误:', error)
   }
 }
 
