@@ -28,7 +28,7 @@
 
 <script>
 import UserList from './chat.vue'
-import ChatContent from './message.vue'
+import ChatContent from './chatcontent.vue'
 import Head from '../../components/Head.vue'
 export default {
   components: {

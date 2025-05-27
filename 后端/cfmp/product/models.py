@@ -1,9 +1,20 @@
 from django.db import models
+from minio_storage import MinioMediaStorage
 from user.models import User
-from django_minio_backend import MinioBackend
+
 
 
 class Product(models.Model):
+    ON_SALE = 0
+    OFF_SALE = 1
+    STATUS_CHOICES = [
+        (ON_SALE, '上架'),
+        (OFF_SALE, '下架'),
+    ]
+    FUNCTION_CHOICES = [
+        (0, '包邮'),
+        (1, '自提'),
+    ]
     """Product
 
     Attributes:
@@ -12,19 +23,23 @@ class Product(models.Model):
         title: CharField
         description: TextField
         price: DecimalField
-        status:  default=0
+        status:  default=0 (0 = 上架, 1 = 下架)
         created_at: DateTimeField(not nessary)
         categories: model(related_name="products")
     """
 
     product_id = models.BigAutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, db_column='user')
     title = models.CharField(max_length=100)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.SmallIntegerField(default=0)
+    status = models.SmallIntegerField(
+        choices=STATUS_CHOICES,
+        default=ON_SALE
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     categories = models.ManyToManyField("Category", related_name="products")
+    function = models.SmallIntegerField(choices=FUNCTION_CHOICES, default=0)
 
     class Meta:
         db_table = "product"
@@ -45,7 +60,7 @@ class ProductMedia(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="media")
     media = models.ImageField(
         upload_to="product_media/",
-        storage=MinioBackend(),
+        storage=MinioMediaStorage(),
         null=True,
         blank=True,
     )
@@ -55,12 +70,12 @@ class ProductMedia(models.Model):
     class Meta:
         db_table = "product_media"
         ordering = ['-is_main', 'created_at']  # 主图优先，然后按时间排序
-    
+
     def save(self, *args, **kwargs):
         # 如果设置为主图，则将该产品的其他图片设为非主图
         if self.is_main:
             ProductMedia.objects.filter(
-                product=self.product, 
+                product=self.product,
                 is_main=True
             ).update(is_main=False)
         super().save(*args, **kwargs)

@@ -14,15 +14,15 @@
         <template #title>
           <span class="menu-title">我的交易</span>
         </template>
-        <el-menu-item index="/user/myrelease">我发布的</el-menu-item>
-        <el-menu-item index="/user/mybought">我买到的</el-menu-item>
+        <el-menu-item :index="path">我发布的</el-menu-item>
+        <el-menu-item index="/user/mybought" v-if="isMyHome">我买到的</el-menu-item>
       </el-sub-menu>
 
-      <el-menu-item  index="mycollection">我的收藏</el-menu-item>
+      <el-menu-item index="/user/mycollection" v-if="isMyHome">我的收藏</el-menu-item>
 
 
       <!-- 账户设置 -->
-      <el-sub-menu index="3">
+      <el-sub-menu index="3"  v-if="isMyHome">
         <template #title>
           <span class="menu-title">账户设置</span>
         </template>
@@ -33,14 +33,34 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-
+import {onMounted, ref} from 'vue'
+import {useRoute} from "vue-router";
+const path = ref('/user/myrelease')
+const route=useRoute()
 const activeMenu = ref('1-1') // 默认激活菜单
-
+defineProps({
+  isMyHome: {
+    type: Boolean,
+    default: false
+  },
+})
+onMounted(()=>{
+  if(route.query.user_id) {
+    path.value = '/user/myrelease?user_id=' + route.query.user_id
+  }
+})
 const handleSelect = (index) => {
   console.log('选中菜单:', index)
   // 这里可以添加路由跳转逻辑
   // 例如：router.push({ path: 对应路径 })
+}
+
+const handleOpen = (key, keyPath) => {
+  console.log('打开菜单:', key, keyPath)
+}
+
+const handleClose = (key, keyPath) => {
+  console.log('关闭菜单:', key, keyPath)
 }
 </script>
 

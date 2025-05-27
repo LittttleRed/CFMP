@@ -1,8 +1,14 @@
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+import uuid
+
+from django.db import transaction
+from rest_framework.parsers import MultiPartParser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework_extensions.cache.mixins import ListCacheResponseMixin
+
 from .pagination import StandardResultsSetPagination
-from .permissions import IsOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly, IsAdmin
 from rest_framework.response import Response
 from rest_framework.generics import (
     ListAPIView,
@@ -28,7 +34,7 @@ from .filters import ProductFilter
 
 
 # 商品相关视图
-class ProductListCreateAPIView(ListCreateAPIView):
+class ProductListCreateAPIView(ListCacheResponseMixin,ListCreateAPIView):
     queryset = Product.objects.all().order_by("-created_at")
     serializer_class = ProductSerializer
     pagination_class = StandardResultsSetPagination
@@ -38,7 +44,7 @@ class ProductListCreateAPIView(ListCreateAPIView):
     def perform_create(self, serializer):
         # 保存商品基本信息
         product = serializer.save(user=self.request.user)
-
+        print(self.request.FILES.getlist("media"))
         # 处理分类
         if "categories" in self.request.data:
             category_ids = (
@@ -65,6 +71,7 @@ class ProductListCreateAPIView(ListCreateAPIView):
 
             for media_file in media_files:
                 # 创建媒体文件记录
+                media_file.name = f"{product.product_id}+'_'+{uuid.uuid4().hex}.jpg"
                 ProductMedia.objects.create(
                     product=product,
                     media=media_file,
@@ -227,6 +234,77 @@ class ProductMediaDetailView(APIView):
             return Response({"detail": "商品不存在"}, status=status.HTTP_404_NOT_FOUND)
 
 
+class ProductMediaBulkUpdateView(APIView):
+    """
+    批量更新商品图片（替换全部）
+    PUT: 删除原有图片，上传新图片
+    """
+    parser_classes = [MultiPartParser]
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, product_id):
+        try:
+            # 获取商品对象
+            product = Product.objects.get(product_id=product_id)
+
+            # 权限验证
+            if request.user != product.user:
+                return Response(
+                    {"detail": "无权操作此商品"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # 使用事务保证操作原子性
+            with transaction.atomic():
+                # 删除所有旧图片
+                old_media = ProductMedia.objects.filter(product=product)
+                for media in old_media:
+                    media.media.delete(save=False)  # 删除物理文件
+                old_media.delete()
+
+                # 处理新图片
+                media_files = request.FILES.getlist('media', [])
+                new_media = []
+                is_first = True
+
+                for idx, file in enumerate(media_files):
+                    # 生成唯一文件名
+                    file.name = f"{product_id}_{uuid.uuid4().hex}"
+
+                    media = ProductMedia(
+                        product=product,
+                        media=file,
+                        is_main=is_first
+                    )
+                    new_media.append(media)
+                    is_first = False
+
+                # 批量创建
+                ProductMedia.objects.bulk_create(new_media)
+
+                # 如果没有上传新图片，设置主图为None
+                if not new_media:
+                    product.main_image = None
+                    product.save()
+
+            # 序列化返回结果
+            serializer = ProductMediaSerializer(
+                ProductMedia.objects.filter(product=product),
+                many=True
+            )
+            return Response(serializer.data)
+
+        except Product.DoesNotExist:
+            return Response(
+                {"detail": "商品不存在"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 class ProductDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
@@ -284,6 +362,12 @@ class ProductReviewListCreateAPIView(ListCreateAPIView):
     def perform_create(self, serializer):
         product_id = self.kwargs.get("product_id")
         product = Product.objects.get(product_id=product_id)
+        
+        # 检查用户是否已经评论过该商品
+        if ProductReview.objects.filter(product=product, user=self.request.user).exists():
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({"detail": "您已经评论过该商品"})
+            
         serializer.save(user=self.request.user, product=product)
 
 
@@ -380,7 +464,7 @@ class CategoryListCreateAPIView(ListCreateAPIView):
         """
         if self.request.method == "GET":
             return []
-        return [IsAdminUser()]
+        return [IsAdmin()]
 
 
 class CategoryDetailAPIView(RetrieveUpdateDestroyAPIView):
@@ -393,7 +477,7 @@ class CategoryDetailAPIView(RetrieveUpdateDestroyAPIView):
     def get_permissions(self):
         if self.request.method == "GET":
             return []
-        return [IsAdminUser()]
+        return [IsAdmin()]
 
 
 class ProductByCategoryAPIView(ListAPIView):
