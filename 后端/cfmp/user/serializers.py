@@ -8,7 +8,7 @@ class UserSerializer(serializers.ModelSerializer):
 class PublicUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.User
-        fields = ['user_id', 'username', 'avatar']
+        fields = ['user_id', 'username', 'avatar','status']
 
 class FollowSerializer(serializers.ModelSerializer):
     follower = PublicUserSerializer(read_only=True)
@@ -21,4 +21,9 @@ class ChatLogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.ChatLog
+        fields = '__all__'
+
+class MessagesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Messages
         fields = '__all__'
