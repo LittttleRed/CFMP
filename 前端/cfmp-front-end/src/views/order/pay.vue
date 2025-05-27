@@ -122,12 +122,12 @@ const router = useRouter()
 const submitting = ref(false)
 const paymentMethod = ref(0) // 默认支付宝
 
-// 从路由参数获取商品信息
+// 从路由参数只获取商品ID，其他信息从API获取
 const productInfo = reactive({
   product_id: parseInt(route.query.product_id),
-  quantity: parseInt(route.query.quantity) || 1,
-  price: parseFloat(route.query.price) || 0,
-  seller_id: parseInt(route.query.seller_id),
+  quantity: 1, // 默认购买数量为1
+  price: 0,
+  seller_id: 0,
   title: '',
   thumbnail: '',
   seller_name: ''
@@ -161,12 +161,22 @@ const totalAmount = computed(() => {
 const fetchProductInfo = async () => {
   try {
     const res = await getProduct(productInfo.product_id)
+    // 从API同步所有商品信息，确保使用后端的最新数据
     productInfo.title = res.title
     productInfo.thumbnail = res.media && res.media.length > 0 ? res.media[0].media : ''
+    productInfo.price = res.price // 使用后端返回的价格
+    productInfo.seller_id = res.user.user_id // 使用后端返回的卖家ID
     productInfo.seller_name = res.user.username
+
+    // 如果商品不存在或已下架，提示并返回
+    if (!res || res.status === 'off_shelf') {
+      ElMessage.error('商品已下架或不存在')
+      router.push('/') // 返回首页
+    }
   } catch (error) {
     ElMessage.error('获取商品信息失败')
     console.error(error)
+    router.push('/') // 返回首页
   }
 }
 
@@ -258,12 +268,13 @@ onMounted(() => {
   }
 
   // 检查必要参数
-  if (!productInfo.product_id || !productInfo.price) {
-    ElMessage.error('商品信息不完整')
+  if (!productInfo.product_id) {
+    ElMessage.error('商品ID缺失')
     router.go(-1)
     return
   }
 
+  // 从API获取商品详情
   fetchProductInfo()
 })
 </script>

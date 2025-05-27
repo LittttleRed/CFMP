@@ -1,7 +1,9 @@
 from rest_framework import serializers
 from .models import Order, OrderItem, Payment, Notification, SecurityPolicy
+from product.models import Product
 from product.serializers import ProductSerializer
 from user.serializers import UserSerializer
+from django.db import transaction
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -49,33 +51,72 @@ class CreateOrderSerializer(serializers.ModelSerializer):
         fields = ['products','total_amount', 'payment_method', 'remark',
                   'shipping_name', 'shipping_phone', 'shipping_address',
                   'shipping_postal_code']
-
     def create(self, validated_data):
         products_data = validated_data.pop('products')
         buyer = self.context['request'].user
 
-        # 创建订单
-        order = Order.objects.create(
-            buyer=buyer,
-            status=0,  # 默认状态为待支付
-            **validated_data
-        )
+        # 使用事务确保数据一致性
+        with transaction.atomic():
+            # 创建订单
+            order = Order.objects.create(
+                buyer=buyer,
+                status=0,  # 默认状态为待支付
+                **validated_data
+            )
 
-        # 创建订单项
-        for product_item in products_data:
-            try:
-                OrderItem.objects.create(
-                    order=order,
-                    product_id=product_item['product_id'],
-                    price=product_item['price'],
-                    quantity=product_item['quantity']
-                )
-            except Exception as e:
-                # 如果创建订单项失败，删除已创建的订单
-                order.delete()
-                raise serializers.ValidationError(f"创建订单项失败: {str(e)}")
+            # 验证总计金额
+            calculated_total = 0
 
-        return order
+            # 创建订单项
+            for product_item in products_data:
+                try:
+                    # 从数据库获取商品最新信息以验证价格
+                    product_id = product_item['product_id']
+                    quantity = product_item.get('quantity', 1)  # 默认数量为1
+
+                    # 获取数据库中的实际商品信息
+                    try:
+                        product = Product.objects.get(product_id=product_id)
+                    except Product.DoesNotExist:
+                        order.delete()
+                        raise serializers.ValidationError(f"商品不存在: {product_id}")
+
+                    # 验证商品价格是否被篡改
+                    db_price = product.price
+                    submitted_price = product_item.get('price')
+
+                    if submitted_price and abs(float(submitted_price) - float(db_price)) > 0.01:
+                        # 价格不匹配，使用数据库中的价格，并记录警告
+                        price_to_use = db_price
+                    else:
+                        # 价格匹配或前端未提供价格，使用数据库中的价格
+                        price_to_use = db_price
+
+                    # 累加计算总价
+                    item_total = float(price_to_use) * quantity
+                    calculated_total += item_total
+
+                    # 创建订单项
+                    OrderItem.objects.create(
+                        order=order,
+                        product_id=product_id,
+                        price=price_to_use,
+                        quantity=quantity
+                    )
+
+                except Exception as e:
+                    # 如果创建订单项失败，事务会回滚，订单会被删除
+                    raise serializers.ValidationError(f"创建订单项失败: {str(e)}")
+
+            # 验证总金额是否匹配
+            if 'total_amount' in validated_data:
+                submitted_total = float(validated_data['total_amount'])
+                if abs(submitted_total - calculated_total) > 0.5:  # 允许小额误差
+                    # 总金额不匹配，更新为计算得出的总金额
+                    order.total_amount = calculated_total
+                    order.save()
+
+            return order
 
 
 class OrderListSerializer(serializers.ModelSerializer):
