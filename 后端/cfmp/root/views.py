@@ -13,6 +13,7 @@ from . import models
 from . import serializers
 from rest_framework.views import APIView
 from . import filter
+from user.models import Messages
 
 class StandardPagination(PageNumberPagination):
     page_size = 2
@@ -127,6 +128,13 @@ class ComplaintReviewView(StandartView):
     filter_backends = [DjangoFilterBackend,filters.OrderingFilter]
     filterset_fields = ['target_id', 'target_type','reviewer_id']
     ordering_fields = ['created_at']
+
+    def create(self, request, *args, **kwargs):
+        create = super().create(request, *args, **kwargs)
+        Messages.objects.create(
+
+        )
+        return Response(create.data)
 
 #解封定时任务
 
