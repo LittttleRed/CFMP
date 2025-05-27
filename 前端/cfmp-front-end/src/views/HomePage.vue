@@ -108,12 +108,13 @@ const getUserFollow=async()=> {
   if(getToken()) {
     await getAllFollows(getToken()).then(res => {
       myFollow.value = res.map(item => {
-        return item.followee
+        return item.followee.user_id
       })
     })
   }
   console.log(myFollow.value)
 }
+getUserFollow()
 
 onMounted(() => {
   startAutoPlay()

@@ -23,6 +23,7 @@ from .serializers import (
 )
 import uuid
 import json
+from user.models import Messages
 
 # 用户登录认证测试，这里全部为IsAuthenticated
 
@@ -350,6 +351,19 @@ class PaymentCallbackAPIView(APIView):
         sign = request.query_params.get('sign')
 
         # 实际应用中需要验证签名
+        order = Order.objects.get(order_id=order_id)
+
+        for product in order.products.all():
+            seller = product.user
+            message_title = "有新的商品销售通知"
+            message_content = f"您发布的商品《{product.title}》已被用户 {order.buyer.username} 购买，请注意查看订单详情。"
+            message = Messages.objects.create(
+                title=message_title,
+                content=message_content
+            )
+            # 将消息关联到卖家
+            seller.messages.add(message)
+
 
         # 假设支付已成功
         try:
@@ -368,18 +382,7 @@ class PaymentCallbackAPIView(APIView):
             order.save()
 
             # 创建通知
-            Notification.objects.create(
-                user=order.buyer,
-                type=0,  # 交易通知
-                title='支付成功通知',
-                content=f'您的订单 #{order.order_id} 已成功支付，感谢您的购买！',
-                related_id=order.order_id,
-                related_data={
-                    'order_id': order.order_id,
-                    'payment_amount': float(payment.amount),
-                    'payment_method': payment.get_payment_method_display()
-                }
-            )
+
 
         except (Payment.DoesNotExist, Order.DoesNotExist):
             return Response({

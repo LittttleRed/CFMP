@@ -31,10 +31,10 @@ from .serializers import (
     ProductMediaSerializer,
 )
 from .filters import ProductFilter
-
+from user.models import User,Messages,Follow
 
 # 商品相关视图
-class ProductListCreateAPIView(ListCacheResponseMixin,ListCreateAPIView):
+class ProductListCreateAPIView(ListCreateAPIView):
     queryset = Product.objects.all().order_by("-created_at")
     serializer_class = ProductSerializer
     pagination_class = StandardResultsSetPagination
@@ -44,7 +44,33 @@ class ProductListCreateAPIView(ListCacheResponseMixin,ListCreateAPIView):
     def perform_create(self, serializer):
         # 保存商品基本信息
         product = serializer.save(user=self.request.user)
-        print(self.request.FILES.getlist("media"))
+
+        # 获取当前创建商品的用户（卖家）
+        seller = self.request.user
+
+        # 查询所有关注该卖家的用户
+        followers = Follow.objects.filter(followee=seller).values_list('follower', flat=True)
+
+        # 创建通知并发送给每个关注者
+        message_title = "新商品上架通知"
+        message_content = f"您关注的卖家 {seller.username} 发布了新商品：{product.title}，快去看看吧！"
+        message = Messages.objects.create(
+            title=message_title,
+            content=message_content
+        )
+        for follower_id in followers:
+            try:
+                # 获取关注者用户对象
+                follower_user = User.objects.get(user_id=follower_id)
+
+                # 创建消息并保存到数据库
+
+
+                # 将消息关联到关注者
+                follower_user.messages.add(message)
+            except User.DoesNotExist:
+                continue  # 如果用户不存在则跳过
+
         # 处理分类
         if "categories" in self.request.data:
             category_ids = (
@@ -81,6 +107,7 @@ class ProductListCreateAPIView(ListCacheResponseMixin,ListCreateAPIView):
                 # 更新标志
                 if is_first:
                     is_first = False
+
 
 
 # 商品图片相关视图
