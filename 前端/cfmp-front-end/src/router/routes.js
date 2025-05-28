@@ -76,10 +76,10 @@ export const constRoutes =   [
         component: () => (import('../views/user/setting.vue')),
         meta: {title: '个人资料'}
       },{
-        path: 'phone',
-        name: 'phone',
-        component: () => (import('../views/user/changePhone.vue')),
-        meta: {title: '修改手机号'}
+        path: 'pwd',
+        name: 'pwd',
+        component: () => (import('../views/user/changePwd.vue')),
+        meta: {title: '修改密码'}
       },{
         path: 'email',
         name: 'email',

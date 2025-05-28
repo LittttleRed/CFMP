@@ -103,7 +103,7 @@
 import { ref, reactive } from 'vue'
 import {ElMessage, FormInstance} from 'element-plus'
 import { useRouter } from 'vue-router'
-import { getLogin,sendCaptcha } from '../api/user'
+import { sendCaptcha,loginWithCaptcha } from '../api/user'
 import {getToken, setHeadImg, setStaff, setToken, setUserId, setUserName} from "../utils/user-utils";
 
 import { ParticlesComponent } from 'particles.vue3';
@@ -141,8 +141,15 @@ email: [
 
 const handleLogin = async () => {
     console.log(loginForm)
-   await getLogin(loginForm).then((res) => {
+   await loginWithCaptcha(loginForm).then((res) => {
 
+   console.log(res)
+        setToken(res["access_token"])
+       setUserId(res["user_id"])
+       setUserName(res["username"])
+       setHeadImg(res["avatar"])
+       setStaff(res["is_staff"])
+       window.location.href = '/'
 }).catch(e=>{
      fail_msg.value = e.response.data.fail_msg
    })
@@ -152,11 +159,6 @@ const sendCap = async () => {
       ElMessage.error('请输入邮箱')
   }else{
     hassend.value = true
-   await sendCaptcha({scene:  'login', email: loginForm.email}).catch(
-       error => {
-        fail_msg.value=error.response.data.fail_msg
-      }
-   )
     countdown.value = 60
     timer.value = setInterval(() => {
       countdown.value--
@@ -165,6 +167,11 @@ const sendCap = async () => {
         hassend.value = false
       }
     }, 1000)
+   await sendCaptcha({scene:  'login', email: loginForm.email}).catch(
+       error => {
+        fail_msg.value=error.response.data.fail_msg
+      }
+   )
   }
 }
 </script>

@@ -194,12 +194,6 @@ const sendCap = async () => {
   }
   try {
     hassend.value = true
-    await sendCaptcha({ scene: 'register', email: registerForm.email }).catch(
-        (e) => {
-          fail_msg.value = e.response.data.fail_msg || '验证码发送失败'
-        }
-    )
-    // 启动倒计时
     countdown.value = 60
     timer.value = setInterval(() => {
       countdown.value--
@@ -208,6 +202,12 @@ const sendCap = async () => {
         hassend.value = false
       }
     }, 1000)
+    await sendCaptcha({ scene: 'register', email: registerForm.email }).catch(
+        (e) => {
+          fail_msg.value = e.response.data.fail_msg || '验证码发送失败'
+        }
+    )
+    // 启动倒计时
   } catch (e) {
     fail_msg.value = e.response?.data?.fail_msg || '验证码发送失败'
   }

@@ -143,7 +143,8 @@ const updateProductList=async()=>{
   //根据页码获取商品列表
   let data={
     page: page.value,
-    page_size: page_size
+    page_size: page_size,
+    status: 0
   }
   console.log(data)
    await getProducts(data).then( res => {

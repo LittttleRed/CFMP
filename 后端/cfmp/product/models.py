@@ -7,9 +7,11 @@ from user.models import User
 class Product(models.Model):
     ON_SALE = 0
     OFF_SALE = 1
+    SALED = 2
     STATUS_CHOICES = [
         (ON_SALE, '上架'),
-        (OFF_SALE, '下架'),
+        (OFF_SALE, '封禁'),
+        (SALED,'已出售')
     ]
     FUNCTION_CHOICES = [
         (0, '包邮'),

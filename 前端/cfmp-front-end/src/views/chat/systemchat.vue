@@ -136,7 +136,7 @@ const handleAction = (item) => {
 
 
 .title {
-  font-size: 14px;
+  font-size: 20px;
   font-weight: bold;
   white-space: nowrap;
   padding: 0px; /* 保持标题固定 */
@@ -144,7 +144,7 @@ const handleAction = (item) => {
 
 .message {
   color: #666;
-  font-size: 14px;
+  font-size: 20px;
   line-height: 1.5;
 }
 

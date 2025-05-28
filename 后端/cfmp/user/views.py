@@ -94,7 +94,7 @@ class CaptchaView(APIView):
             },status=status.HTTP_400_BAD_REQUEST)
         common_scene = {'register','login','forget'}
         need_token_scene = {'change_email','change_password'}
-        need_user_check_scene = {'change_email','change_password'}
+        need_user_check_scene = {'change_email','register'}
         user = User.objects.filter(email=email)
         if user.exists() and scene in need_user_check_scene:
             return Response({
@@ -121,14 +121,15 @@ class CaptchaView(APIView):
             else:
                 return Response({
                     "success":False,
-                    "msg":"发送失败"
+                    "fail_msg":"发送失败"
                 })
         elif scene in need_token_scene:
             auth = request.META.get('HTTP_AUTHORIZATION', '')
-            if  not auth:
+            if not auth:
+                print("not auth")
                 return Response({
                     "success":False,
-                    "msg":"验证失败"
+                    "fail_msg":"验证失败"
                 })
             JWTAuthentication.authenticate(self,request)
             if send_sms_code(email) != 0:
@@ -139,12 +140,12 @@ class CaptchaView(APIView):
             else:
                 return Response({
                     "success":False,
-                    "msg":"发送失败"
+                    "fail_msg":"发送失败"
                 })
         else:
             return Response({
                 "success":False,
-                "msg":"参数错误"
+                "fail_msg":"参数错误"
             })
 class RegisterView(APIView):
 
@@ -287,6 +288,7 @@ class login_passwordView(APIView):
             }, status=status.HTTP_404_NOT_FOUND)
 
 class login_captchaView(APIView):
+
     def post(self, request):
         email = request.data.get('email')
         captcha = request.data.get('captcha')
@@ -315,9 +317,9 @@ class login_captchaView(APIView):
             }
 
             token = jwt.encode(payload = payload, key = salt, algorithm="HS256", headers=headers)
-            url= user.avatar
-            if not url:
-                url = None
+            url= None
+            if user.avatar:
+                url = user.avatar.url
             return Response({
                 "success":True,
                 "access_token":token,

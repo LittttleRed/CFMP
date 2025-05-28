@@ -7,6 +7,33 @@ export const getLogin=(data)=>{
         data:data,
     })
 }
+export const loginWithCaptcha=(data)=>{
+    return http({
+        url:'/v1/auth/login-with-captcha/',
+        method:'post',
+        data:data,
+    })
+}
+export const changeEmail=(data,token)=>{
+    return http({
+        url:'/v1/security/email/',
+        method:'post',
+        data:data,
+        headers:{
+            'Authorization':'Bearer '+token
+        }
+    })
+}
+export const changePassword=(data,token)=>{
+    return http({
+        url:'/v1/security/password/',
+        method:'post',
+        data:data,
+        headers:{
+            'Authorization':'Bearer '+token
+        }
+    })
+}
 export const getRegister=(data)=>{
     return http({
         url:'/v1/auth/register/',
@@ -17,13 +44,6 @@ export const getRegister=(data)=>{
 export const sendCaptcha=(data)=>{
     return http({
         url:'/v1/captcha/',
-        method:'post',
-        data:data,
-    })
-}
-export const loginWithCaptcha=(data)=>{
-    return http({
-        url:'/v1/auth/login-with-captcha/',
         method:'post',
         data:data,
     })

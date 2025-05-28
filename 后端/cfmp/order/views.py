@@ -366,6 +366,8 @@ class PaymentCallbackAPIView(APIView):
             )
             # 将消息关联到卖家
             seller.messages.add(message)
+            product.status = 2
+            product.save()
 
 
         # 假设支付已成功
