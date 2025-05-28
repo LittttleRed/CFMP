@@ -8,7 +8,8 @@ def custom_exception_handler(exc, context):
     if isinstance(exc, Throttled):
         return Response({
             "fail_code": "SEND_TOO_FREQUENTLY",
-            "fail_msg": "验证码发送过于频繁"
+            "fail_msg": "验证码发送过于频繁",
+            "wait_time": exc.wait
             }, status=status.HTTP_400_BAD_REQUEST)
         
 
