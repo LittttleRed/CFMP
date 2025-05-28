@@ -4,6 +4,7 @@ from product.models import Product
 from product.serializers import ProductSerializer
 from user.serializers import UserSerializer
 from django.db import transaction
+from .encryption import encryptor
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -26,6 +27,9 @@ class OrderSerializer(serializers.ModelSerializer):
     buyer_info = serializers.SerializerMethodField(read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     payment_method_display = serializers.CharField(source='get_payment_method_display', read_only=True)
+    shipping_name = serializers.SerializerMethodField()
+    shipping_phone = serializers.SerializerMethodField()
+    shipping_address = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
@@ -42,6 +46,24 @@ class OrderSerializer(serializers.ModelSerializer):
             'username': obj.buyer.username,
         }
 
+    def get_shipping_name(self, obj):
+        """解密收货人姓名"""
+        if obj.shipping_name:
+            return encryptor.decrypt(obj.shipping_name)
+        return None
+
+    def get_shipping_phone(self, obj):
+        """解密收货人手机号"""
+        if obj.shipping_phone:
+            return encryptor.decrypt(obj.shipping_phone)
+        return None
+
+    def get_shipping_address(self, obj):
+        """解密收货地址"""
+        if obj.shipping_address:
+            return encryptor.decrypt(obj.shipping_address)
+        return None
+
 
 class CreateOrderSerializer(serializers.ModelSerializer):
     products = serializers.ListField(child=serializers.DictField(), write_only=True)
@@ -51,9 +73,19 @@ class CreateOrderSerializer(serializers.ModelSerializer):
         fields = ['products','total_amount', 'payment_method', 'remark',
                   'shipping_name', 'shipping_phone', 'shipping_address',
                   'shipping_postal_code']
+
     def create(self, validated_data):
         products_data = validated_data.pop('products')
         buyer = self.context['request'].user
+
+        # 在保存前，加密敏感信息
+        shipping_data = {}
+        sensitive_fields = ['shipping_name', 'shipping_phone', 'shipping_address']
+
+        for field in sensitive_fields:
+            if field in validated_data and validated_data[field]:
+                shipping_data[field] = encryptor.encrypt(validated_data[field])
+                validated_data[field] = shipping_data[field]
 
         # 使用事务确保数据一致性
         with transaction.atomic():
@@ -124,12 +156,33 @@ class OrderListSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     items = OrderItemSerializer(source='order_items', many=True, read_only=True)
     payment_method_display = serializers.CharField(source='get_payment_method_display', read_only=True)
+    shipping_name = serializers.SerializerMethodField()
+    shipping_phone = serializers.SerializerMethodField()
+    shipping_address = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
         fields = ['order_id', 'status', 'status_display', 'created_at', 'updated_at',
-                  'total_amount', 'payment_method', 'payment_method_display',
-                  'payment_time', 'items', 'remark', 'cancel_reason']
+                  'total_amount', 'payment_method', 'payment_method_display', 'shipping_name',
+                  'shipping_phone', 'shipping_address', 'payment_time', 'items', 'remark', 'cancel_reason']
+
+    def get_shipping_name(self, obj):
+        """解密收货人姓名"""
+        if obj.shipping_name:
+            return encryptor.decrypt(obj.shipping_name)
+        return None
+
+    def get_shipping_phone(self, obj):
+        """解密收货人手机号"""
+        if obj.shipping_phone:
+            return encryptor.decrypt(obj.shipping_phone)
+        return None
+
+    def get_shipping_address(self, obj):
+        """解密收货地址"""
+        if obj.shipping_address:
+            return encryptor.decrypt(obj.shipping_address)
+        return None
 
 
 class PaymentSerializer(serializers.ModelSerializer):
