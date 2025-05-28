@@ -30,7 +30,8 @@ from product.models import Product
 from product.serializers import ProductSerializer
 from root.serializers import ComplaintSerializer
 from django.core.mail import send_mail
-
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import check_password
 import random
 # import redis
 
@@ -194,7 +195,9 @@ class RegisterView(APIView):
         #验证码检查
         if varify_captcha(email,captcha)!=0:
             return varify_captcha(email,captcha)
-
+        #对密码加密
+        password = make_password(password)
+        print(password)
         #存入数据库
         user = User.objects.create(
             username=username,
@@ -208,10 +211,17 @@ class RegisterView(APIView):
             "success":True,
             "user_id":user.user_id
         })
-
+import threading
 class login_passwordView(APIView):
     authentication_classes = []
+    _lock = threading.Lock()
+    request_count = 0
     def post(self, request):
+        #看看调用了几次api。貌似调用了两次，有点奇怪 :p
+        with self._lock:
+            print(f"one processing : {self.request_count}")
+            current_count = type(self).request_count
+            type(self).request_count = current_count + 1
         email = request.data.get('email')
         password = request.data.get('password')
         if not all([email, password]):
@@ -221,9 +231,15 @@ class login_passwordView(APIView):
             },status=status.HTTP_400_BAD_REQUEST)
 
         # user = authenticate(email=email, password=password)
-        user = User.objects.filter(email=email,password=password)
+        #密码已加密
+        user = User.objects.filter(email=email)
         user = user.first()
-        print(user)
+        if check_password(password,user.password)==False:
+            return Response({
+                "fail_code":"PASSWORD_ERROR",
+                "fail_msg":"密码错误"
+            },status=status.HTTP_400_BAD_REQUEST)
+        #print(user)
         if user:
             salt = settings.SECRET_KEY
             headers = {

@@ -14,7 +14,7 @@ class User(models.Model):
 
     user_id = models.BigAutoField(primary_key=True)
     username = models.CharField(max_length=30)
-    password = models.CharField(max_length=64)
+    password = models.CharField(max_length=200)
     email = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.IntegerField(choices=STATUS_CHOICES,  default=NORMAL)
