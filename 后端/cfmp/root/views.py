@@ -13,7 +13,7 @@ from . import models
 from . import serializers
 from rest_framework.views import APIView
 from . import filter
-from user.models import Messages
+from user.models import Messages,User
 
 class StandardPagination(PageNumberPagination):
     page_size = 2
@@ -130,11 +130,38 @@ class ComplaintReviewView(StandartView):
     ordering_fields = ['created_at']
 
     def create(self, request, *args, **kwargs):
-        create = super().create(request, *args, **kwargs)
-        Messages.objects.create(
+        # 调用父类的 create 方法完成数据的创建
+        response = super().create(request, *args, **kwargs)
 
-        )
-        return Response(create.data)
+        # 获取当前创建的投诉审核数据
+        target_id = request.data.get('target_id')
+        target_type = request.data.get('target_type')
+
+        if not target_id or not target_type:
+            return Response({'error': '缺少 target_id 或 target_type'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 查询所有举报了该 target_type 和 target_id 的用户
+        complaints = models.Complaint.objects.filter(target_id=target_id, target_type=target_type)
+        complainer_ids = complaints.values_list('complainer_id', flat=True).distinct()
+
+        # 获取对应的用户对象列表
+        users = User.objects.filter(user_id__in=complainer_ids)
+
+        # 创建消息并关联到用户
+        message_title = "举报处理通知"
+        message_type = ""
+        if target_type == 0:
+            message_type = "product"
+        elif target_type == 1:
+            message_type = "user"
+        message_content = f"您举报的目标 (ID: {target_id}, 类型: {message_type}) 已经有了新的处理结果，请及时查看。"
+        message = Messages.objects.create(title=message_title, content=message_content)
+
+        for user in users:
+            user.messages.add(message)  # 将消息关联到用户
+
+        # 返回原始响应数据
+        return response
 
 #解封定时任务
 
