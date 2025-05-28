@@ -17,9 +17,26 @@ class OrderItemSerializer(serializers.ModelSerializer):
         fields = ['product_id', 'product_name', 'price', 'quantity', 'product_image']
 
     def get_product_image(self, obj):
-        if hasattr(obj.product, 'product_img') and obj.product.product_img:
-            return obj.product.product_img
-        return None
+        """获取商品的主图或第一张图片"""
+        try:
+            if not obj.product:
+                return None
+
+            # 获取商品的图片，优先获取主图
+            main_media = obj.product.media.filter(is_main=True).first()
+            if main_media and main_media.media:
+                return main_media.media.url
+
+            # 如果没有主图，获取第一张图片
+            first_media = obj.product.media.first()
+            if first_media and first_media.media:
+                return first_media.media.url
+
+            return None
+        except Exception as e:
+            # 如果出现异常，返回None
+            print(f"[ERROR] 获取商品图片失败: {e}")
+            return None
 
 
 class OrderSerializer(serializers.ModelSerializer):

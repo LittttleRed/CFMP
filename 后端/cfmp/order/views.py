@@ -46,7 +46,10 @@ class OrderListCreateAPIView(ListCreateAPIView):
         status_filter = self.request.query_params.get('status')
         print(f"[OrderListCreateAPIView] status_filter: {status_filter}")  # 调试输出
 
-        queryset = Order.objects.filter(buyer=user)
+        # 预加载相关数据以优化查询性能，包括商品图片
+        queryset = Order.objects.filter(buyer=user).select_related('buyer').prefetch_related(
+            'order_items__product__media'  # 预加载商品及其图片
+        )
 
         if status_filter and status_filter != 'all':
             status_map = {
