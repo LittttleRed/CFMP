@@ -35,7 +35,7 @@ from user.models import User,Messages,Follow
 from django.db.models import Avg
 
 # 商品相关视图
-class ProductListCreateAPIView(ListCreateAPIView):
+
 class ProductListCreateAPIView(ListCreateAPIView):
     queryset = Product.objects.all().order_by("-created_at")
     serializer_class = ProductSerializer
