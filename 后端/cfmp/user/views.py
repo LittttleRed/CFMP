@@ -32,6 +32,7 @@ from root.serializers import ComplaintSerializer
 from django.core.mail import send_mail
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.hashers import check_password
+from .throttling  import EmailRateThrottle
 import random
 # import redis
 
@@ -84,6 +85,7 @@ def varify_captcha(email,captcha):
     return 0
 
 class CaptchaView(APIView):
+    throttle_classes  = [EmailRateThrottle]
     def post(self, request):
         email = request.data.get('email')
         scene = request.data.get('scene')
@@ -105,12 +107,6 @@ class CaptchaView(APIView):
             return Response({
                 "fail_code": "EMAIL_FORMAT_ERROR",
                 "fail_msg": "邮箱格式错误"
-            }, status=status.HTTP_400_BAD_REQUEST)
-        #验证发送是否过于频繁（1min）
-        if Captcha.objects.filter(email=email,created_at__gt=datetime.now(timezone.utc) - timedelta(minutes=1)).exists():
-            return Response({
-                "fail_code": "SEND_TOO_FREQUENTLY",
-                "fail_msg": "验证码发送过于频繁"
             }, status=status.HTTP_400_BAD_REQUEST)
         if scene in common_scene:
             if send_sms_code(email) != 0:
