@@ -66,7 +66,8 @@
         <div @click="()=>{router.push({name:'user',query:{user_id:productData.user.user_id}})}"
              style="cursor:  pointer;margin-left: 15px;margin-top: auto;margin-bottom: auto;font-weight: bold;font-size: 20px">
           {{ productData.user.username }}
-          <el-button style="background:#ffd364;border:none;margin: auto auto auto 20px;">关注</el-button>
+          <el-button v-if="route.query.myfollow==false" style="background:#ffd364;border:none;margin: auto auto auto 20px;">关注</el-button>
+          <el-button v-else style="background:#ffd364;border:none;margin: auto auto auto 20px;">已关注</el-button>
         </div>
 
       </div>
@@ -136,7 +137,7 @@ import {getToken, getUserId} from "../../utils/user-utils.js";
 import Head from "../../components/Head.vue";
 import {ElMessage} from "element-plus";
 import router from "../../router/index.js";
-import {createComplaint} from "../../api/user/index.js";
+import {createComplaint, getAllFollows} from "../../api/user/index.js";
 const route = useRoute()
 const product_id = route.query.product_id
 const imgindex = ref(0)
@@ -145,6 +146,7 @@ const isCollected = ref(false)
 const complaintdialog = ref(false)
 const complaintType = ref('其他')
 const complaintOther = ref('')
+const followed = ref(false)
 const initProduct=async (id) => {
   await getProduct(id).then(res => {
     console.log(res)
@@ -162,6 +164,7 @@ const initProduct=async (id) => {
 
   })
 }
+followed.value=route.query.myfollow
 const change = () => {
   router.push({
     name: 'edit-product',

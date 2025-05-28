@@ -44,11 +44,9 @@ class Order(models.Model):
     payment_method = models.SmallIntegerField(choices=PAYMENT_METHOD_CHOICES, null=True, blank=True)
     payment_time = models.DateTimeField(null=True, blank=True)
     remark = models.TextField(blank=True, null=True)
-    cancel_reason = models.TextField(blank=True, null=True)
-
-    # 配送地址信息
-    shipping_name = models.CharField(max_length=100, null=True, blank=True)
-    shipping_phone = models.CharField(max_length=20, null=True, blank=True)
+    cancel_reason = models.TextField(blank=True, null=True)    # 配送地址信息（加密存储，需要更大的字段长度）
+    shipping_name = models.CharField(max_length=500, null=True, blank=True)
+    shipping_phone = models.CharField(max_length=200, null=True, blank=True)
     shipping_address = models.TextField(null=True, blank=True)
     shipping_postal_code = models.CharField(max_length=20, null=True, blank=True)
 

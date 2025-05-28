@@ -1,11 +1,11 @@
 <template>
   <el-card class="product-card" style="--el-card-border-radius: 10px;" shadow="hover">
-    <div class="image-container" style="cursor: pointer" @click="()=>{router.push({name:'product',query:{product_id:product_id}})}">
+    <div class="image-container" style="cursor: pointer" @click="()=>{router.push({name:'product',query:{product_id:product_id,myfollow:myfollow}})}">
       <img :src="media" alt="商品图片" class="product-image" v-if="media!==null">
       <img src="https://via.placeholder.com/150" alt="商品图片" class="product-image" v-else></img>
     </div>
 
-    <div class="header" style="cursor: pointer" @click="()=>{router.push({name:'product',query:{product_id:product_id}})}">
+    <div class="header" style="cursor: pointer" @click="()=>{router.push({name:'product',query:{product_id:product_id,myfollow:myfollow}})}">
       <div class="title">
         <span class="tag" v-if="functions===0">包邮</span>
         <h3 class="title-text" >{{ title.length>12 ? title.substring(0,12)+'...' : title }}</h3>
