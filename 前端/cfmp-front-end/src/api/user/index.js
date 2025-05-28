@@ -151,3 +151,12 @@ export const getHistory=(token,id,pageconfig)=>{
         },params:pageconfig
     })
 }
+export const getMyMessage=(toekn)=>{
+    return http({
+        url:'/v1/user/message/',
+        method:'get',
+        headers:{
+            'Authorization':'Bearer '+toekn
+        }
+    })
+}

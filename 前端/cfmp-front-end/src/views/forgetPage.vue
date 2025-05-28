@@ -11,7 +11,7 @@
     <!-- 顶部导航栏 -->
     <div class="login-header" style="z-index: 1;">
       <div class="logo-wrapper">
-        <img 
+        <img
           src="../assets/logo1.png"
           alt="校园跳蚤市场"
           class="logo-image"
@@ -29,9 +29,9 @@
         <!-- 右侧登录面板 -->
         <div class="login-panel">
           <div class="panel-header">
-            <h2>账号登录</h2>
+            <h2>邮箱登录</h2>
           </div>
-          <el-form 
+          <el-form
             ref="formRef"
             :model="loginForm"
             :rules="rules"
@@ -49,26 +49,26 @@
                 </template>
               </el-input>
             </el-form-item>
-
-            <el-form-item prop="password">
+            <el-form-item prop="captcha" style="display: flex;flex-direction: column">
               <el-input
-                v-model="loginForm.password"
-                type="password"
-                placeholder="密码"
+                v-model="loginForm.captcha"
+                placeholder="请输入验证码"
                 class="mail-input"
                 tabindex="2"
-                show-password
+                style="width: 250px"
               >
                 <template #prefix>
-                  <span class="input-label">密码</span>
+                  <span class="input-label">验证码</span>
                 </template>
               </el-input>
-            </el-form-item>
-
-            <el-form-item class="remember-item">
-              <div class="link-group" style="margin-top: 10px">
-                <router-link to="/forget" class="link">忘记密码？</router-link>
-              </div>
+              <el-button style="margin-left: 20px;height: 48px" v-if="!hassend"
+              @click="sendCap">发送验证码</el-button>
+              <el-button  style="margin-left: 20px;height: 48px"
+                          v-else
+                          disabled
+                        >
+                {{ countdown }}
+              </el-button>
             </el-form-item>
             <div class="fail-msg">
               {{fail_msg}}
@@ -91,7 +91,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- 底部版权信息 -->
     <div class="login-footer" style="z-index: 2;">
       <p class="copyright">© CampusMarket 校园交易平台</p>
@@ -101,22 +101,21 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import type { FormInstance } from 'element-plus'
+import {ElMessage, FormInstance} from 'element-plus'
 import { useRouter } from 'vue-router'
-import { getLogin } from '../api/user'
+import { getLogin,sendCaptcha } from '../api/user'
 import {getToken, setHeadImg, setStaff, setToken, setUserId, setUserName} from "../utils/user-utils";
 
 import { ParticlesComponent } from 'particles.vue3';
 import { loadSlim } from 'tsparticles-slim'
 import { particles_config } from '../components/background/particles-config'
-
 const particlesInit = async engine => {
     //await loadFull(engine);
     await loadSlim(engine);
 };
 
 
-
+const countdown = ref(60) // 倒计时初始值
 const router = useRouter()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
@@ -124,8 +123,10 @@ const rememberMe = ref(false)
 const fail_msg = ref('')
 const loginForm = reactive({
   email: '',
-  password: ''
+  captcha: ''
 })
+const timer = ref(null)   // 用于保存定时器引用
+const hassend = ref(false)
 const rules = {
 email: [
   { required: true, message: '邮箱不能为空', trigger: 'blur' },
@@ -136,30 +137,35 @@ email: [
   },
   { max: 254, message: '邮箱长度不能超过254个字符', trigger: 'blur' }
 ],
-  password: [
-    { required: true, message: '密码不能为空', trigger: 'blur' },
-    { min: 6, max: 16, message: '长度在6到16个字符', trigger: 'blur' }
-  ]
 }
 
 const handleLogin = async () => {
     console.log(loginForm)
    await getLogin(loginForm).then((res) => {
-     //如果状态码是404,提示用户未注册
-     if (res["success"] === false) {
-       console.log("登录失败")
-     } else {
-       console.log(res)
-       setToken(res["access_token"])
-       setUserId(res["user_id"])
-       setUserName(res["username"])
-       setHeadImg(res["avatar"])
-       setStaff(res["is_staff"])
-       window.location.href = '/'
-     }
+
 }).catch(e=>{
      fail_msg.value = e.response.data.fail_msg
    })
+}
+const sendCap = async () => {
+  if(!loginForm.email){
+      ElMessage.error('请输入邮箱')
+  }else{
+    hassend.value = true
+   await sendCaptcha({scene:  'login', email: loginForm.email}).catch(
+       error => {
+        fail_msg.value=error.response.data.fail_msg
+      }
+   )
+    countdown.value = 60
+    timer.value = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer.value)
+        hassend.value = false
+      }
+    }, 1000)
+  }
 }
 </script>
 
@@ -194,7 +200,7 @@ const handleLogin = async () => {
     .logo-wrapper {
       margin: 0 auto;
       height: 100%;
-  
+
       display: flex;
       align-items: center;
       justify-content: flex-start;
@@ -220,8 +226,8 @@ const handleLogin = async () => {
   .login-main {
     flex: 1;
     padding: 60px 0;
-    
-    
+
+
     .login-wrapper {
       width: 100%;
       margin: 0 auto;
@@ -232,7 +238,7 @@ const handleLogin = async () => {
         width: 600px;
         height: 400px;
         // background: url('@/assets/login-bg.png') no-repeat center/contain;
-        
+
       }
 
       .login-panel {
@@ -262,7 +268,7 @@ const handleLogin = async () => {
             padding: 0 15px;
             border-radius: 4px;
             box-shadow: 0 0 0 1px #dcdfe6;
-            
+
             &.is-focus {
               box-shadow: 0 0 0 1px #0066ff !important;
             }
@@ -299,7 +305,7 @@ const handleLogin = async () => {
           background: #0066ff;
           border: none;
           margin-top: 20px;
-          
+
           &:hover {
             opacity: 0.9;
           }
@@ -308,10 +314,10 @@ const handleLogin = async () => {
         .register-section {
           margin-top: 30px;
           text-align: center;
-          
+
           .register-btn {
             color: #666;
-            
+
             .emphasize {
               color: #0066ff;
               font-weight: 500;
@@ -327,7 +333,7 @@ const handleLogin = async () => {
     padding: 20px 0;
     background: white;
     z-index: 1;
-    
+
     .copyright {
       text-align: center;
       color: #999;

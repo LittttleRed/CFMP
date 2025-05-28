@@ -123,6 +123,10 @@
         </el-button>
       </div>
     </el-dialog>
+    <el-dialog title="投诉详情" v-model="detailVisible" width="600px">
+      <h2>投诉原因</h2>
+      <p v-if="currentComplaint" style="font-size:20px">{{ currentComplaint.reason }}</p>
+    </el-dialog>
   </div>
 </template>
 
@@ -135,6 +139,7 @@ export default {
   data() {
     return {
       dialogVisible:  false,
+      detailVisible: false,
       searchForm: {
         complaint_id: '',
         target_type: '0', // 固定为用户投诉
@@ -216,7 +221,9 @@ export default {
 
     },
     handleDetail(row) {
-
+      this.currentComplaint = row
+      console.log('详情：', row)
+    this.detailVisible  = true
     },
      handlePageChange(page) {
        this.pagination.page = page
@@ -245,14 +252,16 @@ export default {
         if (valid) {
           this.submitting = true
           let review={
-            target_type: 1, // 用户类型
+            target_type: 0 , // 商品类型
             target_id: this.currentComplaint.target_id,
             ...this.handleForm,
             reviewer_id: 2
           }
           console.log(review)
-          await createReview(review)
-          await updateReview(this.currentComplaint.target_id,0,1)
+          await createReview(review).then(async response => {
+                await updateReview(this.currentComplaint.target_id, 0, 1)
+              }
+          )
             this.submitting = false
             this.dialogVisible = false
             this.$message.success('处理成功')

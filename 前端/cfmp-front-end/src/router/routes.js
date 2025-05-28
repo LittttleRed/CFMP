@@ -109,6 +109,14 @@ export const constRoutes =   [
     //   guestOnly: true // 标记仅未登录用户可访问
     }
   },{
+    path: '/forget',
+        name: 'Forget',
+        component: () => import('../views/forgetPage.vue'),
+        meta: {
+          title: '忘记密码',
+        //   guestOnly: true // 标记仅未登录用户可访问
+        }
+    },{
     path: '/register',
     name: 'Register',
     component: () => import('../views/RegisterPage.vue'),

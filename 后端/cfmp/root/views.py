@@ -137,11 +137,9 @@ class ComplaintReviewView(StandartView):
         target_id = request.data.get('target_id')
         target_type = request.data.get('target_type')
 
-        if not target_id or not target_type:
-            return Response({'error': '缺少 target_id 或 target_type'}, status=status.HTTP_400_BAD_REQUEST)
 
         # 查询所有举报了该 target_type 和 target_id 的用户
-        complaints = models.Complaint.objects.filter(target_id=target_id, target_type=target_type)
+        complaints = models.Complaint.objects.filter(target_id=target_id, target_type=target_type,status=0)
         complainer_ids = complaints.values_list('complainer_id', flat=True).distinct()
 
         # 获取对应的用户对象列表

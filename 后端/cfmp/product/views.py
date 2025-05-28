@@ -426,9 +426,9 @@ class ProductReviewListCreateAPIView(ListCreateAPIView):
         product = Product.objects.get(product_id=product_id)
         
         # 检查用户是否已经评论过该商品
-        if ProductReview.objects.filter(product=product, user=self.request.user).exists():
-            from rest_framework.exceptions import ValidationError
-            raise ValidationError({"detail": "您已经评论过该商品"})
+        # if ProductReview.objects.filter(product=product, user=self.request.user).exists():
+        #     from rest_framework.exceptions import ValidationError
+        #     raise ValidationError({"detail": "您已经评论过该商品"})
             
         # 保存评论
         serializer.save(user=self.request.user, product=product)

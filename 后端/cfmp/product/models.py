@@ -126,7 +126,6 @@ class ProductReview(models.Model):
 
     class Meta:
         db_table = "product_review"
-        unique_together = ("product", "user")  # 每个用户对同一商品只能评价一次
 
 
 

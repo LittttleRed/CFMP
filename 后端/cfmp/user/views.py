@@ -443,6 +443,33 @@ class modify_email(APIView):
 
     #  创建关注
 
+class modify_password(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        new_password = request.data.get('new_password')
+        new_password_repeat = request.data.get('new_password_repeat')
+        captcha = request.data.get('captcha')
+        if not all([new_password, new_password_repeat,captcha]):
+            return Response({
+                "fail_code":"MISSING_PARAM",
+                "fail_msg":"缺少参数"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        if new_password  != new_password_repeat:
+            return Response({
+                "fail_code":"PASSWORD_NOT_MATCH",
+                "fail_msg":"密码不匹配"
+            },status=status.HTTP_400_BAD_REQUEST)
+        user = request.user
+        if varify_captcha(request.user.email,captcha)!=0:
+            return varify_captcha(request.user.email,captcha)
+        user.password = make_password(new_password)
+        user.save()
+        return Response({
+            "success":True,
+            "user_id":user.user_id
+        })
+
 
 class FollowUserViewSet(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
@@ -498,4 +525,16 @@ class MessageViewSet(ListCreateAPIView):
     serializer_class = MessagesSerializer
     pagination_class = StandardResultsSetPagination
     def get_queryset(self):
-        pass
+        # 获取当前登录用户
+        user = self.request.user
+        # 返回与当前用户关联的所有通知消息
+        return user.messages.all().order_by('-created_at')
+
+class getPassword(APIView):
+
+    def get(self, request):
+        password = request.data.get('password')
+        password = make_password(password)
+        return Response({
+            "password":password
+        })
