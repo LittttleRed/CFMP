@@ -69,7 +69,7 @@ class ProductListCreateAPIView(ListCreateAPIView):
 
     def perform_create(self, serializer):
         # 保存商品基本信息
-        product = serializer.save(user=self.request.user)
+        product = serializer.save(user=self.request.user,status = 3)
 
         # 获取当前创建商品的用户（卖家）
         seller = self.request.user
@@ -377,14 +377,16 @@ class ProductDetailAPIView(RetrieveUpdateDestroyAPIView):
         """获取商品详情并增加访问次数"""
         instance = self.get_object()
         # 增加访问次数
-        instance.visit_count += 1
+        # 如果是自己的商品则不增加
+        if instance.user_id != request.user.user_id:
+            instance.visit_count += 1
         instance.save(update_fields=['visit_count'])
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
     def perform_update(self, serializer):
         # 保存商品基本信息
-        product = serializer.save()
+        product = serializer.save(status = 3)
 
         # 处理分类
         if "categories" in self.request.data:

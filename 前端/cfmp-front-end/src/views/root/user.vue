@@ -88,7 +88,7 @@ export default {
     return {
       pagination: {
         page: 1,
-        page_size: 2,
+        page_size: 10,
         total: 1
       },tempForm:{
         id: '',

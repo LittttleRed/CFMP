@@ -14,9 +14,11 @@ from . import serializers
 from rest_framework.views import APIView
 from . import filter
 from user.models import Messages,User
+from .permissions import IsAdminUser
+from product.models import Product
 
 class StandardPagination(PageNumberPagination):
-    page_size = 2
+    page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 1000
 
@@ -44,30 +46,9 @@ def admin_user_get(request):
 
 
 # Create your views here.
-
-
-# 基于函数的视图
-@api_view(['GET', 'POST'])
-def test(request, test_int):
-    print(request.path)  # 去掉域名的路径
-    print(request.method)  # 请求方法
-    print(request.query_params.dict())  # query形式的参数,转化为字典,DRF专属
-    print(request.data)  # json形式的参数,存在请求体中,纯字典形式
-    print(request.headers)  # 请求头内容
-    print(test_int)
-    # 序列化并返回结果
-
-    # 签名Response(data, status=None, template_name=None, headers=None, content_type=None)
-    """
-    data:返回的数据，内部会进行序列化，需传入一个字典
-    status:状态码,默认是200
-    header:响应头
-    """
-    return Response({'code': "200", 'message': 'test'}, status=200, headers={'Content-Type': 'application/json'})
-
-
-
 class UserView(StandartView):
+    permission_classes = [IsAdminUser]
+
     queryset = models.User.objects.all()
     serializer_class = serializers.UserSerializer
     lookup_field = 'user_id'
@@ -77,9 +58,21 @@ class UserView(StandartView):
     filterset_fields = ['user_id','username','status']
     ordering_fields = ['created_at']
 
+class ProductView(StandartView):
+    permission_classes = [IsAdminUser]
+
+    queryset = Product.objects.all()
+    serializer_class = serializers.ProductSerializer
+    lookup_field = 'product_id'
+    pagination_class = StandardPagination
+
+    filter_backends = [DjangoFilterBackend,filters.OrderingFilter]
+    filterset_fields = ['status']
+    ordering_fields = ['created_at']
 
 
 class ComplaintView(StandartView):
+    permission_classes = [IsAdminUser]
     queryset = models.Complaint.objects.all()
     serializer_class = serializers.ComplaintSerializer
     lookup_field = 'complaint_id'
@@ -119,6 +112,7 @@ class ComplaintView(StandartView):
 
 
 class ComplaintReviewView(StandartView):
+    permission_classes = [IsAdminUser]
     queryset = models.ComplaintReview.objects.all()
     serializer_class = serializers.ComplaintReviewSerializer
     lookup_field = 'review_id'
@@ -165,6 +159,7 @@ class ComplaintReviewView(StandartView):
 
 
 class OrderView(StandartView):
+    permission_classes = [IsAdminUser]
     queryset = models.Order.objects.all()
     serializer_class = serializers.OrderSerializer
     filterset_class = filter.OrderFilter

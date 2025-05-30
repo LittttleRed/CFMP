@@ -9,15 +9,21 @@
       <div class="title">
         <span class="tag" v-if="functions===0">包邮</span>
         <h3 class="title-text" >{{ title.length>12 ? title.substring(0,12)+'...' : title }}</h3>
-        <div class="price" style="margin-left: 10px">{{ price }}</div>
+        <div class="price" style="margin-left: 10px">￥{{ price }}</div>
+
       </div>
+
     </div>
+
     <!-- 数据信息 -->
     <div class="stats" style="cursor: pointer" @click="()=>{router.push({name:'user',query:{user_id:user_id}})}">
+
      <el-avatar  :size="40" :src="avatar" v-if="avatar!==null"/>
       <el-avatar :size="40"  src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" v-else></el-avatar>
       <a style="margin: auto;padding-left: 20px;font-size: 15px;font-weight: bold">{{ username }}</a>
       <el-button @click="" v-if="myfollow" class="follow"  >已关注</el-button>
+      <div style="margin-left: 15px;margin-top: auto;margin-bottom: auto;color: red;font-size: 15px" v-if="status===2">已封禁</div>
+      <div style="margin-left: 15px;margin-top: auto;margin-bottom: auto;color: orange;font-size: 15px" v-if="status===3">未审核</div>
     </div>
 
   </el-card>
@@ -41,6 +47,7 @@ defineProps({
   media: String,
   myfollow: Boolean,
   functions: Number,
+  status: Number,
 })
 
 </script>

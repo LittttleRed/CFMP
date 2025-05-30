@@ -47,7 +47,8 @@ getAllProducts()
                     :username="product.user.username"
                     :user_id="product.user.user_id"
                     :product_id="product.product_id"
-                    :media="product.media[0]?product.media[0]['media']:''"></Product>
+                    :media="product.media[0]?product.media[0]['media']:''"
+                    :status="product.status"></Product>
       </el-col>
     </el-row>
       <div v-else>

@@ -4,7 +4,7 @@
     <!-- 商品主内容卡片 -->
     <el-card shadow="hover" class="product-card">
       <!-- 商品图片和基本信息 -->
-
+      <el-button @click="router.go(-1)">返回</el-button>
       <div class="main-content">
         <!-- 商品主图 -->
         <el-button class="btn" style="margin: auto;font-size: 20px;font-weight: bold"
@@ -39,20 +39,20 @@
               type="success"
               size="large"
               @click="handleBuyNow"
-              v-if="productData.user.user_id != getUserId()"
+              v-if="productData.user.user_id != getUserId()&&getPrivileges()!=1"
             >
               立即购买
             </el-button>
             <el-button type="warning" size="large" v-if="productData.user.user_id==getUserId()" @click="change">
               修改
             </el-button>
-             <el-button type="warning" size="large" v-if="getToken()&&productData.user.user_id!=getUserId()&&!isCollected" @click="collect">
+             <el-button type="warning" size="large" v-if="getToken()&&productData.user.user_id!=getUserId()&&!isCollected&&getPrivileges()!=1" @click="collect">
               收藏
             </el-button>
-            <el-button type="warning" size="large" v-if="productData.user.user_id!=getUserId()&&isCollected" @click="uncollect">
+            <el-button type="warning" size="large" v-if="productData.user.user_id!=getUserId()&&isCollected&&getPrivileges()!=1" @click="uncollect">
               取消收藏
             </el-button>
-            <el-button type="danger" size="large" v-if="getToken()&&productData.user.user_id!=getUserId()" @click="complaintdialog = true">
+            <el-button type="danger" size="large" v-if="getToken()&&productData.user.user_id!=getUserId()&&getPrivileges()!=1" @click="complaintdialog = true">
               举报
             </el-button>
           </div>
@@ -103,7 +103,7 @@
           />
         </div>
         <div class="comment-content">{{ comment.comment }}</div>
-        <el-button type="danger" style="margin: 5px auto" @click="deleteComment(comment.id)">删除</el-button>
+        <el-button type="danger" v-if="comment.user.user_id==getUserId()||getPrivileges()==1" style="margin: 5px auto" @click="deleteComment(comment.id)">删除</el-button>
         <el-divider />      </div>
       <div class="comment-item" v-else></div>
     </el-card>
@@ -161,7 +161,7 @@ import {
   getProductReviews,
   removeCollection
 } from "../../api/product/index.js";
-import {getHeadImg, getToken, getUserId, getUserName} from "../../utils/user-utils.js";
+import {getHeadImg, getPrivileges, getToken, getUserId, getUserName} from "../../utils/user-utils.js";
 import Head from "../../components/Head.vue";
 import {ElMessage} from "element-plus";
 import router from "../../router/index.js";

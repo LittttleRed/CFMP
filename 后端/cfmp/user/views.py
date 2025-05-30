@@ -266,7 +266,8 @@ class login_passwordView(APIView):
                 "access_token":token,
                 "username":user.username,
                 "user_id":user.user_id,
-                "avatar":url
+                "avatar":url,
+                "privilege":user.privilege
             })
 
         try:
