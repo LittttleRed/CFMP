@@ -107,13 +107,16 @@ export const changeUser=(token,data)=>{
         data:data
     })
 }
-export const getAllLaunches=(token,id)=>{
+export const getAllLaunches=(token,id,status)=>{
     return http({
         url:'/v1/user/me/products/'+id+'/',
         method:'get',
         headers:{
             'Authorization':'Bearer '+token
-        }
+        },
+        params: {   // 修改这里，使用params传递查询参数
+status: status
+}
     })
 }
 export const createComplaint=(token,data)=>{

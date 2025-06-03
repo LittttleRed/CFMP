@@ -1,7 +1,7 @@
 
 import {createRouter, createWebHashHistory, createWebHistory, useRoute} from "vue-router";
 import {constRoutes} from "./routes";
-import {getToken} from "@/utils/user-utils.js";
+import {getToken, removeToken} from "@/utils/user-utils.js";
 import {getMe} from "@/api/user/index.js";
 
 
@@ -18,11 +18,14 @@ router.beforeEach(async (to, from, next) => {
     }
   } else {
     if (getToken()) {
-      try {
-        const user = await getMe(getToken());
-      } catch (e) {
-        next('/login');
-      }
+
+        const user = await getMe(getToken()).catch(
+            e =>{
+              removeToken();
+              console.log(e);
+              next('/login');
+            }
+        );
     }
     next();
   }

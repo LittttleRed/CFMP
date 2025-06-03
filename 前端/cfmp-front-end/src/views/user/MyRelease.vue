@@ -10,28 +10,60 @@ let productList = ref([])
  productList.value = [
 
  ]
+ const statusMap = {
+  'on-sale': 0,     // 在售
+  'had-sale': 2,    // 已售出
+  'on-sure': 3,     // 未审核
+  'on-fail': 1      // 被封禁
+}
+
+// 添加当前激活标签
+const activeTab = ref('on-sale')
+
+// 添加标题映射
+const tabTitles = {
+  'on-sale': '在售商品',
+  'had-sale': '已售出商品',
+  'on-sure': '未审核商品',
+  'on-fail': '被封禁商品'
+}
+const isMyHome = ref(false)
  const router = useRouter()
  const route = useRoute()
- const getAllProducts = async () => {
-  if(!getToken()){
-    return
-  }
-  if(route.query.user_id === getUserId() || route.query.user_id === undefined){
-  const res = await getAllLaunches(getToken(),getUserId()).then(res => {
-     productList.value = res
-  })
-  }else{
-  const res = await getAllLaunches(getToken(),route.query.user_id).then(res => {
-     productList.value = res
-  })
+const getAllProducts = async () => {
+  if(!getToken()) return
+
+  // 获取当前状态码
+  const status = statusMap[activeTab.value]
+
+  if(route.query.user_id === getUserId() || route.query.user_id === undefined) {
+    const res = await getAllLaunches(getToken(), getUserId(), status)
+    productList.value = res
+    isMyHome.value = true
+  } else {
+    const res = await getAllLaunches(getToken(), route.query.user_id, status)
+    productList.value = res
   }
 }
 getAllProducts()
+const handleTabChange=(name)=>{
+  productList.value=[]
+  activeTab.value=name
+  console.log(name)
+  getAllProducts()
+}
 </script>
 
 <template>
-    <h1>我发布的</h1>
-    <div class="product-list">
+    <h1 style="margin-left: 60px">{{ isMyHome ? '我发布的' : 'TA发布的' }}</h1>
+
+  <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+            <el-tab-pane label="在售" name="on-sale"></el-tab-pane>
+            <el-tab-pane label="已售出" name="had-sale"></el-tab-pane>
+            <el-tab-pane label="未审核" name="on-sure" v-if="isMyHome"></el-tab-pane>
+            <el-tab-pane label="被封禁" name="on-fail" v-if="isMyHome"></el-tab-pane>
+          </el-tabs>
+    <div class="product-list" >
     <el-row :gutter="10" v-if="getToken()">  <!-- 控制列间距 -->
       <el-col
         v-for="(product, index) in productList"
@@ -59,5 +91,22 @@ getAllProducts()
 </template>
 
 <style scoped>
-
+.sort_button{
+  margin-left: 30px;
+  margin-top: 10px;
+  height: 50px;
+  width: 135px;
+  border-radius: 25px;
+  font-size: 18px;
+  border: none;
+  color: black;
+  font-weight: bold;
+  background-color: #eeeeee;
+  &:hover{
+    background-color: #ffe63e;
+  }
+}
+.product-list{
+  margin-top: 20px;
+}
 </style>

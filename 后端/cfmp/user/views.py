@@ -6,6 +6,7 @@ from django.core.files.storage import default_storage
 from django.db.models import Q
 from django.shortcuts import render
 from django.contrib.auth import authenticate
+from django_filters.rest_framework import DjangoFilterBackend
 from minio_storage import MinioMediaStorage
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view
@@ -238,6 +239,12 @@ class login_passwordView(APIView):
         #密码已加密
         user = User.objects.filter(email=email)
         user = user.first()
+        #检查user是否存在
+        if not user:
+            return Response({
+                "fail_code":"USER_NOT_EXIST",
+                "fail_msg" : "用户不存在"}, status=status.HTTP_400_BAD_REQUEST)
+
         if check_password(password,user.password)==False:
             return Response({
                 "fail_code":"PASSWORD_ERROR",
@@ -391,10 +398,14 @@ class UserProductsViewSet(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ProductSerializer
     lookup_field = 'user_id'
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['status']
 
     def get_queryset(self):
         user_id = self.kwargs['user_id']
-        return Product.objects.filter(user_id=user_id).order_by('-created_at')
+        sta = self.request.query_params.get('status')
+        print(sta)
+        return Product.objects.filter(user_id=user_id,status=sta).order_by('-created_at')
 
 class UserComplaintViewSet(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
