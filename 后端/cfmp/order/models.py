@@ -49,7 +49,8 @@ class Order(models.Model):
     shipping_phone = models.CharField(max_length=200, null=True, blank=True)
     shipping_address = models.TextField(null=True, blank=True)
     shipping_postal_code = models.CharField(max_length=20, null=True, blank=True)
-
+    def __str__(self):
+        return f"Order {self.order_id}"
 
     class Meta:
         db_table = "order"
