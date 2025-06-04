@@ -83,7 +83,7 @@ class ComplaintView(StandartView):
     filterset_fields = ['complainer_id','target_id','target_type','status','complainer_id']
     ordering_fields = ['created_at']
 
-    @action(methods=['patch'], detail=False, url_path='branch/(?P<target_type>\w+)/(?P<target_id>\d+)')
+    @action(methods=['patch'], detail=False, url_path='branch/(?P<target_type>\w+)/(?P<target_id>\d+)', url_name='branch')
     def branch_update(self, request,target_type, target_id):
         queryset = self.get_queryset().filter(
             target_type=target_type,
