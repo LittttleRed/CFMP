@@ -18,8 +18,15 @@ router.beforeEach(async (to, from, next) => {
     }
   } else {
     if (getToken()) {
-
-        const user = await getMe(getToken()).catch(
+        const user = await getMe(getToken()).then(
+            res =>{
+                console.log(res[0].status)
+                if(res[0].status==1){
+                    removeToken()
+                    next('/login');
+                }
+            }
+        ).catch(
             e =>{
               removeToken();
               console.log(e);

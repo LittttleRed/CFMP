@@ -6,13 +6,16 @@
     </div>
 
     <div class="header" style="cursor: pointer" @click="()=>{router.push({name:'product',query:{product_id:product_id,myfollow:myfollow}})}">
-      <div class="title">
+      <div >
+        <div class="title">
         <span class="tag" v-if="functions===0">包邮</span>
         <h3 class="title-text" >{{ title.length>12 ? title.substring(0,12)+'...' : title }}</h3>
-        <div class="price" style="margin-left: 10px">￥{{ price }}</div>
-
+        </div>
+        <div class="title">
+        <div class="price" style="">￥{{ price }}</div>
+          <div style="margin-top: 10px;margin-left: 10px;color: #999999;font-size: 15px" v-if="status===0">有{{ visit_count}}人想要</div>
+        </div>
       </div>
-
     </div>
 
     <!-- 数据信息 -->
@@ -48,6 +51,7 @@ defineProps({
   myfollow: Boolean,
   functions: Number,
   status: Number,
+  visit_count: Number
 })
 
 </script>
@@ -107,6 +111,7 @@ defineProps({
 .title {
   display: flex;
   align-items: center;
+  margin-top: 5px;
 }
 
 .tag {
@@ -126,8 +131,10 @@ defineProps({
 
 .price {
   color: #ff4444;
-  font-size: 18px;
+  font-size: 23px;
   font-weight: bold;
+  margin-top: 5px;
+  margin-left: 0;
 }
 
 .product-image {

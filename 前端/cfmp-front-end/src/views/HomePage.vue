@@ -20,7 +20,9 @@
             v-for="(img, index) in imageList"
             :key="index"
             class="slider-image"
-           alt="商品图片"/>
+           alt="商品图片"
+            @click="handleClick(index)"
+            style="cursor: pointer"/>
         </div>
       </div>
       </el-card>
@@ -71,7 +73,9 @@
                     :product_id="product.product_id"
                     :media="product.media[0]?product.media[0]['media']:''"
                     :myfollow="myFollow.indexOf(product.user.user_id)!==-1"
-                    :functions="product.function">
+                    :functions="product.function"
+                    :visit_count="product.visit_count"
+                    :status="product.status">
            </Product>
           </el-col>
         </el-row>
@@ -109,6 +113,27 @@ const currentIndex = ref(0)
 let timer = null
 const sort_type = ref('')
 const chating = ref(true)
+const router  = useRouter()
+const handleClick = (index) => {
+  let category = 0;
+  switch (index) {
+    case 0:
+      category = 3;
+      break;
+    case 1:
+      category = 4;
+      break;
+    case 2:
+      category = 16;
+      break;
+    case 3:
+      category = 19;
+      break;
+    default:
+      return;
+  }
+  router.push({ name: 'search', query: { category } });
+};
 const resort = () => {
   page.value = 1;
   isMax.value = false;

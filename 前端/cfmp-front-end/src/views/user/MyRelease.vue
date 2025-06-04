@@ -64,6 +64,7 @@ const handleTabChange=(name)=>{
             <el-tab-pane label="被封禁" name="on-fail" v-if="isMyHome"></el-tab-pane>
           </el-tabs>
     <div class="product-list" >
+      <h2 v-if="productList.length===0" style="margin: auto">暂无</h2>
     <el-row :gutter="10" v-if="getToken()">  <!-- 控制列间距 -->
       <el-col
         v-for="(product, index) in productList"

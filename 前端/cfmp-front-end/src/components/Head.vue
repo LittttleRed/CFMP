@@ -6,8 +6,9 @@
       <h1 class="title" @click="toHomePage">
         校园跳蚤市场
       </h1>
+
     </div>
-<Search v-if="showSearch===true" style="border-radius: 40px" ></Search>
+<Search v-if="showSearch===true" style="border-radius: 40px;" ></Search>
   <div class="right">
 
     <el-col :span="12">
@@ -96,5 +97,6 @@ const initUserInfo = () => {
   .title{
     font-size: 40px;
     cursor: pointer;
+    height: 50px;
   }
 </style>

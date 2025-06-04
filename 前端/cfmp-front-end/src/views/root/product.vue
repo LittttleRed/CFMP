@@ -1,7 +1,7 @@
 <template>
   <div class="product-management">
     <!-- 搜索表单 -->
-    <el-form :model="tempForm" ref="searchForm" inline class="search-form">
+    <el-form :model="tempForm" ref="searchForm" inline class="search-form" @keyup.enter.native="handleSearch">
       <el-form-item label="商品ID">
         <el-input v-model="tempForm.id" placeholder="请输入商品ID"></el-input>
       </el-form-item>
