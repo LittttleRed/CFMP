@@ -57,6 +57,7 @@ class UserView(StandartView):
     filter_backends = [DjangoFilterBackend,filters.OrderingFilter]
     filterset_fields = ['user_id','username','status','privilege']
     ordering_fields = ['created_at']
+    name = 'user'
 
 class ProductView(StandartView):
     permission_classes = [IsAdminUser]
@@ -69,7 +70,7 @@ class ProductView(StandartView):
     filter_backends = [DjangoFilterBackend,filters.OrderingFilter]
     filterset_fields = ['status']
     ordering_fields = ['created_at']
-
+    name = 'products'
 
 class ComplaintView(StandartView):
     permission_classes = [IsAdminUser]
@@ -82,8 +83,8 @@ class ComplaintView(StandartView):
     filter_backends = [DjangoFilterBackend,filters.OrderingFilter]
     filterset_fields = ['complainer_id','target_id','target_type','status','complainer_id']
     ordering_fields = ['created_at']
-
-    @action(methods=['patch'], detail=False, url_path='branch/(?P<target_type>\w+)/(?P<target_id>\d+)')
+    name = 'complaint'
+    @action(methods=['patch'], detail=False, url_path='branch/(?P<target_type>\w+)/(?P<target_id>\d+)',url_name='branch')
     def branch_update(self, request,target_type, target_id):
         queryset = self.get_queryset().filter(
             target_type=target_type,
@@ -122,7 +123,7 @@ class ComplaintReviewView(StandartView):
     filter_backends = [DjangoFilterBackend,filters.OrderingFilter]
     filterset_fields = ['target_id', 'target_type','reviewer_id']
     ordering_fields = ['created_at']
-
+    name = 'review'
     def create(self, request, *args, **kwargs):
         # 调用父类的 create 方法完成数据的创建
         response = super().create(request, *args, **kwargs)
