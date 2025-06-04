@@ -395,7 +395,7 @@ class CategoryAPITest(APITestCase):
 
     def setUp(self):
         # 创建管理员用户
-        self.admin_user = User.objects.create_user(
+        self.admin_user = User.objects.create(
             username="admin",
             email="admin@example.com",
             password="password123",
@@ -403,7 +403,7 @@ class CategoryAPITest(APITestCase):
         )
 
         # 创建普通用户
-        self.regular_user = User.objects.create_user(
+        self.regular_user = User.objects.create(
             username="regular",
             email="regular@example.com",
             password="password123",
