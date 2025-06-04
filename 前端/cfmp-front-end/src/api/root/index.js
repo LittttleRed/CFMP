@@ -71,3 +71,30 @@ export const getOrders=(day,status)=>{
         }
     })
 }
+import request from "@/utils/request";
+
+// 获取所有商品
+export function getAllProducts(params) {
+  return request({
+    url: "/root/products/",
+    method: "get",
+    params
+  });
+}
+
+// 根据 ID 获取商品
+export function getProductById(id) {
+  return request({
+    url: `/root/products/${id}/`,
+    method: "get"
+  });
+}
+
+// 更新商品状态
+export function updateProductStatus(productId, status) {
+  return request({
+    url: `/root/products/${productId}/`,
+    method: "patch",
+    data: { status }
+  });
+}

@@ -14,7 +14,7 @@ urlpatterns += [
     path('auth/login-with-password/',views.login_passwordView.as_view(),name='login_password'),
     path('auth/login-with-captcha/',views.login_captchaView.as_view(),name='login_captcha'),
     path('security/email/',views.modify_email.as_view(), name='modify_email'),
-    # path('security/password/',views.modify_password.as_view(), name='modify_password'),
+    path('security/password/',views.modify_password.as_view(), name='modify_password'),
     path('captcha/', views.CaptchaView.as_view(), name='captcha'),
 
     path('user/<int:user_id>/', views.UserIdViewSet.as_view(), name='user'),
@@ -25,5 +25,7 @@ urlpatterns += [
     path('user/follow/',views.FollowUserViewSet.as_view()),
     path('user/followee/',views.FolloweeUserViewSet.as_view()),
     path('user/me/products/<int:user_id>/', views.UserProductsViewSet.as_view()),
-    path('user/chat/<int:user_id>/',  views.ChatLogViewSet.as_view())
+    path('user/chat/<int:user_id>/',  views.ChatLogViewSet.as_view()),
+    path('user/message/',  views.MessageViewSet.as_view()),
+    path('user/password/',views.getPassword.as_view())
 ]

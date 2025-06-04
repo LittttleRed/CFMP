@@ -30,10 +30,15 @@ export const constRoutes =   [
         name: 'UserManagement',
         component: () => (import('../views/root/user.vue')),
         meta: {title: '用户管理'}
-      },
+      },{
+        path: 'product',
+            name: 'productManagement',
+            component: () => (import('../views/root/product.vue')),
+            meta: {title: '商品审核'}
+        },
       {
         path: 'complaint_product',
-        name: 'productManagement',
+        name: 'ProductReview',
         component: () => (import('../views/root/complaint_product.vue')),
         meta: {title: '投诉管理'}
       },{
@@ -76,10 +81,10 @@ export const constRoutes =   [
         component: () => (import('../views/user/setting.vue')),
         meta: {title: '个人资料'}
       },{
-        path: 'phone',
-        name: 'phone',
-        component: () => (import('../views/user/changePhone.vue')),
-        meta: {title: '修改手机号'}
+        path: 'pwd',
+        name: 'pwd',
+        component: () => (import('../views/user/changePwd.vue')),
+        meta: {title: '修改密码'}
       },{
         path: 'email',
         name: 'email',
@@ -109,6 +114,14 @@ export const constRoutes =   [
     //   guestOnly: true // 标记仅未登录用户可访问
     }
   },{
+    path: '/forget',
+        name: 'Forget',
+        component: () => import('../views/forgetPage.vue'),
+        meta: {
+          title: '忘记密码',
+        //   guestOnly: true // 标记仅未登录用户可访问
+        }
+    },{
     path: '/register',
     name: 'Register',
     component: () => import('../views/RegisterPage.vue'),
