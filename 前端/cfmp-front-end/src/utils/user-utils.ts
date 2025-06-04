@@ -42,10 +42,12 @@ export function setHeadImg(headImg: string) {
 export function removeHeadImg() {
   localStorage.removeItem('headImg')
 }
-export function setStaff(staff: string) {
-  localStorage.setItem('staff', staff)
+export function setPrivileges(privilege: string) {
+  localStorage.setItem('privilege', privilege)
 }
-export function removeStaff() {}
-export function getStaff(){
-  return localStorage.getItem('staff')
+export function removePrivileges() {
+  localStorage.removeItem('privilege')
+}
+export function getPrivileges(){
+  return localStorage.getItem('privilege')
 }

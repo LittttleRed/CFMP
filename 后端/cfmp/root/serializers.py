@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from . import models
+from product.serializers import ProductSerializer
 class ComplaintSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Complaint

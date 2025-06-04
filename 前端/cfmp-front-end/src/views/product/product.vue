@@ -4,7 +4,7 @@
     <!-- 商品主内容卡片 -->
     <el-card shadow="hover" class="product-card">
       <!-- 商品图片和基本信息 -->
-
+      <el-button @click="router.go(-1)">返回</el-button>
       <div class="main-content">
         <!-- 商品主图 -->
         <el-button class="btn" style="margin: auto;font-size: 20px;font-weight: bold"
@@ -39,20 +39,20 @@
               type="success"
               size="large"
               @click="handleBuyNow"
-              v-if="productData.user.user_id != getUserId()"
+              v-if="productData.user.user_id != getUserId()&&getPrivileges()!=1"
             >
               立即购买
             </el-button>
             <el-button type="warning" size="large" v-if="productData.user.user_id==getUserId()" @click="change">
               修改
             </el-button>
-             <el-button type="warning" size="large" v-if="getToken()&&productData.user.user_id!=getUserId()&&!isCollected" @click="collect">
+             <el-button type="warning" size="large" v-if="getToken()&&productData.user.user_id!=getUserId()&&!isCollected&&getPrivileges()!=1" @click="collect">
               收藏
             </el-button>
-            <el-button type="warning" size="large" v-if="productData.user.user_id!=getUserId()&&isCollected" @click="uncollect">
+            <el-button type="warning" size="large" v-if="productData.user.user_id!=getUserId()&&isCollected&&getPrivileges()!=1" @click="uncollect">
               取消收藏
             </el-button>
-            <el-button type="danger" size="large" v-if="getToken()&&productData.user.user_id!=getUserId()" @click="complaintdialog = true">
+            <el-button type="danger" size="large" v-if="getToken()&&productData.user.user_id!=getUserId()&&getPrivileges()!=1" @click="complaintdialog = true">
               举报
             </el-button>
           </div>
@@ -66,7 +66,7 @@
         <div @click="()=>{router.push({name:'user',query:{user_id:productData.user.user_id}})}"
              style="cursor:  pointer;margin-left: 15px;margin-top: auto;margin-bottom: auto;font-weight: bold;font-size: 20px">
           {{ productData.user.username }}
-          <el-button v-if="route.query.myfollow==false" style="background:#ffd364;border:none;margin: auto auto auto 20px;">关注</el-button>
+          <el-button v-if="followed==false" style="background:#ffd364;border:none;margin: auto auto auto 20px;">关注</el-button>
           <el-button v-else style="background:#ffd364;border:none;margin: auto auto auto 20px;">已关注</el-button>
         </div>
 
@@ -93,8 +93,8 @@
         v-if="getToken()"
       >
         <div class="user-info">
-          <el-avatar :src="comment.avatar" />
-          <span class="username">{{ comment.username }}</span>
+          <el-avatar :src="comment.user.avatar" />
+          <span class="username">{{ comment.user.username }}</span>
           <el-rate
             v-model="comment.rating"
             disabled
@@ -102,7 +102,8 @@
             score-template="{value} 分"
           />
         </div>
-        <div class="comment-content">{{ comment.content }}</div>
+        <div class="comment-content">{{ comment.comment }}</div>
+        <el-button type="danger" v-if="comment.user.user_id==getUserId()||getPrivileges()==1" style="margin: 5px auto" @click="deleteComment(comment.id)">删除</el-button>
         <el-divider />      </div>
       <div class="comment-item" v-else></div>
     </el-card>
@@ -125,6 +126,27 @@
         <el-button type="primary" @click="complaint">提交</el-button>
       </el-form>
     </el-dialog>
+<!--    评价-->
+    <el-dialog v-model="showCommentDialog" title="发表评价">
+    <el-form>
+      <!-- 添加评分组件 -->
+      <el-form-item label="评分">
+        <el-rate v-model="newCommentRating" />
+      </el-form-item>
+      <el-form-item label="评价内容">
+        <el-input
+          type="textarea"
+          v-model="newCommentContent"
+          :rows="4"
+          placeholder="请输入评价内容"
+        ></el-input>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="showCommentDialog = false">取消</el-button>
+      <el-button type="primary" @click="submitComment">提交</el-button>
+    </template>
+  </el-dialog>
   </div>
 </template>
 
@@ -132,8 +154,14 @@
 import { ref, reactive } from 'vue'
 import { ShoppingCart } from '@element-plus/icons-vue'
 import {useRoute} from "vue-router";
-import {addCollection, checkCollection, getProduct, removeCollection} from "../../api/product/index.js";
-import {getToken, getUserId} from "../../utils/user-utils.js";
+import {
+  addCollection, addReview,
+  checkCollection,
+  getProduct,
+  getProductReviews,
+  removeCollection
+} from "../../api/product/index.js";
+import {getHeadImg, getPrivileges, getToken, getUserId, getUserName} from "../../utils/user-utils.js";
 import Head from "../../components/Head.vue";
 import {ElMessage} from "element-plus";
 import router from "../../router/index.js";
@@ -164,7 +192,11 @@ const initProduct=async (id) => {
 
   })
 }
-followed.value=route.query.myfollow
+if(route.query.myfollow==='true'){
+  followed.value=true
+}else{
+  followed.value=false
+}
 const change = () => {
   router.push({
     name: 'edit-product',
@@ -216,11 +248,11 @@ initProduct(product_id)
 // 模拟商品数据
 const productData = reactive({
   product_id: product_id,
-  title: '【官方正品】高端智能手机 旗舰款',
+  title: '',
   price: 5999.00,
-  main_image: 'http://59.110.23.64:9000/img/product_media/4272732bfeaf7a432e9cf1c4148bc1cd6e.jpg',
+  main_image: '',
   media: [
-    'http://59.110.23.64:9000/img/product_media/4272732bfeaf7a432e9cf1c4148bc1cd6e.jpg',
+    '',
   ],
   description: '高端旗舰手机，采用最新处理器...',
   user: {
@@ -230,19 +262,74 @@ const productData = reactive({
   },
   comments: [
     {
-      id: 1,
-      username: '用户1',
       avatar: 'https://example.com/avatar1.jpg',
       rating: 4.5,
-      content: '手机性能非常强大，运行流畅'
+      content: '手机性能非常强大，运行流畅',
+      user:{}
     },
     // 更多评论...
   ]
 })
 
 // 交互状态
-const showCommentDialog = ref(false)
 
+
+const showCommentDialog = ref(false)
+const newCommentRating = ref(5) // 默认5星
+const newCommentContent = ref('')
+const getcomments=async () => {
+  await getProductReviews(product_id).then(
+      res => {
+        productData.comments=res.results
+        console.log(productData.comments)
+      }
+  )
+}
+getcomments()
+// 提交评论方法
+const submitComment = async () => {
+  if (!newCommentContent.value.trim()) {
+    ElMessage.warning('评价内容不能为空')
+    return
+  }
+
+  // 构造评论数据 - 包含评分和内容
+  const commentData = {
+    product_id: productData.product_id,
+    user_id: getUserId(),
+    rating: newCommentRating.value,
+    comment: newCommentContent.value
+  }
+
+  try {
+    // 这里调用API提交评论
+    // await submitCommentAPI(commentData)
+    console.log(commentData)
+    await addReview(product_id,commentData,getToken())
+    // 模拟提交成功
+    ElMessage.success('评价发布成功')
+
+    // 更新本地评论列表
+    productData.comments.unshift({
+      id: Date.now(),
+      rating: newCommentRating.value,
+      comment: newCommentContent.value,
+      user: {
+        user_id: getUserId(),
+        username: getUserName(),
+        avatar: getHeadImg()
+      }
+    })
+
+    // 重置表单
+    showCommentDialog.value = false
+    newCommentRating.value = 5
+    newCommentContent.value = ''
+  } catch (error) {
+    ElMessage.error('评价发布失败')
+    console.error(error)
+  }
+}
 
 
 // 立即购买 - 直接跳转到支付页面
