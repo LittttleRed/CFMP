@@ -1,0 +1,41 @@
+
+import {createRouter, createWebHashHistory, createWebHistory, useRoute} from "vue-router";
+import {constRoutes} from "./routes";
+import {getToken, removeToken} from "@/utils/user-utils.js";
+import {getMe} from "@/api/user/index.js";
+
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes: constRoutes,
+});
+router.beforeEach(async (to, from, next) => {
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    if (!getToken()) {
+      next('/login');
+    } else {
+      next();
+    }
+  } else {
+    if (getToken()) {
+        const user = await getMe(getToken()).then(
+            res =>{
+                console.log(res[0].status)
+                if(res[0].status==1){
+                    removeToken()
+                    next('/login');
+                }
+            }
+        ).catch(
+            e =>{
+              removeToken();
+              console.log(e);
+              next('/login');
+            }
+        );
+    }
+    next();
+  }
+});
+export default router;
+
