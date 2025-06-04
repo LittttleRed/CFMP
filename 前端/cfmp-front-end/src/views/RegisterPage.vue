@@ -125,8 +125,12 @@
               </el-input>
               <el-button style="margin-left: 20px;height: 48px" v-if="!hassend"
               @click="sendCap">发送验证码</el-button>
-              <el-button style="margin-left: 20px;height: 48px" v-else
-              >已发送</el-button>
+              <el-button  style="margin-left: 20px;height: 48px"
+                          v-else
+                          disabled
+                        >
+                {{ countdown }}
+              </el-button>
             </el-form-item>
             <div style="color: red">{{ fail_msg }}</div>
             <el-button
@@ -165,6 +169,8 @@ const loading = ref(false)
 const rememberMe = ref(false)
 const emailregister = ref(false)
 const hassend = ref(false)
+const countdown = ref(60) // 倒计时初始值
+const timer = ref(null)   // 用于保存定时器引用
 const registerForm = reactive({
   username: '',
   password: '',
@@ -172,19 +178,38 @@ const registerForm = reactive({
   email: '',
   captcha: ''
 })
-const sendCap=async () => {
-  if(!registerForm.email){
-      ElMessage.error('请输入邮箱')
-  }else if(!registerForm.username){
+const sendCap = async () => {
+  if (!registerForm.email) {
+    ElMessage.error('请输入邮箱')
+    return
+  } else if (!registerForm.username) {
     ElMessage.error('请输入用户名')
-  }else if (registerForm.password !== registerForm.password_repeat||!registerForm.password){
+    return
+  } else if (registerForm.password !== registerForm.password_repeat || !registerForm.password) {
     ElMessage.error('密码有误')
-  }else{
-   await sendCaptcha({scene:  'register', email: registerForm.email}).then(res=>{
-     hassend.value = true
-   }).catch(e=>{
-      fail_msg.value = e.response.data.fail_msg
-    })
+    return
+  }else if(hassend.value===true){
+    ElMessage.error('请勿重复发送验证码')
+    return
+  }
+  try {
+    hassend.value = true
+    countdown.value = 60
+    timer.value = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer.value)
+        hassend.value = false
+      }
+    }, 1000)
+    await sendCaptcha({ scene: 'register', email: registerForm.email }).catch(
+        (e) => {
+          fail_msg.value = e.response.data.fail_msg || '验证码发送失败'
+        }
+    )
+    // 启动倒计时
+  } catch (e) {
+    fail_msg.value = e.response?.data?.fail_msg || '验证码发送失败'
   }
 }
 const particlesInit = async engine => {

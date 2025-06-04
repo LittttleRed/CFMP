@@ -108,3 +108,19 @@ export const deletePro=(id,token)=>{
         }
     })
 }
+export const getProductReviews=(id)=>{
+    return http({
+        url:'/product/'+id+'/reviews/',
+        method:'get',
+    })
+}
+export const addReview=(id,data,token)=>{
+    return http({
+        url:'/product/'+id+'/reviews/',
+        method:'post',
+        data:data,
+        headers:{
+            'Authorization':'Bearer '+token,
+        }
+    })
+}
