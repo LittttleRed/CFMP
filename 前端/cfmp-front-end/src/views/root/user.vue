@@ -1,7 +1,7 @@
 <template>
   <div class="user-management">
     <!-- 搜索表单 -->
-    <el-form :model="tempForm" ref="searchForm" inline class="search-form">
+    <el-form :model="tempForm" ref="searchForm" inline class="search-form" @keyup.enter.native="handleSearch">
       <el-form-item label="用户ID">
         <el-input v-model="tempForm.id" placeholder="请输入用户ID"></el-input>
       </el-form-item>
@@ -88,7 +88,7 @@ export default {
     return {
       pagination: {
         page: 1,
-        page_size: 2,
+        page_size: 10,
         total: 1
       },tempForm:{
         id: '',
@@ -159,11 +159,12 @@ export default {
            username: this.searchForm.name,    // 键名改为 name
            phone: this.searchForm.phone,
            status: this.searchForm.status, // 使用动态分页
+           privilege: 0,
            page: page
          };
          this.loadUsers(queryParams)
        }else{
-         this.loadUsers()
+         this.loadUsers({privilege: 0})
        }
     },
       async handleSearch() {
@@ -173,7 +174,7 @@ export default {
             id: '',
             name: '',
             phone: '',
-            status: ''
+            status: '',
           }
 
       // 这里应实现搜索逻辑
@@ -187,14 +188,15 @@ export default {
         username: this.searchForm.name,    // 键名改为 name
         phone: this.searchForm.phone,
         status: this.searchForm.status, // 使用动态分页
+            privilege: 0
       };
          console.log(queryParams)
       await this.loadUsers(queryParams);
       }else{
-        await this.loadUsers()
+        await this.loadUsers({privilege: 0})
       }
     },
-     async loadUsers(queryParams = {page: 1}) {
+     async loadUsers(queryParams = {page: 1,privilege: 0}) {
       const filteredParams = Object.fromEntries(
       Object.entries(queryParams).filter(([_, v]) => v !== '' && v !== null)
     );

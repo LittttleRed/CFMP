@@ -7,6 +7,33 @@ export const getLogin=(data)=>{
         data:data,
     })
 }
+export const loginWithCaptcha=(data)=>{
+    return http({
+        url:'/v1/auth/login-with-captcha/',
+        method:'post',
+        data:data,
+    })
+}
+export const changeEmail=(data,token)=>{
+    return http({
+        url:'/v1/security/email/',
+        method:'post',
+        data:data,
+        headers:{
+            'Authorization':'Bearer '+token
+        }
+    })
+}
+export const changePassword=(data,token)=>{
+    return http({
+        url:'/v1/security/password/',
+        method:'post',
+        data:data,
+        headers:{
+            'Authorization':'Bearer '+token
+        }
+    })
+}
 export const getRegister=(data)=>{
     return http({
         url:'/v1/auth/register/',
@@ -17,13 +44,6 @@ export const getRegister=(data)=>{
 export const sendCaptcha=(data)=>{
     return http({
         url:'/v1/captcha/',
-        method:'post',
-        data:data,
-    })
-}
-export const loginWithCaptcha=(data)=>{
-    return http({
-        url:'/v1/auth/login-with-captcha/',
         method:'post',
         data:data,
     })
@@ -87,13 +107,16 @@ export const changeUser=(token,data)=>{
         data:data
     })
 }
-export const getAllLaunches=(token,id)=>{
+export const getAllLaunches=(token,id,status)=>{
     return http({
         url:'/v1/user/me/products/'+id+'/',
         method:'get',
         headers:{
             'Authorization':'Bearer '+token
-        }
+        },
+        params: {   // 修改这里，使用params传递查询参数
+status: status
+}
     })
 }
 export const createComplaint=(token,data)=>{
@@ -149,5 +172,14 @@ export const getHistory=(token,id,pageconfig)=>{
         headers:{
             'Authorization':'Bearer '+token
         },params:pageconfig
+    })
+}
+export const getMyMessage=(toekn)=>{
+    return http({
+        url:'/v1/user/message/',
+        method:'get',
+        headers:{
+            'Authorization':'Bearer '+toekn
+        }
     })
 }

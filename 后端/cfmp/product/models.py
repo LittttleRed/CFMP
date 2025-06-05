@@ -7,9 +7,13 @@ from user.models import User
 class Product(models.Model):
     ON_SALE = 0
     OFF_SALE = 1
+    SALED = 2
+    UN_CHECK = 3
     STATUS_CHOICES = [
         (ON_SALE, '上架'),
-        (OFF_SALE, '下架'),
+        (OFF_SALE, '封禁'),
+        (SALED,'已出售'),
+        (UN_CHECK, '未审核')
     ]
     FUNCTION_CHOICES = [
         (0, '包邮'),
@@ -40,6 +44,13 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     categories = models.ManyToManyField("Category", related_name="products")
     function = models.SmallIntegerField(choices=FUNCTION_CHOICES, default=0)
+    visit_count = models.PositiveIntegerField(default=0)
+    rating_avg = models.DecimalField(
+        max_digits=2,
+        decimal_places=1,
+        default=0.0,
+        help_text="平均评分"
+    )
 
     class Meta:
         db_table = "product"
@@ -119,7 +130,6 @@ class ProductReview(models.Model):
 
     class Meta:
         db_table = "product_review"
-        unique_together = ("product", "user")  # 每个用户对同一商品只能评价一次
 
 
 

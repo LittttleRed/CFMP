@@ -13,9 +13,12 @@ from . import models
 from . import serializers
 from rest_framework.views import APIView
 from . import filter
+from user.models import Messages,User
+from .permissions import IsAdminUser
+from product.models import Product
 
 class StandardPagination(PageNumberPagination):
-    page_size = 2
+    page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 1000
 
@@ -43,42 +46,33 @@ def admin_user_get(request):
 
 
 # Create your views here.
-
-
-# 基于函数的视图
-@api_view(['GET', 'POST'])
-def test(request, test_int):
-    print(request.path)  # 去掉域名的路径
-    print(request.method)  # 请求方法
-    print(request.query_params.dict())  # query形式的参数,转化为字典,DRF专属
-    print(request.data)  # json形式的参数,存在请求体中,纯字典形式
-    print(request.headers)  # 请求头内容
-    print(test_int)
-    # 序列化并返回结果
-
-    # 签名Response(data, status=None, template_name=None, headers=None, content_type=None)
-    """
-    data:返回的数据，内部会进行序列化，需传入一个字典
-    status:状态码,默认是200
-    header:响应头
-    """
-    return Response({'code': "200", 'message': 'test'}, status=200, headers={'Content-Type': 'application/json'})
-
-
-
 class UserView(StandartView):
+    permission_classes = [IsAdminUser]
+
     queryset = models.User.objects.all()
     serializer_class = serializers.UserSerializer
     lookup_field = 'user_id'
     pagination_class = StandardPagination
 
     filter_backends = [DjangoFilterBackend,filters.OrderingFilter]
-    filterset_fields = ['user_id','username','status']
+    filterset_fields = ['user_id','username','status','privilege']
+    ordering_fields = ['created_at']
+
+class ProductView(StandartView):
+    permission_classes = [IsAdminUser]
+
+    queryset = Product.objects.all()
+    serializer_class = serializers.ProductSerializer
+    lookup_field = 'product_id'
+    pagination_class = StandardPagination
+
+    filter_backends = [DjangoFilterBackend,filters.OrderingFilter]
+    filterset_fields = ['status']
     ordering_fields = ['created_at']
 
 
-
 class ComplaintView(StandartView):
+    permission_classes = [IsAdminUser]
     queryset = models.Complaint.objects.all()
     serializer_class = serializers.ComplaintSerializer
     lookup_field = 'complaint_id'
@@ -89,7 +83,7 @@ class ComplaintView(StandartView):
     filterset_fields = ['complainer_id','target_id','target_type','status','complainer_id']
     ordering_fields = ['created_at']
 
-    @action(methods=['patch'], detail=False, url_path='branch/(?P<target_type>\w+)/(?P<target_id>\d+)')
+    @action(methods=['patch'], detail=False, url_path='branch/(?P<target_type>\w+)/(?P<target_id>\d+)', url_name='branch')
     def branch_update(self, request,target_type, target_id):
         queryset = self.get_queryset().filter(
             target_type=target_type,
@@ -118,6 +112,7 @@ class ComplaintView(StandartView):
 
 
 class ComplaintReviewView(StandartView):
+    permission_classes = [IsAdminUser]
     queryset = models.ComplaintReview.objects.all()
     serializer_class = serializers.ComplaintReviewSerializer
     lookup_field = 'review_id'
@@ -128,10 +123,43 @@ class ComplaintReviewView(StandartView):
     filterset_fields = ['target_id', 'target_type','reviewer_id']
     ordering_fields = ['created_at']
 
+    def create(self, request, *args, **kwargs):
+        # 调用父类的 create 方法完成数据的创建
+        response = super().create(request, *args, **kwargs)
+
+        # 获取当前创建的投诉审核数据
+        target_id = request.data.get('target_id')
+        target_type = request.data.get('target_type')
+
+
+        # 查询所有举报了该 target_type 和 target_id 的用户
+        complaints = models.Complaint.objects.filter(target_id=target_id, target_type=target_type,status=0)
+        complainer_ids = complaints.values_list('complainer_id', flat=True).distinct()
+
+        # 获取对应的用户对象列表
+        users = User.objects.filter(user_id__in=complainer_ids)
+
+        # 创建消息并关联到用户
+        message_title = "举报处理通知"
+        message_type = ""
+        if target_type == 0:
+            message_type = "product"
+        elif target_type == 1:
+            message_type = "user"
+        message_content = f"您举报的目标 (ID: {target_id}, 类型: {message_type}) 已经有了新的处理结果，请及时查看。"
+        message = Messages.objects.create(title=message_title, content=message_content)
+
+        for user in users:
+            user.messages.add(message)  # 将消息关联到用户
+
+        # 返回原始响应数据
+        return response
+
 #解封定时任务
 
 
 class OrderView(StandartView):
+    permission_classes = [IsAdminUser]
     queryset = models.Order.objects.all()
     serializer_class = serializers.OrderSerializer
     filterset_class = filter.OrderFilter

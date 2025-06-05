@@ -13,6 +13,9 @@
       <el-menu-item index="user">
         <span slot="title">用户管理</span>
       </el-menu-item>
+      <el-menu-item index="/root/product">
+        <span>商品审核</span>
+      </el-menu-item>
           <el-menu-item index="/root/complaint_product">
           <span>商品投诉</span>
         </el-menu-item>

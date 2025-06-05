@@ -44,11 +44,9 @@ class Order(models.Model):
     payment_method = models.SmallIntegerField(choices=PAYMENT_METHOD_CHOICES, null=True, blank=True)
     payment_time = models.DateTimeField(null=True, blank=True)
     remark = models.TextField(blank=True, null=True)
-    cancel_reason = models.TextField(blank=True, null=True)
-
-    # 配送地址信息
-    shipping_name = models.CharField(max_length=100, null=True, blank=True)
-    shipping_phone = models.CharField(max_length=20, null=True, blank=True)
+    cancel_reason = models.TextField(blank=True, null=True)    # 配送地址信息（加密存储，需要更大的字段长度）
+    shipping_name = models.CharField(max_length=500, null=True, blank=True)
+    shipping_phone = models.CharField(max_length=200, null=True, blank=True)
     shipping_address = models.TextField(null=True, blank=True)
     shipping_postal_code = models.CharField(max_length=20, null=True, blank=True)
 
@@ -81,7 +79,7 @@ class Payment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     paid_at = models.DateTimeField(null=True, blank=True)
     expires_at = models.DateTimeField(null=True, blank=True)
-    transaction_id = models.IntegerField(null=True, blank=True)  # 支付平台交易号
+    transaction_id = models.BigIntegerField(null=True, blank=True)  # 支付平台交易号
     payment_subject = models.CharField(max_length=255)  # 支付标题
     payment_data = models.JSONField(default=dict, blank=True)  # 支付数据（如支付URL、二维码等）
     failure_reason = models.CharField(max_length=255, null=True, blank=True)

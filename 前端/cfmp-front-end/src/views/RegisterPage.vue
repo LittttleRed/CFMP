@@ -47,7 +47,7 @@
                  <span class ="switch-type">
             </span>
               </h2>
-
+           
           </div>
 
           <el-form
@@ -70,46 +70,18 @@
               </el-input>
             </el-form-item>
 
-            <el-form-item prop="email">
+            <el-form-item prop="message">
               <el-input
                 v-model="registerForm.email"
                 placeholder="请输入邮箱"
                 class="mail-input"
                 tabindex="1"
-                @blur="handleEmailBlur"
               >
                 <template #prefix>
                   <span class="input-label">邮箱</span>
                 </template>
               </el-input>
             </el-form-item>
-
-           <el-form-item  v-if="isEmailValid" prop="captcha" style="display: flex;flex-direction: column">
-          <el-input
-          v-model="registerForm.captcha"
-          placeholder="请输入验证码"
-          class="mail-input"
-          tabindex="2"
-          style="width: 250px"
-  >
-        <template #prefix>
-           <span class="input-label">验证码</span>
-        </template>
-        </el-input>
-  <!-- 只有邮箱格式正确时才显示按钮 -->
-        <el-button
-          style="margin-left: 20px;height: 48px"
-          :disabled="captchaCountdown > 0"
-          @click="handleSendCaptcha"
-          >
-          <span v-if="captchaCountdown <= 0">
-          发送验证码
-          </span>
-          <span v-else>
-            {{ captchaCountdown }}秒后重新发送
-          </span>
-        </el-button>
-      </el-form-item>
 
             <el-form-item prop="password">
               <el-input
@@ -139,7 +111,28 @@
                 </template>
               </el-input>
             </el-form-item>
-
+            <el-form-item prop="captcha" style="display: flex;flex-direction: column">
+              <el-input
+                v-model="registerForm.captcha"
+                placeholder="请输入验证码"
+                class="mail-input"
+                tabindex="2"
+                style="width: 250px"
+              >
+                <template #prefix>
+                  <span class="input-label">验证码</span>
+                </template>
+              </el-input>
+              <el-button style="margin-left: 20px;height: 48px" v-if="!hassend"
+              @click="sendCap">发送验证码</el-button>
+              <el-button  style="margin-left: 20px;height: 48px"
+                          v-else
+                          disabled
+                        >
+                {{ countdown }}
+              </el-button>
+            </el-form-item>
+            <div style="color: red">{{ fail_msg }}</div>
             <el-button
               class="mail-login-btn"
               type="primary"
@@ -162,11 +155,9 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
-import type { FormInstance } from 'element-plus'
-import { ElMessage } from 'element-plus'
+import {ElMessage, FormInstance} from 'element-plus'
 import { useRouter } from 'vue-router'
-import { getRegister } from '../api/user'
-import { sendCaptcha } from '../api/user'
+import { getRegister,sendCaptcha } from '../api/user'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { ParticlesComponent } from 'particles.vue3';
 import { loadSlim } from 'tsparticles-slim'
@@ -176,12 +167,10 @@ const router = useRouter()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
 const rememberMe = ref(false)
-const canSendCaptcha = ref(false)
-const captchaCountdown = ref(0)
-let timer: any = null
-
 const emailregister = ref(false)
 const hassend = ref(false)
+const countdown = ref(60) // 倒计时初始值
+const timer = ref(null)   // 用于保存定时器引用
 const registerForm = reactive({
   username: '',
   password: '',
@@ -189,8 +178,40 @@ const registerForm = reactive({
   email: '',
   captcha: ''
 })
-
-
+const sendCap = async () => {
+  if (!registerForm.email) {
+    ElMessage.error('请输入邮箱')
+    return
+  } else if (!registerForm.username) {
+    ElMessage.error('请输入用户名')
+    return
+  } else if (registerForm.password !== registerForm.password_repeat || !registerForm.password) {
+    ElMessage.error('密码有误')
+    return
+  }else if(hassend.value===true){
+    ElMessage.error('请勿重复发送验证码')
+    return
+  }
+  try {
+    hassend.value = true
+    countdown.value = 60
+    timer.value = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer.value)
+        hassend.value = false
+      }
+    }, 1000)
+    await sendCaptcha({ scene: 'register', email: registerForm.email }).catch(
+        (e) => {
+          fail_msg.value = e.response.data.fail_msg || '验证码发送失败'
+        }
+    )
+    // 启动倒计时
+  } catch (e) {
+    fail_msg.value = e.response?.data?.fail_msg || '验证码发送失败'
+  }
+}
 const particlesInit = async engine => {
     //await loadFull(engine);
     await loadSlim(engine);
@@ -203,7 +224,25 @@ const rules = {
   ],
   password: [
     { required: true, message: '密码不能为空', trigger: 'blur' },
-    { min: 6, max: 16, message: '长度在6到16个字符', trigger: 'blur' }
+    { min: 6, max: 16, message: '长度在6到16个字符', trigger: 'blur' },
+    {
+    validator: (rule, value, callback) => {
+      // 定义三种字符类型正则
+      const hasNumber = /\d/.test(value);
+      const hasLetter = /[a-zA-Z]/.test(value);
+      const hasSpecial = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(value);
+
+      // 计算满足的类型数量
+      const typeCount = [hasNumber, hasLetter, hasSpecial].filter(Boolean).length;
+
+      if (typeCount >= 2) {
+        callback();
+      } else {
+        callback(new Error('必须包含数字、字母、特殊字符中的至少两种'));
+      }
+    },
+    trigger: 'blur'
+  }
   ],
   repeatPassword: [
     { required: true, message: '请再次输入密码', trigger: 'blur' },
@@ -217,63 +256,8 @@ const rules = {
         trigger: ['blur', 'input']
       }
     }
-  ],
-  email: [
-    { required: true, message: '邮箱不能为空', trigger: 'blur' },
-    { type: 'email', message: '请输入有效的邮箱地址', trigger: ['blur', 'input'] }
   ]
-
 }
-const handleSendCaptcha = async () => {
-  if (captchaCountdown.value > 0) return
-  const email = registerForm.email
-  captchaCountdown.value = 120
-  timer = setInterval(() =>{
-        captchaCountdown.value--
-        if (captchaCountdown.value <= 0){
-          clearInterval(timer)
-        }
-      },1000)
-  try{
-    const res = await sendCaptcha({ email, scene:'register'})
-    console.log(res)
-    if (res && res['success'] === true){
-      ElMessage.success(res['msg']|| '验证码已发送，请查收邮箱')
-    }else{
-      ElMessage.error(res?.['msg'] || res?.['fail_msg'] || '验证码发送失败，请重试')
-    }
-  }catch (error: any) {
-    ElMessage.error(error?.response?.data?.msg || error?.response?.data?.fail_msg || '验证码发送异常')
-  }
-}
-// const handleRegister = async () => {
-//   //localStorage Need
-//   try{
-//     loading.value = true
-//     await formRef.value?.validate()
-//     // 构造注册数据
-//     const registerData = {
-//       username: registerForm.username,
-//       password: registerForm.password,
-//       password_repeat: registerForm.password_repeat,
-//       email: registerForm.email,
-//       captcha: registerForm.captcha
-//     }
-//     const res = await getRegister(registerData)
-
-//     if (res && res['success']) {
-//       // 注册成功，跳转到登录页面
-//       router.push('/login')
-//     } else {
-//       // 处理注册失败的情况
-//       ElMessage.error(res?.['fail_msg'] || '注册失败')
-//     }
-//   } catch (error: any) {
-//     ElMessage.error(error?.response?.data?.fail_msg || '注册异常')
-//   } finally {
-//     loading.value = false
-//   }
-// }
 
 const handleRegister = async () => {
    if(!registerForm.email){
@@ -295,13 +279,15 @@ const handleRegister = async () => {
 const handleBack = () => {
   router.push('/login')
 }
-const isEmailValid = computed(() =>
-  /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(registerForm.email)
-)
-function handleEmailBlur() {
-  const valid = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(registerForm.email)
-  canSendCaptcha.value = valid
-}
+const SelectWays = computed (() =>{
+  if(router.currentRoute.value.path === '/register/email') {
+    return 'email'
+  } else if (router.currentRoute.value.path === '/register/phone') {
+    return 'phone'
+  }
+  return '未知'
+})
+
 
 </script>
 

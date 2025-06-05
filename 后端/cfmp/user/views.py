@@ -6,6 +6,7 @@ from django.core.files.storage import default_storage
 from django.db.models import Q
 from django.shortcuts import render
 from django.contrib.auth import authenticate
+from django_filters.rest_framework import DjangoFilterBackend
 from minio_storage import MinioMediaStorage
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view
@@ -15,8 +16,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
-from .serializers import UserSerializer, PublicUserSerializer, FollowSerializer, ChatLogSerializer
-from .models import User, Follow, ChatLog
+from .serializers import UserSerializer, PublicUserSerializer, FollowSerializer, ChatLogSerializer, MessagesSerializer
+from .models import User, Follow, ChatLog, Messages
 from .serializers import UserSerializer, PublicUserSerializer
 from .models import User
 from .models import Captcha
@@ -30,7 +31,9 @@ from product.models import Product
 from product.serializers import ProductSerializer
 from root.serializers import ComplaintSerializer
 from django.core.mail import send_mail
-
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import check_password
+from .throttling  import EmailRateThrottle
 import random
 # import redis
 
@@ -83,6 +86,7 @@ def varify_captcha(email,captcha):
     return 0
 
 class CaptchaView(APIView):
+    throttle_classes  = [EmailRateThrottle]
     def post(self, request):
         email = request.data.get('email')
         scene = request.data.get('scene')
@@ -93,8 +97,9 @@ class CaptchaView(APIView):
             },status=status.HTTP_400_BAD_REQUEST)
         common_scene = {'register','login','forget'}
         need_token_scene = {'change_email','change_password'}
+        need_user_check_scene = {'change_email','register'}
         user = User.objects.filter(email=email)
-        if user.exists():
+        if user.exists() and scene in need_user_check_scene:
             return Response({
                 "fail_code": "USER_EXIST",
                 "fail_msg": "用户已存在"
@@ -113,14 +118,15 @@ class CaptchaView(APIView):
             else:
                 return Response({
                     "success":False,
-                    "msg":"发送失败"
+                    "fail_msg":"发送失败"
                 })
         elif scene in need_token_scene:
             auth = request.META.get('HTTP_AUTHORIZATION', '')
-            if  not auth:
+            if not auth:
+                print("not auth")
                 return Response({
                     "success":False,
-                    "msg":"验证失败"
+                    "fail_msg":"验证失败"
                 })
             JWTAuthentication.authenticate(self,request)
             if send_sms_code(email) != 0:
@@ -131,12 +137,12 @@ class CaptchaView(APIView):
             else:
                 return Response({
                     "success":False,
-                    "msg":"发送失败"
+                    "fail_msg":"发送失败"
                 })
         else:
             return Response({
                 "success":False,
-                "msg":"参数错误"
+                "fail_msg":"参数错误"
             })
 class RegisterView(APIView):
 
@@ -194,7 +200,9 @@ class RegisterView(APIView):
         #验证码检查
         if varify_captcha(email,captcha)!=0:
             return varify_captcha(email,captcha)
-
+        #对密码加密
+        password = make_password(password)
+        print(password)
         #存入数据库
         user = User.objects.create(
             username=username,
@@ -208,10 +216,17 @@ class RegisterView(APIView):
             "success":True,
             "user_id":user.user_id
         })
-
+import threading
 class login_passwordView(APIView):
     authentication_classes = []
+    _lock = threading.Lock()
+    request_count = 0
     def post(self, request):
+        #看看调用了几次api。貌似调用了两次，有点奇怪 :p
+        with self._lock:
+            print(f"one processing : {self.request_count}")
+            current_count = type(self).request_count
+            type(self).request_count = current_count + 1
         email = request.data.get('email')
         password = request.data.get('password')
         if not all([email, password]):
@@ -221,9 +236,21 @@ class login_passwordView(APIView):
             },status=status.HTTP_400_BAD_REQUEST)
 
         # user = authenticate(email=email, password=password)
-        user = User.objects.filter(email=email,password=password)
+        #密码已加密
+        user = User.objects.filter(email=email)
         user = user.first()
-        print(user)
+        #检查user是否存在
+        if not user:
+            return Response({
+                "fail_code":"USER_NOT_EXIST",
+                "fail_msg" : "用户不存在"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if check_password(password,user.password)==False:
+            return Response({
+                "fail_code":"PASSWORD_ERROR",
+                "fail_msg":"密码错误"
+            },status=status.HTTP_400_BAD_REQUEST)
+        #print(user)
         if user:
             salt = settings.SECRET_KEY
             headers = {
@@ -236,6 +263,12 @@ class login_passwordView(APIView):
                 'username': user.username,
                 'exp':datetime.now(timezone.utc) + timedelta(days=3)  # 延长token有效期为60分钟
             }
+            if user.status==1:
+                return Response({
+                    "success":False,
+                    "fail_code":"BANNED",
+                    "fail_msg":"用户已被封禁"
+                },status=status.HTTP_401_UNAUTHORIZED)
 
             token = jwt.encode(payload = payload, key = salt, algorithm="HS256", headers=headers)
             url= None
@@ -246,7 +279,8 @@ class login_passwordView(APIView):
                 "access_token":token,
                 "username":user.username,
                 "user_id":user.user_id,
-                "avatar":url
+                "avatar":url,
+                "privilege":user.privilege
             })
 
         try:
@@ -264,6 +298,7 @@ class login_passwordView(APIView):
             }, status=status.HTTP_404_NOT_FOUND)
 
 class login_captchaView(APIView):
+
     def post(self, request):
         email = request.data.get('email')
         captcha = request.data.get('captcha')
@@ -292,9 +327,9 @@ class login_captchaView(APIView):
             }
 
             token = jwt.encode(payload = payload, key = salt, algorithm="HS256", headers=headers)
-            url= user.avatar
-            if not url:
-                url = None
+            url= None
+            if user.avatar:
+                url = user.avatar.url
             return Response({
                 "success":True,
                 "access_token":token,
@@ -369,10 +404,14 @@ class UserProductsViewSet(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ProductSerializer
     lookup_field = 'user_id'
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['status']
 
     def get_queryset(self):
         user_id = self.kwargs['user_id']
-        return Product.objects.filter(user_id=user_id).order_by('-created_at')
+        sta = self.request.query_params.get('status')
+        print(sta)
+        return Product.objects.filter(user_id=user_id,status=sta).order_by('-created_at')
 
 class UserComplaintViewSet(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
@@ -427,6 +466,33 @@ class modify_email(APIView):
 
     #  创建关注
 
+class modify_password(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        new_password = request.data.get('new_password')
+        new_password_repeat = request.data.get('new_password_repeat')
+        captcha = request.data.get('captcha')
+        if not all([new_password, new_password_repeat,captcha]):
+            return Response({
+                "fail_code":"MISSING_PARAM",
+                "fail_msg":"缺少参数"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        if new_password  != new_password_repeat:
+            return Response({
+                "fail_code":"PASSWORD_NOT_MATCH",
+                "fail_msg":"密码不匹配"
+            },status=status.HTTP_400_BAD_REQUEST)
+        user = request.user
+        if varify_captcha(request.user.email,captcha)!=0:
+            return varify_captcha(request.user.email,captcha)
+        user.password = make_password(new_password)
+        user.save()
+        return Response({
+            "success":True,
+            "user_id":user.user_id
+        })
+
 
 class FollowUserViewSet(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
@@ -476,3 +542,22 @@ class ChatLogViewSet(ListCreateAPIView):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+class MessageViewSet(ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = MessagesSerializer
+    pagination_class = StandardResultsSetPagination
+    def get_queryset(self):
+        # 获取当前登录用户
+        user = self.request.user
+        # 返回与当前用户关联的所有通知消息
+        return user.messages.all().order_by('-created_at')
+
+class getPassword(APIView):
+
+    def get(self, request):
+        password = request.data.get('password')
+        password = make_password(password)
+        return Response({
+            "password":password
+        })

@@ -42,6 +42,8 @@ class ProductSerializer(serializers.ModelSerializer):
             "categories",
             "media",
             "function",
+            "visit_count",
+            "rating_avg",
         ]
 
 
