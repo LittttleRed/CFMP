@@ -10,7 +10,8 @@ router.register(r'complaint', views.ComplaintView, basename='complaint')
 router.register(r'review', views.ComplaintReviewView, basename='review')
 router.register(r'order', views.OrderView, basename="order")
 router.register(r'products', views.ProductView,  basename='products')
+
 urlpatterns = router.urls
-urlpatterns += []
+urlpatterns += [path(r'create', views.CreatNewRoot)]
 
 

@@ -104,11 +104,13 @@ class CaptchaView(APIView):
                 "fail_code": "USER_EXIST",
                 "fail_msg": "用户已存在"
             }, status=status.HTTP_400_BAD_REQUEST)
+
         if not re.match(r'^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$', email):
             return Response({
                 "fail_code": "EMAIL_FORMAT_ERROR",
                 "fail_msg": "邮箱格式错误"
             }, status=status.HTTP_400_BAD_REQUEST)
+
         if scene in common_scene:
             if send_sms_code(email) != 0:
                 return Response({
