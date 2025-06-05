@@ -3,6 +3,7 @@ from datetime import timezone, timedelta, datetime
 import django_filters
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.views.generic import CreateView
 from rest_framework.decorators import api_view, action
 from rest_framework import generics, mixins, viewsets, filters, status
 from rest_framework.pagination import PageNumberPagination
@@ -179,3 +180,11 @@ class OrderView(StandartView):
     filter_backends = [DjangoFilterBackend,]
     filterset_fields = ['status']
 
+class CreatNewRoot(CreateView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, *args, **kwargs):
+        name = request.data.get('name')
+        email = request.data.get('email')
+        password = request.data.get('password')
+        User.objects.create(email=email, password=password,username=name)
