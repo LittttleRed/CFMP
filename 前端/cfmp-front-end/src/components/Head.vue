@@ -95,8 +95,7 @@ const initUserInfo = () => {
     flex-direction: row-reverse;
   }
   .title{
-    font-size: 40px;
+    font-size: 4vh;
     cursor: pointer;
-    height: 50px;
   }
 </style>

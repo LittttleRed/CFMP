@@ -48,10 +48,10 @@
 
     <!-- 商品展示区 -->
     <el-card class="goods-container" shadow="never">
-      <el-button class="sort_button" @click="sort_type='hot';resort()" v-if="!loading" style="background-color: #ffe63e">最近热门</el-button>
-      <el-button class="sort_button" @click="sort_type='score';resort()" v-if="!loading">评分最高</el-button>
-      <el-button class="sort_button" @click="sort_type='price'; resort()" v-if="!loading">价格最低</el-button>
-      <el-button class="sort_button" @click="sort_type='time';resort()" v-if="!loading">最新发布</el-button>
+      <el-button class="sort_button" @click="sort_type='time';resort()" v-if="!loading" :style="sort_type==='time' ? 'background-color: #ffe63e;' : ''">最新发布</el-button>
+      <el-button class="sort_button" @click="sort_type='hot';resort()" v-if="!loading" :style="sort_type==='hot' ? 'background-color: #ffe63e;' : ''">最近热门</el-button>
+      <el-button class="sort_button" @click="sort_type='score';resort()" v-if="!loading" :style="sort_type==='score'? 'background-color: #ffe63e;' : ''">评分最高</el-button>
+      <el-button class="sort_button" @click="sort_type='price'; resort()" v-if="!loading" :style="sort_type==='score' ? 'background-color: #ffe63e;' : ''">价格最低</el-button>
       <div v-if="loading" class="loading-wrapper">
         <el-icon class="loading-icon" :size="50"><Loading /></el-icon>
       </div>
@@ -111,7 +111,7 @@ const imageList=ref([ 'picture_1.png', 'picture_2.png', 'picture_3.png', 'pictur
 const imageList1=ref([ '制作商品宣传图片.png', '制作商品宣传图片1.png', '制作商品宣传图片2.png', '制作商品宣传图片3.png'])
 const currentIndex = ref(0)
 let timer = null
-const sort_type = ref('')
+const sort_type = ref('time')
 const chating = ref(true)
 const router  = useRouter()
 const handleClick = (index) => {
