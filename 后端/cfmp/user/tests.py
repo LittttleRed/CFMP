@@ -100,26 +100,26 @@ class UserViewsTests(APITestCase):
     
 # user/tests/test_views.py
 
-def test_user_info_view(self):
-    url = reverse('user:update_user')
-    response = self.client.get(url)
-    
-    # 打印响应内容用于调试
-    print(f"User Info Response: {response.content}")
-    
-    self.assertEqual(response.status_code, status.HTTP_200_OK)
-    
-    # 确保响应是列表
-    self.assertIsInstance(response.data, list)
-    
-    # 确保列表中至少有一个元素
-    self.assertGreater(len(response.data), 0)
-    
-    # 获取第一个用户对象
-    user_data = response.data[0]
-    
-    # 验证用户名
-    self.assertEqual(user_data['username'], 'testuser')
+    def test_user_info_view(self):
+        url = reverse('user:update_user')
+        response = self.client.get(url)
+
+        # 打印响应内容用于调试
+        print(f"User Info Response: {response.content}")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # 确保响应是列表
+        self.assertIsInstance(response.data, list)
+
+        # 确保列表中至少有一个元素
+        self.assertGreater(len(response.data), 0)
+
+        # 获取第一个用户对象
+        user_data = response.data[0]
+
+        # 验证用户名
+        self.assertEqual(user_data['username'], 'testuser')
     
     def test_upload_avatar_view(self):
         url = reverse('user:upload_portrait')

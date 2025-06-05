@@ -129,3 +129,5 @@ class RootAPITestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.complaint.refresh_from_db()
         self.assertEqual(self.complaint.status, 1)
+
+
