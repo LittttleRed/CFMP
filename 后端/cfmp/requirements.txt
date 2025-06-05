@@ -13,3 +13,4 @@ Pillow==11.2.1
 PyJWT==2.10.1
 urllib3==2.4.0
 daphne==4.2.0
+mysqlclient==2.2.7

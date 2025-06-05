@@ -4,6 +4,9 @@ FROM node:24-alpine
 # 设置工作目录
 WORKDIR /app
 
+# 设置Docker环境变量
+ENV DOCKER_ENV=true
+
 # 复制 package.json 和 lock 文件
 COPY package.json package-lock.json* ./
 

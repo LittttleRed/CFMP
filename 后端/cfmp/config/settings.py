@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-juz)%(1i+d0am6xr=i2he*e0%0e65$6fvatqycjp+2z_c@%bv$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'backend', 'backend:8000', '*']
 
 ASGI_APPLICATION = 'config.asgi.application'  # 指定ASGI入口
 # Application definition

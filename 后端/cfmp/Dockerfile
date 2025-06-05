@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
   libffi-dev \
   libssl-dev \
   python3-dev \
+  pkg-config \
   git \
   curl \
   && apt-get clean \
