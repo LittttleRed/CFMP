@@ -12,7 +12,7 @@
         :sm="12"
         :xs="24"
       >
-        <Product :title="product.title" :price="product.price" :avatar="product.user.avatar" :username="product.user.username" :user_id="product.user.username" :product_id="product.product_id"></Product>
+        <Product :title="product.title" :price="product.price" :avatar="product.user.avatar" :username="product.user.username" :user_id="product.user.user_id" :product_id="product.product_id" :media="product.media && product.media[0] ? product.media[0].media : null"></Product>
       </el-col>
     </el-row>
     <div v-if="productList.length===0" style="margin: auto">暂无收藏</div>

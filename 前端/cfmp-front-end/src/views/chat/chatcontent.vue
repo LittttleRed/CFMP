@@ -22,14 +22,14 @@
             <div class="message-bubble">
               {{ message.content }}
             </div>
-            <span class="time">{{ typeof message.time === 'string'?  message.time.slice(0,10) : message.time.toISOString().split('T')[0] }}</span>
+            <span class="time">{{ typeof message.time === 'string'?  message.time.slice(0,10)+' '+message.time.slice(11,19) : message.time.toISOString().slice(0,10)+'  '+message.time.toISOString().slice(11,19) }}</span>
           </div>
         </div>
 
         <!-- 自己发送的消息 -->
         <div v-if="message.isSelf" class="self-message">
           <div class="message-content">
-            <span class="time">{{ typeof message.time === 'string'?  message.time.slice(0,10) : message.time.toISOString().split('T')[0] }}</span>
+            <span class="time">{{ typeof message.time === 'string'?  message.time.slice(0,10)+' '+message.time.slice(11,19) : message.time.toISOString().slice(0,10)+' '+message.time.toISOString().slice(11,19) }}</span>
             <div class="message-bubble">
               {{ message.content }}
             </div>
@@ -229,6 +229,7 @@ const getUser = async () => {
     currentUser.value = response
   })
 }
+getUser()
 
 const sendMessage = () => {
   if (!inputMessage.value.trim()) return
@@ -293,6 +294,7 @@ scrollToBottom()
   overflow-y: auto;
   padding: 20px;
   padding-bottom: 0;
+  font-size: 18px;
 }
 
 .message-item {

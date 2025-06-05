@@ -16,6 +16,7 @@
         </template>
         <el-menu-item :index="path">我发布的</el-menu-item>
         <el-menu-item index="/user/mybought" v-if="isMyHome">我买到的</el-menu-item>
+        <el-menu-item index="/user/myorder" v-if="isMyHome">我的订单</el-menu-item>
       </el-sub-menu>
 
       <el-menu-item index="/user/mycollection" v-if="isMyHome">我的收藏</el-menu-item>

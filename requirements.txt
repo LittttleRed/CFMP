@@ -1,8 +1,0 @@
-APScheduler==3.11.0
-Django==5.2
-django_apscheduler==0.7.0
-django_minio_backend==3.8.0
-django_minio_storage==0.5.8
-djangorestframework==3.16.0
-minio==7.2.15
-urllib3==2.4.0

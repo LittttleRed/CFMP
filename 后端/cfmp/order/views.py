@@ -23,6 +23,7 @@ from .serializers import (
 )
 import uuid
 import json
+from user.models import Messages
 
 # 用户登录认证测试，这里全部为IsAuthenticated
 
@@ -45,7 +46,10 @@ class OrderListCreateAPIView(ListCreateAPIView):
         status_filter = self.request.query_params.get('status')
         print(f"[OrderListCreateAPIView] status_filter: {status_filter}")  # 调试输出
 
-        queryset = Order.objects.filter(buyer=user)
+        # 预加载相关数据以优化查询性能，包括商品图片
+        queryset = Order.objects.filter(buyer=user).select_related('buyer').prefetch_related(
+            'order_items__product__media'  # 预加载商品及其图片
+        )
 
         if status_filter and status_filter != 'all':
             status_map = {
@@ -134,6 +138,47 @@ class OrderListCreateAPIView(ListCreateAPIView):
             }
         }, status=status.HTTP_201_CREATED)
 
+class OrderSoldListAPIView(ListAPIView):
+    """获取当前用户作为卖家的订单列表"""
+    serializer_class = OrderListSerializer
+    pagination_class = StandardPagination
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+
+        # 查询当前用户发布的商品相关的订单
+        queryset = Order.objects.filter(
+            order_items__product__user=user
+        ).distinct().select_related('buyer').prefetch_related(
+            'order_items__product__media'
+        )
+
+        # 状态筛选
+        status_filter = self.request.query_params.get('status')
+        if status_filter and status_filter != 'all':
+            status_map = {
+                'pending_payment': 0,
+                'paid': 1,
+                'completed': 2,
+                'cancelled': 3
+            }
+            if status_filter in status_map:
+                queryset = queryset.filter(status=status_map[status_filter])
+
+        # 排序处理
+        sort = self.request.query_params.get('sort', 'created_desc')
+        if sort == 'created_desc':
+            queryset = queryset.order_by('-created_at')
+        elif sort == 'created_asc':
+            queryset = queryset.order_by('created_at')
+        elif sort == 'amount_desc':
+            queryset = queryset.order_by('-total_amount')
+        elif sort == 'amount_asc':
+            queryset = queryset.order_by('total_amount')
+
+        return queryset
+
 class OrderDetailAPIView(RetrieveAPIView):
     """获取订单详情"""
     serializer_class = OrderSerializer
@@ -141,7 +186,7 @@ class OrderDetailAPIView(RetrieveAPIView):
     lookup_field = 'order_id'
 
     def get_queryset(self):
-        return Order.objects.filter(buyer=self.request.user)
+        return Order.objects.filter(order_id=self.kwargs['order_id'])
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -350,10 +395,25 @@ class PaymentCallbackAPIView(APIView):
         sign = request.query_params.get('sign')
 
         # 实际应用中需要验证签名
+        order = Order.objects.get(order_id=order_id)
+
+        for product in order.products.all():
+            seller = product.user
+            message_title = "有新的商品销售通知"
+            message_content = f"您发布的商品《{product.title}》已被用户 {order.buyer.username} 购买，请注意查看订单详情。"
+            message = Messages.objects.create(
+                title=message_title,
+                content=message_content
+            )
+            # 将消息关联到卖家
+            seller.messages.add(message)
+            product.status = 2
+            product.save()
+
 
         # 假设支付已成功
         try:
-            payment = Payment.objects.get(payment_id=payment_id)
+            payment = Payment.objects.get(order_id=order_id)
             order = payment.order
 
             # 更新支付状态
@@ -368,18 +428,7 @@ class PaymentCallbackAPIView(APIView):
             order.save()
 
             # 创建通知
-            Notification.objects.create(
-                user=order.buyer,
-                type=0,  # 交易通知
-                title='支付成功通知',
-                content=f'您的订单 #{order.order_id} 已成功支付，感谢您的购买！',
-                related_id=order.order_id,
-                related_data={
-                    'order_id': order.order_id,
-                    'payment_amount': float(payment.amount),
-                    'payment_method': payment.get_payment_method_display()
-                }
-            )
+
 
         except (Payment.DoesNotExist, Order.DoesNotExist):
             return Response({

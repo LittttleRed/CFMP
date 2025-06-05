@@ -20,7 +20,9 @@
             v-for="(img, index) in imageList"
             :key="index"
             class="slider-image"
-           alt="商品图片"/>
+           alt="商品图片"
+            @click="handleClick(index)"
+            style="cursor: pointer"/>
         </div>
       </div>
       </el-card>
@@ -46,6 +48,10 @@
 
     <!-- 商品展示区 -->
     <el-card class="goods-container" shadow="never">
+      <el-button class="sort_button" @click="sort_type='time';resort()" v-if="!loading" :style="sort_type==='time' ? 'background-color: #ffe63e;' : ''">最新发布</el-button>
+      <el-button class="sort_button" @click="sort_type='hot';resort()" v-if="!loading" :style="sort_type==='hot' ? 'background-color: #ffe63e;' : ''">最近热门</el-button>
+      <el-button class="sort_button" @click="sort_type='score';resort()" v-if="!loading" :style="sort_type==='score'? 'background-color: #ffe63e;' : ''">评分最高</el-button>
+      <el-button class="sort_button" @click="sort_type='price'; resort()" v-if="!loading" :style="sort_type==='score' ? 'background-color: #ffe63e;' : ''">价格最低</el-button>
       <div v-if="loading" class="loading-wrapper">
         <el-icon class="loading-icon" :size="50"><Loading /></el-icon>
       </div>
@@ -67,7 +73,9 @@
                     :product_id="product.product_id"
                     :media="product.media[0]?product.media[0]['media']:''"
                     :myfollow="myFollow.indexOf(product.user.user_id)!==-1"
-                    :functions="product.function">
+                    :functions="product.function"
+                    :visit_count="product.visit_count"
+                    :status="product.status">
            </Product>
           </el-col>
         </el-row>
@@ -103,17 +111,50 @@ const imageList=ref([ 'picture_1.png', 'picture_2.png', 'picture_3.png', 'pictur
 const imageList1=ref([ '制作商品宣传图片.png', '制作商品宣传图片1.png', '制作商品宣传图片2.png', '制作商品宣传图片3.png'])
 const currentIndex = ref(0)
 let timer = null
+const sort_type = ref('time')
 const chating = ref(true)
+const router  = useRouter()
+const handleClick = (index) => {
+  let category = 0;
+  switch (index) {
+    case 0:
+      category = 3;
+      break;
+    case 1:
+      category = 4;
+      break;
+    case 2:
+      category = 16;
+      break;
+    case 3:
+      category = 19;
+      break;
+    default:
+      return;
+  }
+  router.push({ name: 'search', query: { category } });
+};
+const resort = () => {
+  page.value = 1;
+  isMax.value = false;
+  isUpdating.value = false; // 添加这一行确保可再次加载
+  productList.value = [];
+  loading.value = true;
+  updateProductList().then(() => {
+    loading.value = false;
+  });
+}
 const getUserFollow=async()=> {
   if(getToken()) {
     await getAllFollows(getToken()).then(res => {
       myFollow.value = res.map(item => {
-        return item.followee
+        return item.followee.user_id
       })
     })
   }
   console.log(myFollow.value)
 }
+getUserFollow()
 
 onMounted(() => {
   startAutoPlay()
@@ -137,28 +178,50 @@ const stopAutoPlay = () => {
 
 
 
-const updateProductList=async()=>{
-  let page_size=10
-  //根据页码获取商品列表
-  let data={
+const updateProductList = async () => {
+  console.log(isUpdating.value)
+  console.log(isMax.value)
+  if (isUpdating.value || isMax.value) return;
+
+  isUpdating.value = true;
+
+  let page_size = 10;
+  let data = {
     page: page.value,
-    page_size: page_size
+    page_size: page_size,
+    status: 0
+  };
+
+  if (sort_type.value === 'hot') {
+    data["sort_by"] = "1";
+  } else if (sort_type.value === 'score') {
+    data["sort_by"] = "4";
+  } else if (sort_type.value === 'price') {
+    data["sort_by"] = "2";
   }
-  console.log(data)
-   await getProducts(data).then( res => {
-     console.log(res["results"])
-     if(res["results"].length<page_size){
-       productList.value=[...productList.value,...res["results"]]
-       isMax.value=true
-       console.log("max")
-     }else {
-       console.log(res["results"])
-       productList.value = [...productList.value, ...res["results"]]
-     }
-  })
-  loading.value=false
-   page.value++
-}
+
+  try {
+    const res = await getProducts(data);
+    if (res && res.results && res.results.length > 0) {
+      console.log(res.results)
+      productList.value = [...productList.value, ...res.results];
+      if (res.results.length < page_size) {
+        isMax.value = true;
+      } else {
+        isMax.value = false;
+      }
+    } else {
+      isMax.value = true; // 没有更多数据了
+    }
+  } catch (error) {
+    console.error('请求商品列表失败:', error);
+    isMax.value = true; // 出错时也停止加载
+  } finally {
+    loading.value = false;
+    isUpdating.value = false;
+    page.value++;
+  }
+};
 
 updateProductList()
 //获取当前可视范围的高度
@@ -193,11 +256,8 @@ const windowScroll=()=> {
         let scrollHeight = getScrollHeight()
         //如果满足公式则，确实到底了
         if(scrollTop+clientHeight >= scrollHeight-3&&isUpdating.value===false&&isMax.value===false){
-          isUpdating.value=true
           console.log("到底了")
-          updateProductList().then(() => {
-            isUpdating.value=false
-          })
+          updateProductList()
         }
     }
 
@@ -215,6 +275,21 @@ onBeforeRouteLeave(
 </script>
 
 <style scoped lang="scss">
+.sort_button{
+  margin-left: 30px;
+  margin-top: 10px;
+  height: 50px;
+  width: 135px;
+  border-radius: 25px;
+  font-size: 18px;
+  border: none;
+  color: black;
+  font-weight: bold;
+  background-color: #eeeeee;
+  &:hover{
+    background-color: #ffe63e;
+  }
+}
 .slider-container {
   width: 100%;
   height: 40vh;/* 根据需求调整高度 */

@@ -67,7 +67,7 @@
 
             <el-form-item class="remember-item">
               <div class="link-group" style="margin-top: 10px">
-                <router-link to="/forgot" class="link">忘记密码？</router-link>
+                <router-link to="/forget" class="link">忘记密码？</router-link>
               </div>
             </el-form-item>
             <div class="fail-msg">
@@ -78,7 +78,6 @@
               type="primary"
               native-type="submit"
               :loading="loading"
-              @click="handleLogin"
             >
               立即登录
             </el-button>
@@ -105,7 +104,7 @@ import { ref, reactive } from 'vue'
 import type { FormInstance } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { getLogin } from '../api/user'
-import {getToken, setHeadImg, setStaff, setToken, setUserId, setUserName} from "../utils/user-utils";
+import {getToken, setHeadImg, setPrivileges, setStaff, setToken, setUserId, setUserName} from "../utils/user-utils";
 
 import { ParticlesComponent } from 'particles.vue3';
 import { loadSlim } from 'tsparticles-slim'
@@ -155,8 +154,12 @@ const handleLogin = async () => {
        setUserId(res["user_id"])
        setUserName(res["username"])
        setHeadImg(res["avatar"])
-       setStaff(res["is_staff"])
-       window.location.href = '/'
+       setPrivileges(res["privilege"])
+       if(res["privilege"]==1){
+         window.location.href = '/root'
+       }else {
+         window.location.href = '/'
+       }
      }
 }).catch(e=>{
      fail_msg.value = e.response.data.fail_msg

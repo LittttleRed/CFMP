@@ -4,8 +4,11 @@
       <div v-if="loading" class="loading-wrapper">
         <el-icon class="loading-icon" :size="50"><Loading /></el-icon>
       </div>
-
-      <div v-else class="goods-list" style="padding: 10px 10px 0 0">
+      <el-button class="sort_button" @click="sort_type='time';resort()" v-if="!loading" :style="sort_type==='time' ? 'background-color: #ffe63e;' : ''">最新发布</el-button>
+      <el-button class="sort_button" @click="sort_type='hot';resort()" v-if="!loading" :style="sort_type==='hot' ? 'background-color: #ffe63e;' : ''">最近热门</el-button>
+      <el-button class="sort_button" @click="sort_type='score';resort()" v-if="!loading" :style="sort_type==='score'? 'background-color: #ffe63e;' : ''">评分最高</el-button>
+      <el-button class="sort_button" @click="sort_type='price'; resort()" v-if="!loading" :style="sort_type==='score' ? 'background-color: #ffe63e;' : ''">价格最低</el-button>
+      <div class="goods-list" style="padding: 10px 10px 0 0">
         <el-row :gutter="10">
         <el-col v-for="(product, index) in productList"
         :key="product.product_id"
@@ -21,11 +24,13 @@
                     :user_id="product.user.user_id"
                     :product_id="product.product_id"
                     :media="product.media[0]?product.media[0]['media']:''"
-                    :myfollow="myFollow.indexOf(product.user.user_id)!==-1">
+                    :myfollow="myFollow.indexOf(product.user.user_id)!==-1"
+                    :visit_count="product.visit_count"
+                    :status="product.status">
            </Product>
           </el-col>
         </el-row>
-        <h2 v-if="noProduct" style="margin: auto">暂无此种商品,看看别的吧~</h2>
+        <h2 v-if="noProduct" style="margin-top: 20px;margin-left: 20px">暂无此种商品,看看别的吧~</h2>
       </div>
     </el-card>
 </template>
@@ -47,6 +52,17 @@ const isMax=ref(false)
 const loading = ref(true)
 const isUpdating = ref(false)
 const noProduct = ref(false)
+const sort_type=ref('time')
+const resort = () => {
+  page.value = 1;
+  isMax.value = false;
+  isUpdating.value = false; // 添加这一行确保可再次加载
+  productList.value = [];
+  loading.value = true;
+  updateProductList().then(() => {
+    loading.value = false;
+  });
+}
 const getUserFollow=async()=> {
  if(getToken()) {
     await getAllFollows(getToken()).then(res => {
@@ -64,6 +80,7 @@ const updateProductList=async()=>{
   let data={
     page: page.value,
     page_size: page_size,
+    status: 0
   }
   const queryFields = ['search', 'category', 'min_price', 'max_price'];
 
@@ -72,6 +89,13 @@ queryFields.forEach(field => {
     data[field] = route.query[field];
   }
 });
+ if (sort_type.value === 'hot') {
+    data["sort_by"] = "1";
+  } else if (sort_type.value === 'score') {
+    data["sort_by"] = "4";
+  } else if (sort_type.value === 'price') {
+    data["sort_by"] = "2";
+  }
 
   console.log(data)
   console.log(data)
@@ -148,6 +172,21 @@ onBeforeRouteLeave(
 )
 </script>
 <style scoped lang="scss">
+.sort_button{
+  margin-left: 30px;
+  margin-top: 10px;
+  height: 50px;
+  width: 135px;
+  border-radius: 25px;
+  font-size: 18px;
+  border: none;
+  color: black;
+  font-weight: bold;
+  background-color: #eeeeee;
+  &:hover{
+    background-color: #ffe63e;
+  }
+}
 .goods-container {
     max-width: 1600px;
     margin: 20px auto;
