@@ -92,7 +92,7 @@ watch(showSuggestions, (val) => {
   position: relative;
   max-width: 1000px;
   margin: 20px auto;
-  border-radius: 40px
+  border-radius: 40px;
 }
 
 .xy-search-input :deep(.el-input__inner) {

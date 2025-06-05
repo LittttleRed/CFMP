@@ -138,6 +138,47 @@ class OrderListCreateAPIView(ListCreateAPIView):
             }
         }, status=status.HTTP_201_CREATED)
 
+class OrderSoldListAPIView(ListAPIView):
+    """获取当前用户作为卖家的订单列表"""
+    serializer_class = OrderListSerializer
+    pagination_class = StandardPagination
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+
+        # 查询当前用户发布的商品相关的订单
+        queryset = Order.objects.filter(
+            order_items__product__user=user
+        ).distinct().select_related('buyer').prefetch_related(
+            'order_items__product__media'
+        )
+
+        # 状态筛选
+        status_filter = self.request.query_params.get('status')
+        if status_filter and status_filter != 'all':
+            status_map = {
+                'pending_payment': 0,
+                'paid': 1,
+                'completed': 2,
+                'cancelled': 3
+            }
+            if status_filter in status_map:
+                queryset = queryset.filter(status=status_map[status_filter])
+
+        # 排序处理
+        sort = self.request.query_params.get('sort', 'created_desc')
+        if sort == 'created_desc':
+            queryset = queryset.order_by('-created_at')
+        elif sort == 'created_asc':
+            queryset = queryset.order_by('created_at')
+        elif sort == 'amount_desc':
+            queryset = queryset.order_by('-total_amount')
+        elif sort == 'amount_asc':
+            queryset = queryset.order_by('total_amount')
+
+        return queryset
+
 class OrderDetailAPIView(RetrieveAPIView):
     """获取订单详情"""
     serializer_class = OrderSerializer
@@ -145,7 +186,7 @@ class OrderDetailAPIView(RetrieveAPIView):
     lookup_field = 'order_id'
 
     def get_queryset(self):
-        return Order.objects.filter(buyer=self.request.user)
+        return Order.objects.filter(order_id=self.kwargs['order_id'])
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()

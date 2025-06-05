@@ -4,10 +4,10 @@
       <div v-if="loading" class="loading-wrapper">
         <el-icon class="loading-icon" :size="50"><Loading /></el-icon>
       </div>
-      <el-button class="sort_button" @click="sort_type='hot';resort()" v-if="!loading" style="background-color: #ffe63e">最近热门</el-button>
-      <el-button class="sort_button" @click="sort_type='score';resort()" v-if="!loading">评分最高</el-button>
-      <el-button class="sort_button" @click="sort_type='price'; resort()" v-if="!loading">价格最低</el-button>
-      <el-button class="sort_button" @click="sort_type='time';resort()" v-if="!loading">最新发布</el-button>
+      <el-button class="sort_button" @click="sort_type='time';resort()" v-if="!loading" :style="sort_type==='time' ? 'background-color: #ffe63e;' : ''">最新发布</el-button>
+      <el-button class="sort_button" @click="sort_type='hot';resort()" v-if="!loading" :style="sort_type==='hot' ? 'background-color: #ffe63e;' : ''">最近热门</el-button>
+      <el-button class="sort_button" @click="sort_type='score';resort()" v-if="!loading" :style="sort_type==='score'? 'background-color: #ffe63e;' : ''">评分最高</el-button>
+      <el-button class="sort_button" @click="sort_type='price'; resort()" v-if="!loading" :style="sort_type==='score' ? 'background-color: #ffe63e;' : ''">价格最低</el-button>
       <div class="goods-list" style="padding: 10px 10px 0 0">
         <el-row :gutter="10">
         <el-col v-for="(product, index) in productList"
@@ -30,7 +30,7 @@
            </Product>
           </el-col>
         </el-row>
-        <h2 v-if="noProduct" style="margin: auto">暂无此种商品,看看别的吧~</h2>
+        <h2 v-if="noProduct" style="margin-top: 20px;margin-left: 20px">暂无此种商品,看看别的吧~</h2>
       </div>
     </el-card>
 </template>
@@ -52,7 +52,7 @@ const isMax=ref(false)
 const loading = ref(true)
 const isUpdating = ref(false)
 const noProduct = ref(false)
-const sort_type=ref('')
+const sort_type=ref('time')
 const resort = () => {
   page.value = 1;
   isMax.value = false;

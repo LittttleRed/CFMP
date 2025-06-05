@@ -138,3 +138,10 @@ export const getUnreadCount = (type = null) => {
         params: type ? { type } : {}
     })
 }
+export const getOrderSoldList = async (params) => {
+    return http({
+      url: 'orders/sold/',
+      method: 'get',
+      params: params
+    })
+}

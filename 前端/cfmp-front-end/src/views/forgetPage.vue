@@ -104,7 +104,7 @@ import { ref, reactive } from 'vue'
 import {ElMessage, FormInstance} from 'element-plus'
 import { useRouter } from 'vue-router'
 import { sendCaptcha,loginWithCaptcha } from '../api/user'
-import {getToken, setHeadImg, setStaff, setToken, setUserId, setUserName} from "../utils/user-utils";
+import {getToken, setHeadImg, setPrivileges, setToken, setUserId, setUserName} from "../utils/user-utils";
 
 import { ParticlesComponent } from 'particles.vue3';
 import { loadSlim } from 'tsparticles-slim'
@@ -148,7 +148,7 @@ const handleLogin = async () => {
        setUserId(res["user_id"])
        setUserName(res["username"])
        setHeadImg(res["avatar"])
-       setStaff(res["is_staff"])
+       setPrivileges(res["is_staff"])
        window.location.href = '/'
 }).catch(e=>{
      fail_msg.value = e.response.data.fail_msg

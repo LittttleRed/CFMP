@@ -13,7 +13,7 @@
   class="friend-list"
   :modal="false"
   draggable
-  style="width: 400px; height: 700px; background-color: #fff4de"
+  style="width: 400px; height: 700px;background-color: #fffded"
   v-model="chating"
 >
   <!-- 顶部用户信息（固定高度） -->

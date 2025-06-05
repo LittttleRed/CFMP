@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     # 订单相关路由
     path('orders/', views.OrderListCreateAPIView.as_view(), name='order-list-create'),
+    path('orders/sold/', views.OrderSoldListAPIView.as_view(), name='order-sold-list'),
     path('orders/<int:order_id>/', views.OrderDetailAPIView.as_view(), name='order-detail'),
     path('orders/<int:order_id>/cancel/', views.OrderCancelAPIView.as_view(), name='order-cancel'),
     path('orders/<int:order_id>/complete/', views.OrderCompleteAPIView.as_view(), name='order-complete'),
