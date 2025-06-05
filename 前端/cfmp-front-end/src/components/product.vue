@@ -1,46 +1,70 @@
 <template>
-  <el-card class="product-card" style="--el-card-border-radius: 5%">
-    <div class="image-container">
-      <img :src="image" alt="商品图片" class="product-image">
+  <el-card class="product-card" style="--el-card-border-radius: 10px;" shadow="hover">
+    <div class="image-container" style="cursor: pointer" @click="()=>{router.push({name:'product',query:{product_id:product_id,myfollow:myfollow}})}">
+      <img :src="media" alt="商品图片" class="product-image" v-if="media!==null">
+      <img src="https://via.placeholder.com/150" alt="商品图片" class="product-image" v-else></img>
     </div>
 
-    <div class="header">
-      <div class="title">
-        <span class="tag">包邮</span>
-        <h3 class="title-text">{{ title }}</h3>
+    <div class="header" style="cursor: pointer" @click="()=>{router.push({name:'product',query:{product_id:product_id,myfollow:myfollow}})}">
+      <div >
+        <div class="title">
+        <span class="tag" v-if="functions===0">包邮</span>
+        <h3 class="title-text" >{{ title.length>12 ? title.substring(0,12)+'...' : title }}</h3>
+        </div>
+        <div class="title">
+        <div class="price" style="">￥{{ price }}</div>
+          <div style="margin-top: 10px;margin-left: 10px;color: #999999;font-size: 15px" v-if="status===0">有{{ visit_count}}人想要</div>
+        </div>
       </div>
-      <div class="price">{{ price }}</div>
     </div>
+
     <!-- 数据信息 -->
-    <div class="stats">
-     <el-avatar  :size="40" :src="seller.headimg" v-if="seller.headimg"/>
-      <el-avatar :size="40" v-else>未知</el-avatar>
-      <a style="margin: auto;padding-left: 20px">{{ seller.name }}</a>
+    <div class="stats" style="cursor: pointer" @click="()=>{router.push({name:'user',query:{user_id:user_id}})}">
+
+     <el-avatar  :size="40" :src="avatar" v-if="avatar!==null"/>
+      <el-avatar :size="40"  src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" v-else></el-avatar>
+      <a style="margin: auto;padding-left: 20px;font-size: 15px;font-weight: bold">{{ username }}</a>
+      <el-button @click="" v-if="myfollow" class="follow"  >已关注</el-button>
+      <div style="margin-left: 15px;margin-top: auto;margin-bottom: auto;color: red;font-size: 15px" v-if="status===2">已封禁</div>
+      <div style="margin-left: 15px;margin-top: auto;margin-bottom: auto;color: orange;font-size: 15px" v-if="status===3">未审核</div>
     </div>
+
   </el-card>
 </template>
 
 <script setup>
 import { StarFilled } from '@element-plus/icons-vue'
+import { useRoute, useRouter } from 'vue-router'
+import {ref} from "vue";
+
+const router = useRouter()
+const route = useRoute()
 
 defineProps({
   title: String,
   price: String,
-  mainDesc: String,
-  brand: String,
-  wants: Number,
-  seller: {
-    type: Object,
-    default: () => ({
-      name: '',
-      headimg: ''
-    })
-  }
+  product_id: Number,
+  user_id: Number,
+  username: String,
+  avatar: String,
+  media: String,
+  myfollow: Boolean,
+  functions: Number,
+  status: Number,
+  visit_count: Number
 })
+
 </script>
 
 <style scoped>
-
+.follow{
+  height:25px;
+  width:50px;
+  margin:auto 20px auto 20px;
+  background: #ffd299;
+  --el-button-border-color: #ffd299;
+  color: #ff6a21
+}
 
 .image-container {
   width: 100%; /* 容器宽度为card的60% */
@@ -87,6 +111,7 @@ defineProps({
 .title {
   display: flex;
   align-items: center;
+  margin-top: 5px;
 }
 
 .tag {
@@ -106,44 +131,20 @@ defineProps({
 
 .price {
   color: #ff4444;
-  font-size: 18px;
+  font-size: 23px;
   font-weight: bold;
+  margin-top: 5px;
+  margin-left: 0;
 }
 
-.description {
-  margin-bottom: 12px;
+.product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 关键属性：保持比例填充容器 */
+  transition: transform 0.3s ease; /* 添加缩放过渡效果 */
 }
 
-.main-desc {
-  color: #666;
-  font-size: 14px;
-  line-height: 1.4;
-  margin-bottom: 4px;
-}
-
-.brand {
-  color: #999;
-  font-size: 12px;
-}
-
-
-.wants {
-  color: #999;
-}
-
-.seller {
-  display: flex;
-  align-items: center;
-  color: #666;
-}
-
-.credit-icon {
-  color: #ffb300;
-  font-size: 14px;
-  margin: 0 4px;
-}
-
-.credit-text {
-  color: #ffb300;
+.product-image:hover {
+  transform: scale(1.05); /* 悬停时轻微放大 */
 }
 </style>

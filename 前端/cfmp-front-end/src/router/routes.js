@@ -30,10 +30,15 @@ export const constRoutes =   [
         name: 'UserManagement',
         component: () => (import('../views/root/user.vue')),
         meta: {title: '用户管理'}
-      },
+      },{
+        path: 'product',
+            name: 'productManagement',
+            component: () => (import('../views/root/product.vue')),
+            meta: {title: '商品审核'}
+        },
       {
         path: 'complaint_product',
-        name: 'productManagement',
+        name: 'ProductReview',
         component: () => (import('../views/root/complaint_product.vue')),
         meta: {title: '投诉管理'}
       },{
@@ -51,6 +56,9 @@ export const constRoutes =   [
   },{
   path: '/user',
     component: () => (import('../views/user/index.vue')),
+    name: 'user',
+    redirect: '/user/MyRelease',
+        meta: { requiresAuth: true }, // 添加这里
     children: [
       {
         path:'MyRelease',
@@ -63,6 +71,11 @@ export const constRoutes =   [
         component: () => (import('../views/user/mybought.vue')),
         meta: {title: '我的购买'}
       },{
+        path: 'MyOrder',
+            name: 'MyOrder',
+            component: () => (import('../views/user/myorder.vue')),
+            meta: {title: '我的订单'}
+        },{
         path:'MyCollection',
         name: 'MyCollection',
         component: () => (import('../views/user/mycollection.vue')),
@@ -73,10 +86,10 @@ export const constRoutes =   [
         component: () => (import('../views/user/setting.vue')),
         meta: {title: '个人资料'}
       },{
-        path: 'phone',
-        name: 'phone',
-        component: () => (import('../views/user/changePhone.vue')),
-        meta: {title: '修改手机号'}
+        path: 'pwd',
+        name: 'pwd',
+        component: () => (import('../views/user/changePwd.vue')),
+        meta: {title: '修改密码'}
       },{
         path: 'email',
         name: 'email',
@@ -105,6 +118,63 @@ export const constRoutes =   [
       title: '用户登录',
     //   guestOnly: true // 标记仅未登录用户可访问
     }
-  }
+  },{
+    path: '/forget',
+        name: 'Forget',
+        component: () => import('../views/forgetPage.vue'),
+        meta: {
+          title: '忘记密码',
+        //   guestOnly: true // 标记仅未登录用户可访问
+        }
+    },{
+    path: '/register',
+    name: 'Register',
+    component: () => import('../views/RegisterPage.vue'),
+    meta: {
+      title: '用户注册',
+    //   guestOnly: true // 标记仅未登录用户可访问
+    }
+  },{
+     path: '/product/launch',
+     name: 'launch',
+      component: () => import('../views/product/launch.vue'),
+      meta: { title: '发布商品' }
+  },{
+    path: '/product',
+    name: 'product',
+    component: () => import('../views/product/product.vue'),
+    meta: { title: '商品详情' }  },{
+  path: '/edit-product',
+  name: 'edit-product',
+  component: () => import('../views/product/edit.vue'),
+  meta: { requiresAuth: true } // 如果需要登录权限
+  },{
+    path: '/order/pay',
+    name: 'pay',
+    component: () => import('../views/order/pay.vue'),
+    meta: {
+      title: '订单支付',
+      requiresAuth: true
+    }
+  },{
+    path: '/order/payment',
+    name: 'OrderPayment',
+    component: () => import('../views/order/payment.vue'),
+    meta: {
+      title: '订单详情',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/test',
+    name: 'test',
+    component: () => import('../views/chat/systemchat.vue'),
+    meta: { title: '测试' }
+  },{
+    path: '/search',
+    name: 'search',
+    component: () => import('../views/search.vue'),
+    meta:{title: '搜索'}
+    }
   ]
 

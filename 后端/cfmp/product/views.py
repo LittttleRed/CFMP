@@ -1,8 +1,14 @@
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+import uuid
+
+from django.db import transaction
+from rest_framework.parsers import MultiPartParser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework_extensions.cache.mixins import ListCacheResponseMixin
+
 from .pagination import StandardResultsSetPagination
-from .permissions import IsOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly, IsAdmin
 from rest_framework.response import Response
 from rest_framework.generics import (
     ListAPIView,
@@ -25,9 +31,11 @@ from .serializers import (
     ProductMediaSerializer,
 )
 from .filters import ProductFilter
-
+from user.models import User,Messages,Follow
+from django.db.models import Avg
 
 # 商品相关视图
+
 class ProductListCreateAPIView(ListCreateAPIView):
     queryset = Product.objects.all().order_by("-created_at")
     serializer_class = ProductSerializer
@@ -35,9 +43,59 @@ class ProductListCreateAPIView(ListCreateAPIView):
     filter_backends = [DjangoFilterBackend]
     filterset_class = ProductFilter
 
+
+    def get_queryset(self, ):
+        """
+            sort_by = 0 表示按创建时间倒序
+            sort_by = 1 表示按热度倒序
+            sort_by = 2 表示按价格升序
+            sort_by = 3 表示按价格降序
+            sort_by = 4 表示按评分倒序
+        """
+        # 如果查询参数sort_by存在，则按指定字段排序
+        sort_by = self.request.query_params.get("sort_by")
+        if sort_by is not None:
+            if sort_by == "0":
+                return Product.objects.all().order_by("-created_at")
+            elif sort_by == "1":
+                return Product.objects.all().order_by("-visit_count")
+            elif sort_by == "2":
+                return Product.objects.all().order_by("price")
+            elif sort_by == "3":
+                return Product.objects.all().order_by("-price")
+            elif sort_by == "4":
+                return Product.objects.all().order_by("-rating_avg")
+        return Product.objects.all().order_by("-created_at")
+
     def perform_create(self, serializer):
         # 保存商品基本信息
-        product = serializer.save(user=self.request.user)
+        product = serializer.save(user=self.request.user,status = 3)
+
+        # 获取当前创建商品的用户（卖家）
+        seller = self.request.user
+
+        # 查询所有关注该卖家的用户
+        followers = Follow.objects.filter(followee=seller).values_list('follower', flat=True)
+
+        # 创建通知并发送给每个关注者
+        message_title = "新商品上架通知"
+        message_content = f"您关注的卖家 {seller.username} 发布了新商品：{product.title}，快去看看吧！"
+        message = Messages.objects.create(
+            title=message_title,
+            content=message_content
+        )
+        for follower_id in followers:
+            try:
+                # 获取关注者用户对象
+                follower_user = User.objects.get(user_id=follower_id)
+
+                # 创建消息并保存到数据库
+
+
+                # 将消息关联到关注者
+                follower_user.messages.add(message)
+            except User.DoesNotExist:
+                continue  # 如果用户不存在则跳过
 
         # 处理分类
         if "categories" in self.request.data:
@@ -65,6 +123,7 @@ class ProductListCreateAPIView(ListCreateAPIView):
 
             for media_file in media_files:
                 # 创建媒体文件记录
+                media_file.name = f"{product.product_id}+'_'+{uuid.uuid4().hex}.jpg"
                 ProductMedia.objects.create(
                     product=product,
                     media=media_file,
@@ -74,6 +133,7 @@ class ProductListCreateAPIView(ListCreateAPIView):
                 # 更新标志
                 if is_first:
                     is_first = False
+
 
 
 # 商品图片相关视图
@@ -227,6 +287,77 @@ class ProductMediaDetailView(APIView):
             return Response({"detail": "商品不存在"}, status=status.HTTP_404_NOT_FOUND)
 
 
+class ProductMediaBulkUpdateView(APIView):
+    """
+    批量更新商品图片（替换全部）
+    PUT: 删除原有图片，上传新图片
+    """
+    parser_classes = [MultiPartParser]
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, product_id):
+        try:
+            # 获取商品对象
+            product = Product.objects.get(product_id=product_id)
+
+            # 权限验证
+            if request.user != product.user:
+                return Response(
+                    {"detail": "无权操作此商品"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # 使用事务保证操作原子性
+            with transaction.atomic():
+                # 删除所有旧图片
+                old_media = ProductMedia.objects.filter(product=product)
+                for media in old_media:
+                    media.media.delete(save=False)  # 删除物理文件
+                old_media.delete()
+
+                # 处理新图片
+                media_files = request.FILES.getlist('media', [])
+                new_media = []
+                is_first = True
+
+                for idx, file in enumerate(media_files):
+                    # 生成唯一文件名
+                    file.name = f"{product_id}_{uuid.uuid4().hex}"
+
+                    media = ProductMedia(
+                        product=product,
+                        media=file,
+                        is_main=is_first
+                    )
+                    new_media.append(media)
+                    is_first = False
+
+                # 批量创建
+                ProductMedia.objects.bulk_create(new_media)
+
+                # 如果没有上传新图片，设置主图为None
+                if not new_media:
+                    product.main_image = None
+                    product.save()
+
+            # 序列化返回结果
+            serializer = ProductMediaSerializer(
+                ProductMedia.objects.filter(product=product),
+                many=True
+            )
+            return Response(serializer.data)
+
+        except Product.DoesNotExist:
+            return Response(
+                {"detail": "商品不存在"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 class ProductDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
@@ -242,9 +373,20 @@ class ProductDetailAPIView(RetrieveUpdateDestroyAPIView):
             return []
         return [IsOwnerOrReadOnly()]
 
+    def retrieve(self, request, *args, **kwargs):
+        """获取商品详情并增加访问次数"""
+        instance = self.get_object()
+        # 增加访问次数
+        # 如果是自己的商品则不增加
+        if instance.user_id != request.user.user_id:
+            instance.visit_count += 1
+        instance.save(update_fields=['visit_count'])
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
     def perform_update(self, serializer):
         # 保存商品基本信息
-        product = serializer.save()
+        product = serializer.save(status = 3)
 
         # 处理分类
         if "categories" in self.request.data:
@@ -284,7 +426,19 @@ class ProductReviewListCreateAPIView(ListCreateAPIView):
     def perform_create(self, serializer):
         product_id = self.kwargs.get("product_id")
         product = Product.objects.get(product_id=product_id)
+        
+        # 检查用户是否已经评论过该商品
+        # if ProductReview.objects.filter(product=product, user=self.request.user).exists():
+        #     from rest_framework.exceptions import ValidationError
+        #     raise ValidationError({"detail": "您已经评论过该商品"})
+            
+        # 保存评论
         serializer.save(user=self.request.user, product=product)
+
+        # 更新商品平均评分
+        rating_avg = ProductReview.objects.filter(product=product).aggregate(Avg('rating'))['rating__avg']
+        product.rating_avg = round(rating_avg, 1) if rating_avg else 0.0
+        product.save(update_fields=['rating_avg'])
 
 
 class ProductReviewDetailAPIView(RetrieveUpdateDestroyAPIView):
@@ -295,6 +449,26 @@ class ProductReviewDetailAPIView(RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         product_id = self.kwargs.get("product_id")
         return ProductReview.objects.filter(product_id=product_id)
+    def perform_update(self, serializer):
+        """更新评论时，重新计算商品的平均评分"""
+        review = serializer.save()
+
+        # 获取评论对应的商品
+        product = review.product
+
+        # 重新计算平均评分
+        rating_avg = ProductReview.objects.filter(product=product).aggregate(Avg('rating'))['rating__avg']
+        product.rating_avg = round(rating_avg, 1) if rating_avg else 0.0
+        product.save(update_fields=['rating_avg'])
+    def perform_destroy(self, instance):
+        """删除评论时，重新计算商品的平均评分"""
+        product = instance.product
+        super().perform_destroy(instance)
+
+        # 重新计算平均评分
+        rating_avg = ProductReview.objects.filter(product=product).aggregate(Avg('rating'))['rating__avg']
+        product.rating_avg = round(rating_avg, 1) if rating_avg else 0.0
+        product.save(update_fields=['rating_avg'])
 
 
 # 收藏相关视图
@@ -380,7 +554,7 @@ class CategoryListCreateAPIView(ListCreateAPIView):
         """
         if self.request.method == "GET":
             return []
-        return [IsAdminUser()]
+        return [IsAdmin()]
 
 
 class CategoryDetailAPIView(RetrieveUpdateDestroyAPIView):
@@ -393,7 +567,7 @@ class CategoryDetailAPIView(RetrieveUpdateDestroyAPIView):
     def get_permissions(self):
         if self.request.method == "GET":
             return []
-        return [IsAdminUser()]
+        return [IsAdmin()]
 
 
 class ProductByCategoryAPIView(ListAPIView):
@@ -405,7 +579,25 @@ class ProductByCategoryAPIView(ListAPIView):
     filterset_class = ProductFilter
 
     def get_queryset(self):
+        """
+            sort_by = 0 表示按创建时间倒序
+            sort_by = 1 表示按热度倒序
+            sort_by = 2 表示按价格升序
+            sort_by = 3 表示按价格降序
+            sort_by = 4 表示按评分倒序
+        """
         category_id = self.kwargs.get("category_id")
-        return Product.objects.filter(categories__category_id=category_id).order_by(
-            "-created_at"
-        )
+        # 如果查询参数sort_by存在，则按指定字段排序
+        sort_by = self.request.query_params.get("sort_by")
+        if sort_by is not None:
+            if sort_by == "0":
+                return Product.objects.filter(categories__category_id=category_id).order_by("-created_at")
+            elif sort_by == "1":
+                return Product.objects.filter(categories__category_id=category_id).order_by("-visit_count")
+            elif sort_by == "2":
+                return Product.objects.filter(categories__category_id=category_id).order_by("price")
+            elif sort_by == "3":
+                return Product.objects.filter(categories__category_id=category_id).order_by("-price")
+            elif sort_by == "4":
+                return Product.objects.filter(categories__category_id=category_id).order_by("-rating_avg")
+        return Product.objects.filter(categories__category_id=category_id).order_by("-created_at")

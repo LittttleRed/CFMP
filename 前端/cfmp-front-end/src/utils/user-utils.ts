@@ -42,3 +42,12 @@ export function setHeadImg(headImg: string) {
 export function removeHeadImg() {
   localStorage.removeItem('headImg')
 }
+export function setPrivileges(privilege: string) {
+  localStorage.setItem('privilege', privilege)
+}
+export function removePrivileges() {
+  localStorage.removeItem('privilege')
+}
+export function getPrivileges(){
+  return localStorage.getItem('privilege')
+}

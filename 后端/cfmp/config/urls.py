@@ -24,4 +24,5 @@ urlpatterns = [
     path(f"{api_prefix}/root/", include("root.urls")),
     path(f"{api_prefix}/", include("product.url")),
     path(f"{api_prefix}/v1/", include("user.urls")),
+    path(f"{api_prefix}/", include("order.url")),
 ]

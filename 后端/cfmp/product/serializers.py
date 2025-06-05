@@ -6,7 +6,7 @@ from .models import (
     Collection,
     ProductMedia,
 )
-from user.serializers import UserSerializer
+from user.serializers import PublicUserSerializer
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -24,7 +24,8 @@ class ProductMediaSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     categories = CategorySerializer(many=True, read_only=True)
-    user = UserSerializer(read_only=True)
+    #使用不敏感的序列化方式
+    user = PublicUserSerializer(read_only=True)
     # 反向引用外键，需要使用related_name
     media = ProductMediaSerializer(many=True, read_only=True)
 
@@ -40,11 +41,15 @@ class ProductSerializer(serializers.ModelSerializer):
             "created_at",
             "categories",
             "media",
+            "function",
+            "visit_count",
+            "rating_avg",
         ]
 
 
 class ProductReviewSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
+    user = PublicUserSerializer(read_only=True)
+    product = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = ProductReview
@@ -59,7 +64,7 @@ class ProductReviewSerializer(serializers.ModelSerializer):
 
 
 class CollectionSerializer(serializers.ModelSerializer):
-    collecter = UserSerializer(read_only=True)
+    collecter = PublicUserSerializer(read_only=True)
     collection = ProductSerializer(read_only=True)
 
     class Meta:

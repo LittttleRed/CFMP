@@ -1,7 +1,7 @@
 <template>
   <div class="complaint-container">
     <!-- 搜索表单（差异部分） -->
-    <el-form :model="tempForm" inline class="search-form">
+    <el-form :model="tempForm" inline class="search-form" @keyup.enter.native="handleSearch">
       <el-form-item label="投诉ID">
         <el-input v-model="tempForm.complaint_id" placeholder="输入投诉ID"></el-input>
       </el-form-item>
@@ -44,6 +44,7 @@
       <el-table-column label="操作">
         <template #default="{row}">
           <el-button type="primary" size=small @click="openHandleDialog(row)" v-if="row.status === 0">处理</el-button>
+          <el-button type="primary" size=small @click="handleDetail(row)" v-if="row.status === 0">详情</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -122,6 +123,10 @@
         </el-button>
       </div>
     </el-dialog>
+    <el-dialog title="投诉详情" v-model="detailVisible" width="600px">
+      <h2>投诉原因</h2>
+      <p v-if="currentComplaint" style="font-size:20px">{{ currentComplaint.reason }}</p>
+    </el-dialog>
   </div>
 </template>
 
@@ -134,6 +139,7 @@ export default {
   data() {
     return {
       dialogVisible:  false,
+      detailVisible: false,
       searchForm: {
         complaint_id: '',
         target_type: '0', // 固定为用户投诉
@@ -157,7 +163,7 @@ export default {
       ],
       pagination: {
         page: 1,
-        page_size: 2,
+        page_size: 10,
         total: 1
       },
       submitting: false,
@@ -215,7 +221,9 @@ export default {
 
     },
     handleDetail(row) {
-      console.log('处理投诉：', row.id)
+      this.currentComplaint = row
+      console.log('详情：', row)
+    this.detailVisible  = true
     },
      handlePageChange(page) {
        this.pagination.page = page
@@ -244,14 +252,16 @@ export default {
         if (valid) {
           this.submitting = true
           let review={
-            target_type: 1, // 用户类型
+            target_type: 0 , // 商品类型
             target_id: this.currentComplaint.target_id,
             ...this.handleForm,
             reviewer_id: 2
           }
           console.log(review)
-          await createReview(review)
-          await updateReview(this.currentComplaint.target_id,0,1)
+          await createReview(review).then(async response => {
+                await updateReview(this.currentComplaint.target_id, 0, 1)
+              }
+          )
             this.submitting = false
             this.dialogVisible = false
             this.$message.success('处理成功')

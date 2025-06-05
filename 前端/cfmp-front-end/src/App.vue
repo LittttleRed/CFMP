@@ -19,7 +19,6 @@ body {
   background: #ffffff; /* 明确设置白色背景 */
 }
 
-/* 移除所有过渡动画相关样式 */
 </style>
 
 <style scoped>

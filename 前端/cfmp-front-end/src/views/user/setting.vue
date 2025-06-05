@@ -43,17 +43,28 @@
           <el-button @click="ensureName" v-if="nameChanging">确定</el-button>
           <el-button @click="changeName">修改用户名</el-button>
         </div>
-        <div class="info-item">
-          <label class="info-label">手机号：</label>
-          <span class="info-content">{{ phone }}</span>
-          <el-button @click="changePhone">修改手机号</el-button>
-        </div>
+
         <div class="info-item">
           <label class="info-label">电子邮箱：</label>
           <span class="info-content">{{ email }}</span>
           <el-button @click="changeEmail">修改电子邮箱</el-button>
         </div>
+        <div class="info-item">
+          <label class="info-label">我的地址：</label>
+          <span class="info-content" v-if="addressChanging===false">{{ address }}</span>
+          <el-input
+            v-model="address"
+            placeholder="请输入地址"
+            class="qqmail-input"
+            v-if="addressChanging"
+            width="100px"
+          ></el-input>
+          <el-button @click="rejectAddr" v-if="addressChanging" style="margin-left: 10px">取消</el-button>
+          <el-button @click="ensureAddr" v-if="addressChanging">确定</el-button>
+          <el-button @click="changeAddr">修改地址</el-button>
+        </div>
         <el-button style="width: 20%" @click="changepwd">修改密码</el-button>
+        <el-button style="width: 20%;margin-left: 0" @click="logout">退出登录</el-button>
       </div>
     </div>
   </el-card>
@@ -62,7 +73,19 @@
 <script setup>
 import {useUserStore} from '../../stores/user.js'
 import {onMounted, ref,watch} from 'vue'
-import {setUserName} from "../../utils/user-utils.js";
+import {
+  getToken,
+  removeHeadImg,
+  removeToken,
+  removeUserId,
+  removeUserName,
+  setHeadImg,
+  setUserName
+} from "../../utils/user-utils.js";
+import * as $api from "../../api/user/index.js";
+import {changeUser, getMe, updateAvatar} from "../../api/user/index.js";
+import router from "../../router/index.js";
+  import { useRouter } from 'vue-router'
 
 let userStore = useUserStore()
 const error = ref('')
@@ -71,11 +94,36 @@ const selectedFile = ref(null);
 const avatar = ref('')
 const nameChanging = ref(false)
 const previousName = ref('')
+const addressChanging = ref(false)
+const preAddr = ref('')
+const email = ref('')
+const address = ref('')
+
+const logout = ()=>{
+  removeToken()
+      removeUserName()
+      removeUserId()
+      removeHeadImg()
+  router.push('/')
+}
+const showinfo=async () => {
+  let token = getToken()
+  await getMe(token).then((response) => {
+    let user=response[0]
+    console.log(user)
+    userStore.username = user["username"]
+    email.value = user["email"]
+    avatar.value= user["avatar"]
+    address.value = user["address"]
+  //去除avatar的"http://127.0.0.1:8000/"前缀
+  })
+}
+showinfo()
 const handleEdit = () => {
   emit('edit')
 }
-const changeAvatar = (event) => {
-    const file = event.target.files[0];
+const changeAvatar = async (event) => {
+  const file = event.target.files[0];
   if (!file) return;
 
   // 验证文件类型和大小
@@ -90,26 +138,59 @@ const changeAvatar = (event) => {
   selectedFile.value = file;
   error.value = '';
   avatar.value = URL.createObjectURL(file);
+  let token = getToken()
+  updateAvatar(token, file).then(res => {
+    avatar.value = res["avatar"];
+    setHeadImg(res["avatar"])
+  });
 }
 const changeName = () => {
     nameChanging.value=true
-  previousName.value=userStore.username
+    previousName.value=userStore.username
 }
 const rejectName = () => {
     nameChanging.value=false
-  userStore.username=previousName.value
+    setUserName(previousName.value)
+    userStore.username = previousName.value
 }
-const ensureName = () => {
-    nameChanging.value=false
-    setUserName(userStore.username)
+const ensureName = async () => {
+  nameChanging.value = false
+  let token  = getToken()
+  console.log(userStore.username)
+  await changeUser(token, {username: userStore.username}).then(res => {
+    setUserName(res["username"])
+  });
   //
 }
-const changePhone = () => {
-  //跳转到手机号修改页面
-  window.location.href = '/user/phone';
+const changeAddr=()=>{
+  addressChanging.value=true
+  preAddr.value=address.value
 }
+const rejectAddr = () => {
+  addressChanging.value = false
+  address.value = preAddr.value
+}
+const ensureAddr = async () => {
+  addressChanging.value = false
+  let token  = getToken()
+  await changeUser(token, {address: address.value}).then(res => {
+    address.value=res["address"]
+  });
+}
+
+const changepwd = () => {
+  router.push({
+    path: '/user/pwd/',
+    query: {
+      email: email.value  // 将当前邮箱作为查询参数传递
+    }
+  })
+}
+
 const changeEmail = () => {
   //跳转到邮箱修改页面
+  //传递消息
+
   window.location.href = '/user/email';
 }
 

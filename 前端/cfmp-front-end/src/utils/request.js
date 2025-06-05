@@ -1,4 +1,7 @@
 import axios from 'axios'
+
+const TokenKey = 'vue_admin_template_token'
+
 const http = axios.create({
   baseURL: '/api/',
   timeout: 10000, // 超时时间
@@ -6,8 +9,9 @@ const http = axios.create({
     'Content-Type': 'application/json'
   }
 })
+
 http.interceptors.request.use(config => {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem(TokenKey)
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
@@ -23,4 +27,5 @@ http.interceptors.response.use(
   }
 )
 
+//
 export default http

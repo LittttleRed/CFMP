@@ -2,7 +2,7 @@
 <template>
   <div class="complaint-container">
     <!-- 搜索表单（差异部分） -->
-    <el-form :model="tempForm" inline class="search-form">
+    <el-form :model="tempForm" inline class="search-form" @keyup.enter.native="handleSearch">
       <el-form-item label="投诉ID">
         <el-input v-model="tempForm.complaint_id" placeholder="输入投诉ID"></el-input>
       </el-form-item>
@@ -157,7 +157,7 @@ export default {
       ],
       pagination: {
         page: 1,
-        page_size: 2,
+        page_size: 10,
         total: 1
       },
       submitting: false,

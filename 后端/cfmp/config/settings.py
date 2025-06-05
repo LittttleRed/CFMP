@@ -25,9 +25,9 @@ SECRET_KEY = "django-insecure-juz)%(1i+d0am6xr=i2he*e0%0e65$6fvatqycjp+2z_c@%bv$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'backend', 'backend:8000', '*']
 
-
+ASGI_APPLICATION = 'config.asgi.application'  # 指定ASGI入口
 # Application definition
 
 # python3 manage.py migrate
@@ -39,6 +39,7 @@ MINIO_STORAGE_MEDIA_BUCKET_NAME = 'img'    # 存储媒体文件的 Bucket 名称
 MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET = True     # 自动创建 Bucket
 DEFAULT_FILE_STORAGE = 'minio_storage.storage.MinioMediaStorage'
 INSTALLED_APPS = [
+    'channels',
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -56,6 +57,12 @@ INSTALLED_APPS = [
 #     python manage.py migrate --fake django_apscheduler zero
 ]# 指定媒体文件的URL前缀（相对路径）
 
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"  # 使用内存通道
+    }
+}
 # 允许的HOST（替换为你的IP或域名）
 
 #自己写自己的分页器,不要全局配置
@@ -63,6 +70,14 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',  # 启用过滤
     ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'config.authentication.JWTAuthentication',  # JWT认证
+    ],'DEFAULT_FILE_STORAGE':
+        'minio_storage.storage.MinioStaticStorage',
+    'EXCEPTION_HANDLER': 'config.exceptions.custom_exception_handler',
+    'DEFAULT_THROTTLE_RATES': {
+        'email': '1/minute',
+    }
 }
 
 MIDDLEWARE = [
@@ -92,7 +107,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "config.wsgi.application"
+# WSGI_APPLICATION = "config.wsgi.application"
 
 
 # Database
@@ -151,4 +166,11 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+EMAIL_HOST = "smtp.qq.com"     # 服务器
+EMAIL_PORT = 25                 # 一般情况下都为25
+EMAIL_HOST_USER = "3417934680@qq.com"     # 账号
+EMAIL_HOST_PASSWORD = "wvqhwfbidkhydabf"     # （上面保存的授权码）
+EMAIL_USE_TLS = True       # 一般都为False
+EMAIL_FROM = "qq账号@qq.com"      # 邮箱来自
+email_title = '邮箱激活'
 
