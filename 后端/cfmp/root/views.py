@@ -130,6 +130,8 @@ class ComplaintReviewView(StandartView):
         # 获取当前创建的投诉审核数据
         target_id = request.data.get('target_id')
         target_type = request.data.get('target_type')
+        ban_type = request.data.get('ban_type')
+        result = request.data.get('result')
 
 
         # 查询所有举报了该 target_type 和 target_id 的用户
@@ -139,14 +141,24 @@ class ComplaintReviewView(StandartView):
         # 获取对应的用户对象列表
         users = User.objects.filter(user_id__in=complainer_ids)
 
+        # 向被举报者发送消息
+        if ban_type == 0:
+            target_user=models.User.objects.filter(user_id=target_id)
+            message = Messages.objects.create(title="用户举报通知", content=f"您被举报,原因为:{result}")
+            target_user.messages.add(message)
+        elif ban_type == 1:
+            target_product=Product.objects.filter(product_id=target_id)
+
+
         # 创建消息并关联到用户
         message_title = "举报处理通知"
         message_type = ""
         if target_type == 0:
-            message_type = "product"
+            message_type = "商品"
         elif target_type == 1:
-            message_type = "user"
-        message_content = f"您举报的目标 (ID: {target_id}, 类型: {message_type}) 已经有了新的处理结果，请及时查看。"
+            message_type = "用户"
+
+        message_content = f"您举报的目标 (ID: {target_id}, 类型: {message_type}) 已有新的处理结果，处理方式为:{ban_type}"
         message = Messages.objects.create(title=message_title, content=message_content)
 
         for user in users:

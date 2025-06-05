@@ -119,7 +119,7 @@ class CaptchaView(APIView):
                 return Response({
                     "success":False,
                     "fail_msg":"发送失败"
-                })
+                },status=status.HTTP_400_BAD_REQUEST)
         elif scene in need_token_scene:
             auth = request.META.get('HTTP_AUTHORIZATION', '')
             if not auth:
@@ -127,7 +127,7 @@ class CaptchaView(APIView):
                 return Response({
                     "success":False,
                     "fail_msg":"验证失败"
-                })
+                },status=status.HTTP_400_BAD_REQUEST)
             JWTAuthentication.authenticate(self,request)
             if send_sms_code(email) != 0:
                 return Response({
@@ -138,12 +138,12 @@ class CaptchaView(APIView):
                 return Response({
                     "success":False,
                     "fail_msg":"发送失败"
-                })
+                },status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({
                 "success":False,
                 "fail_msg":"参数错误"
-            })
+            },status=status.HTTP_400_BAD_REQUEST)
 class RegisterView(APIView):
 
     def post(self, request):

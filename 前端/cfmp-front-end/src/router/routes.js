@@ -71,6 +71,11 @@ export const constRoutes =   [
         component: () => (import('../views/user/mybought.vue')),
         meta: {title: '我的购买'}
       },{
+        path: 'MyOrder',
+            name: 'MyOrder',
+            component: () => (import('../views/user/myorder.vue')),
+            meta: {title: '我的订单'}
+        },{
         path:'MyCollection',
         name: 'MyCollection',
         component: () => (import('../views/user/mycollection.vue')),

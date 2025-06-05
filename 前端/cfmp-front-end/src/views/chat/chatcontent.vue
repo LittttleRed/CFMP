@@ -294,6 +294,7 @@ scrollToBottom()
   overflow-y: auto;
   padding: 20px;
   padding-bottom: 0;
+  font-size: 18px;
 }
 
 .message-item {
