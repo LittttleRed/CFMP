@@ -85,9 +85,10 @@ const initUserInfo = () => {
   width: 300px;
 }
  .left {
-   margin-left: 15%;
+   margin-left: 5%;
    display: flex;
    flex-direction: row;
+
   }
   .right {
     display: flex;
@@ -95,7 +96,9 @@ const initUserInfo = () => {
     flex-direction: row-reverse;
   }
   .title{
-    font-size: 4vh;
+    font-size: 3vh;
     cursor: pointer;
+    margin-right: 50px;
+    width: 150px;
   }
 </style>
