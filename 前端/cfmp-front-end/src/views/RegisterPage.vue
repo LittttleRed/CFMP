@@ -202,14 +202,18 @@ const sendCap = async () => {
         hassend.value = false
       }
     }, 1000)
-    await sendCaptcha({ scene: 'register', email: registerForm.email }).catch(
+    await sendCaptcha({ scene: 'register', email: registerForm.email }).then(
+        (res) =>{
+         console.log("发送成功")
+        }
+    ).catch(
         (e) => {
-          fail_msg.value = e.response.data.fail_msg || '验证码发送失败'
+          fail_msg.value = e.response.data.fail_msg || '验证码发送失败,请稍后再试'
         }
     )
     // 启动倒计时
   } catch (e) {
-    fail_msg.value = e.response?.data?.fail_msg || '验证码发送失败'
+    fail_msg.value = e.response?.data?.fail_msg || '验证码发送失败,请稍后再试'
   }
 }
 const particlesInit = async engine => {

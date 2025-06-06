@@ -12,6 +12,6 @@ router.register(r'order', views.OrderView, basename="order")
 router.register(r'products', views.ProductView,  basename='products')
 
 urlpatterns = router.urls
-urlpatterns += [path(r'create', views.CreatNewRoot)]
+urlpatterns += [path(r'create', views.CreatNewRoot.as_view(), name='creat')]
 
 
