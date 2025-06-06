@@ -101,6 +101,7 @@ queryFields.forEach(field => {
   console.log(data)
    await getProducts(data).then( res => {
      console.log(res["results"])
+     res["results"]=res["results"].filter(item => item.user.status===0)
      if(res["results"].length<page_size){
        productList.value=[...productList.value,...res["results"]]
        isMax.value=true

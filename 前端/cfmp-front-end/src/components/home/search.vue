@@ -6,7 +6,7 @@
       :placeholder="placeholder"
       clearable
       @keyup.enter="handleInput"
-      style="--el-input-border-radius: 40px;width: 800px;height:60px"
+      style="--el-input-border-radius: 40px;width: 60vh;height:60px"
     >
       <template #prefix>
         <el-icon class="search-icon"><Search /></el-icon>
@@ -101,8 +101,7 @@ watch(showSuggestions, (val) => {
   padding-left: 50px;
   font-size: 16px;
   border-color: #ff5000;
-  width: 500px;
-
+  width: 40vh;
 }
 
 .xy-search-input :deep(.el-input__wrapper) {

@@ -238,7 +238,6 @@ export default {
         this.$refs.handleForm.resetFields()
       })
     },
-
     submitHandle() {
       this.$refs.handleForm.validate(async valid => {
         if (valid) {
@@ -252,7 +251,9 @@ export default {
           console.log(review)
           await createReview(review)
           await updateReview(this.currentComplaint.target_id,1,1)
-          await changeUserState(this.currentComplaint.target_id,1)
+          if(this.handleForm.ban_type==='ban') {
+            await changeUserState(this.currentComplaint.target_id, 1)
+          }
             this.submitting = false
             this.dialogVisible = false
             this.$message.success('处理成功')

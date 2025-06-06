@@ -51,7 +51,7 @@
       <el-button class="sort_button" @click="sort_type='time';resort()" v-if="!loading" :style="sort_type==='time' ? 'background-color: #ffe63e;' : ''">最新发布</el-button>
       <el-button class="sort_button" @click="sort_type='hot';resort()" v-if="!loading" :style="sort_type==='hot' ? 'background-color: #ffe63e;' : ''">最近热门</el-button>
       <el-button class="sort_button" @click="sort_type='score';resort()" v-if="!loading" :style="sort_type==='score'? 'background-color: #ffe63e;' : ''">评分最高</el-button>
-      <el-button class="sort_button" @click="sort_type='price'; resort()" v-if="!loading" :style="sort_type==='score' ? 'background-color: #ffe63e;' : ''">价格最低</el-button>
+      <el-button class="sort_button" @click="sort_type='price'; resort()" v-if="!loading" :style="sort_type==='price' ? 'background-color: #ffe63e;' : ''">价格最低</el-button>
       <div v-if="loading" class="loading-wrapper">
         <el-icon class="loading-icon" :size="50"><Loading /></el-icon>
       </div>
@@ -204,12 +204,15 @@ const updateProductList = async () => {
     const res = await getProducts(data);
     if (res && res.results && res.results.length > 0) {
       console.log(res.results)
-      productList.value = [...productList.value, ...res.results];
+
+
       if (res.results.length < page_size) {
         isMax.value = true;
       } else {
         isMax.value = false;
       }
+      res.results=res.results.filter(item => item.user.status === 0)
+      productList.value = [...productList.value, ...res.results];
     } else {
       isMax.value = true; // 没有更多数据了
     }

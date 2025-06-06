@@ -362,9 +362,11 @@ class UserInfoView(ListCreateAPIView,RetrieveUpdateDestroyAPIView):
     def get_object(self):
         # 直接返回当前请求的用户对象（通过 Token 解析出的用户）
         print(1)
+        print(1234)
         return self.request.user
     def get_queryset(self):
         print(2)
+        print(123)
         return User.objects.filter(user_id=self.request.user.user_id)
 
 
@@ -556,7 +558,8 @@ class MessageViewSet(ListCreateAPIView):
         return user.messages.all().order_by('-created_at')
 
 class getPassword(APIView):
-
+    permission_classes = []
+    authentication_classes = []
     def get(self, request):
         password = request.data.get('password')
         password = make_password(password)
