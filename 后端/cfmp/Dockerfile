@@ -6,8 +6,16 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV DEBIAN_FRONTEND=noninteractive
 
+RUN apt-get update && apt-get install -y --no-install-recommends gnupg2 ca-certificates \
+    && gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 871920D1991BC93C \
+    && gpg --batch --export 871920D1991BC93C > /etc/apt/trusted.gpg.d/noble-security.gpg \
+    && apt-get clean
+
+ADD sources.list /etc/apt/
+
+
 # 安装系统依赖，支持 cryptography、Pillow、minio 等编译
-RUN apt-get update && apt-get install -y \
+RUN  apt-get update  && apt-get install -y \
   build-essential \
   libmariadb-dev-compat \
   libmariadb-dev \
@@ -36,6 +44,7 @@ RUN python -m pip install --upgrade pip setuptools wheel
 # 验证Python版本
 RUN python --version && python -c "import sys; print(f'Python version: {sys.version}')"
 
+RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
 # 安装依赖包，使用缓存和更好的错误处理
 RUN pip install --no-cache-dir -r requirements.txt
 
