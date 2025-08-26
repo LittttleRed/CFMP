@@ -1,9 +1,10 @@
-# 使用官方 Python 3.11 的精简镜像
-FROM python:3.11-slim
+# 使用官方 Python 3.11 的精简镜像，固定版本避免自动升级
+FROM python:3.11.10-slim-bookworm
 
 # 环境变量设置
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV DEBIAN_FRONTEND=noninteractive
 
 # 安装系统依赖，支持 cryptography、Pillow、minio 等编译
 RUN apt-get update && apt-get install -y \
@@ -18,6 +19,8 @@ RUN apt-get update && apt-get install -y \
   pkg-config \
   git \
   curl \
+  rustc \
+  cargo \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
@@ -26,8 +29,15 @@ WORKDIR /app
 
 # 拷贝 requirements.txt 并安装依赖
 COPY requirements.txt .
-RUN pip install --upgrade pip \
-  && pip install -r requirements.txt
+
+# 升级 pip 和安装构建工具
+RUN python -m pip install --upgrade pip setuptools wheel
+
+# 验证Python版本
+RUN python --version && python -c "import sys; print(f'Python version: {sys.version}')"
+
+# 安装依赖包，使用缓存和更好的错误处理
+RUN pip install --no-cache-dir -r requirements.txt
 
 # 拷贝项目源代码
 COPY . .
