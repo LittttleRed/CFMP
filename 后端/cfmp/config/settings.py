@@ -114,13 +114,17 @@ TEMPLATES = [
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "cfmp_db",
-        "HOST": "123.57.145.79",
-        "USER": "root",
-        "PASSWORD": "No5_Group_DB",
-        "PORT": "3306",
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'HOST': os.environ.get('DB_HOST', '123.57.145.79'),
+        'PORT': os.environ.get('DB_PORT', '3306'),
+        'NAME': os.environ.get('DB_NAME', 'cfmp_db'),
+        'USER': os.environ.get('DB_USER', 'root'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'No5_Group_DB'),
+        # 为了安全，测试中不允许使用生产数据库
+        'TEST': {
+            'NAME': 'test_cfmp_db_1',# 明确指定测试数据库名
+        },
     }
 }
 
