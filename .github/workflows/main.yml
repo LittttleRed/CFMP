@@ -12,17 +12,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Create deployment archive
+        run: |
+          mkdir -p deploy-temp
+          cp -r * deploy-temp/ 2>/dev/null || true
+          cp -r .[^.]* deploy-temp/ 2>/dev/null || true
+          cd deploy-temp
+          rm -rf .git
+          tar -czf ../cfmp-deploy.tar.gz .
+          cd ..
+          rm -rf deploy-temp
+
       - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
       - name: Deploy to Aliyun
         run: |
+          sshpass -p ${{secrets.ECS_PASSWORD}} scp -o StrictHostKeyChecking=no cfmp-deploy.tar.gz root@${{secrets.ECS_IP}}:/tmp/
           sshpass -p ${{secrets.ECS_PASSWORD}} ssh -o StrictHostKeyChecking=no root@${{secrets.ECS_IP}} "
-            if [ ! -d ~/CFMP ]; then
-              git clone https://github.com/LittttleRed/CFMP.git ~/CFMP
-            fi &&
+            mkdir -p ~/CFMP &&
             cd ~/CFMP &&
-            git pull origin master &&
+            tar -xzf /tmp/cfmp-deploy.tar.gz &&
+            rm /tmp/cfmp-deploy.tar.gz &&
             docker-compose down || true &&
             docker-compose build &&
             docker-compose up -d
