@@ -30,15 +30,24 @@ data:
     *.swp
     *.swo
   Dockerfile: |
-    # 使用官方 Python 3.11 的精简镜像
-    FROM python:3.11-slim
+    # 使用官方 Python 3.11 的精简镜像，固定版本避免自动升级
+    FROM python:3.11.10-slim-bookworm
 
     # 环境变量设置
     ENV PYTHONDONTWRITEBYTECODE=1
     ENV PYTHONUNBUFFERED=1
+    ENV DEBIAN_FRONTEND=noninteractive
+
+    RUN apt-get update && apt-get install -y --no-install-recommends gnupg2 ca-certificates \
+        && gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 871920D1991BC93C \
+        && gpg --batch --export 871920D1991BC93C > /etc/apt/trusted.gpg.d/noble-security.gpg \
+        && apt-get clean
+
+    ADD sources.list /etc/apt/
+
 
     # 安装系统依赖，支持 cryptography、Pillow、minio 等编译
-    RUN apt-get update && apt-get install -y \
+    RUN  apt-get update  && apt-get install -y \
       build-essential \
       libmariadb-dev-compat \
       libmariadb-dev \
@@ -50,6 +59,8 @@ data:
       pkg-config \
       git \
       curl \
+      rustc \
+      cargo \
       && apt-get clean \
       && rm -rf /var/lib/apt/lists/*
 
@@ -58,8 +69,16 @@ data:
 
     # 拷贝 requirements.txt 并安装依赖
     COPY requirements.txt .
-    RUN pip install --upgrade pip \
-      && pip install -r requirements.txt
+
+    # 升级 pip 和安装构建工具
+    RUN python -m pip install --upgrade pip setuptools wheel
+
+    # 验证Python版本
+    RUN python --version && python -c "import sys; print(f'Python version: {sys.version}')"
+
+    RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
+    # 安装依赖包，使用缓存和更好的错误处理
+    RUN pip install --no-cache-dir -r requirements.txt
 
     # 拷贝项目源代码
     COPY . .
@@ -95,14 +114,14 @@ data:
   pytest.ini: |
     [pytest]
     ;这里的../..不要动,中文会乱码导致报告出问题
-    addopts = --html=../../report.html
+
     DJANGO_SETTINGS_MODULE = config.settings
-    python_files = tests.py test_x.py
+    python_files = tests.py test_*.py
     testpaths = .
-  requirements.txt: |
+  requirements.txt: |-
     APScheduler==3.11.0
     channels==4.2.2
-    cryptography==41.0.5
+    cryptography>=41.0.7,<46.0.0
     Django==5.2
     django_apscheduler==0.7.0
     django_minio_backend==3.8.0
@@ -111,11 +130,25 @@ data:
     django_filter==25.1
     drf_extensions==0.8.0
     minio==7.2.15
-    Pillow==11.2.1
+    Pillow>=10.0.0,<12.0.0
     PyJWT==2.10.1
-    urllib3==2.4.0
+    urllib3>=2.0.0,<3.0.0
     daphne==4.2.0
-    mysqlclient==2.2.7
+    mysqlclient>=2.2.0,<3.0.0
+    pytest==8.3.4
+    pytest-django==4.9.0
+  sources.list: |-
+    deb https://mirrors.ustc.edu.cn/ubuntu/ noble main restricted universe multiverse
+    # deb-src https://mirrors.ustc.edu.cn/ubuntu/ noble main restricted universe multiverse
+
+    deb https://mirrors.ustc.edu.cn/ubuntu/ noble-security main restricted universe multiverse
+    # deb-src https://mirrors.ustc.edu.cn/ubuntu/ noble-security main restricted universe multiverse
+
+    deb https://mirrors.ustc.edu.cn/ubuntu/ noble-updates main restricted universe multiverse
+    # deb-src https://mirrors.ustc.edu.cn/ubuntu/ noble-updates main restricted universe multiverse
+
+    deb https://mirrors.ustc.edu.cn/ubuntu/ noble-backports main restricted universe multiverse
+    # deb-src https://mirrors.ustc.edu.cn/ubuntu/ noble-backports main restricted universe multiverse
 kind: ConfigMap
 metadata:
   labels:

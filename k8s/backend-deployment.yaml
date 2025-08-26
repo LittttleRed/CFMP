@@ -2,8 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    kompose.cmd: C:\Users\Administrator\scoop\apps\kompose\current\kompose.exe convert -f docker-compose.yml
-    kompose.version: 1.35.0 (9532ceef3)
+    kompose.cmd: kompose convert --file docker-compose.yml
+    kompose.version: 1.37.0 (HEAD)
   labels:
     io.kompose.service: backend
   name: backend
@@ -17,22 +17,16 @@ spec:
   template:
     metadata:
       annotations:
-        kompose.cmd: C:\Users\Administrator\scoop\apps\kompose\current\kompose.exe convert -f docker-compose.yml
-        kompose.version: 1.35.0 (9532ceef3)
+        kompose.cmd: kompose convert --file docker-compose.yml
+        kompose.version: 1.37.0 (HEAD)
       labels:
         io.kompose.service: backend
     spec:
       containers:
         - image: backend
+          imagePullPolicy: Never
           name: cfmp-backend
           ports:
             - containerPort: 8000
               protocol: TCP
-          volumeMounts:
-            - mountPath: /app
-              name: backend-cm0
       restartPolicy: Always
-      volumes:
-        - configMap:
-            name: backend-cm0
-          name: backend-cm0
