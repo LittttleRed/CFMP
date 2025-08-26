@@ -18,6 +18,8 @@ RUN apt-get update && apt-get install -y \
   pkg-config \
   git \
   curl \
+  rustc \
+  cargo \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
@@ -26,8 +28,12 @@ WORKDIR /app
 
 # 拷贝 requirements.txt 并安装依赖
 COPY requirements.txt .
-RUN pip install --upgrade pip \
-  && pip install -r requirements.txt
+
+# 升级 pip 和安装构建工具
+RUN pip install --upgrade pip setuptools wheel
+
+# 安装依赖包，使用缓存和更好的错误处理
+RUN pip install --no-cache-dir -r requirements.txt
 
 # 拷贝项目源代码
 COPY . .
