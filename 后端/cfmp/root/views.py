@@ -21,14 +21,14 @@ from product.models import Product
 class StandardPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
-    max_page_size = 1000
+    max_page_size = 1000 # test
 
 class StandartView(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         list = super().list(request, *args, **kwargs)
         return Response({'data': list.data})
 
-    def retrieve(self, request, *args, **kwargs):#带路径参数的查询
+    def retrieve(self, request, *args, **kwargs):#带路径参数的查询#123
         retrieve = super().retrieve(request, *args, **kwargs)
         return Response({'data': retrieve.data})
 
