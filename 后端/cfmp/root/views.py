@@ -28,7 +28,7 @@ class StandartView(viewsets.ModelViewSet):
         list = super().list(request, *args, **kwargs)
         return Response({'data': list.data})
 
-    def retrieve(self, request, *args, **kwargs):#带路径参数的查询
+    def retrieve(self, request, *args, **kwargs):#带路径参数的查询#123
         retrieve = super().retrieve(request, *args, **kwargs)
         return Response({'data': retrieve.data})
 
