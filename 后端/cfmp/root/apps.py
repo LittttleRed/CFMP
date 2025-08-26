@@ -8,4 +8,4 @@ class Test123Config(AppConfig):
     def ready(self):
         from .schedulers import scheduler
         #scheduler.remove_all_jobs()
-        scheduler.start()
+        #scheduler.start()

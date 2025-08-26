@@ -31,11 +31,11 @@ ASGI_APPLICATION = 'config.asgi.application'  # 指定ASGI入口
 # Application definition
 
 # python3 manage.py migrate
-MINIO_STORAGE_ENDPOINT = "59.110.23.64:9000" # Minio 服务器地址
-MINIO_STORAGE_ACCESS_KEY = 'T1oIslxvYe9YzP2ECk3U'      # 替换为你的 Access Key
-MINIO_STORAGE_SECRET_KEY = 'wbmud9Os71UJUqt4cf0cFbpn3yYgnkjQ3RmKYI2s'      # 替换为你的 Secret Key
+MINIO_STORAGE_ENDPOINT = "47.94.167.198:9000" # Minio 服务器地址
+MINIO_STORAGE_ACCESS_KEY = '80rhHcZMlWxc7V3kT4Rs'      # 替换为你的 Access Key
+MINIO_STORAGE_SECRET_KEY = 'rKxfuJdaTwcjiu9YIsn3R4UCR9Q39Ft8ywK4LVCi'      # 替换为你的 Secret Key
 MINIO_STORAGE_USE_HTTPS = False                   # 根据你的 Minio 配置调整
-MINIO_STORAGE_MEDIA_BUCKET_NAME = 'img'    # 存储媒体文件的 Bucket 名称
+MINIO_STORAGE_MEDIA_BUCKET_NAME = 'cfmp'    # 存储媒体文件的 Bucket 名称
 MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET = True     # 自动创建 Bucket
 DEFAULT_FILE_STORAGE = 'minio_storage.storage.MinioMediaStorage'
 INSTALLED_APPS = [
@@ -117,7 +117,7 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "cfmp_db",
-        "HOST": "59.110.23.64",
+        "HOST": "123.57.145.79",
         "USER": "root",
         "PASSWORD": "No5_Group_DB",
         "PORT": "3306",
