@@ -85,6 +85,7 @@ import {
 import * as $api from "../../api/user/index.js";
 import {changeUser, getMe, updateAvatar} from "../../api/user/index.js";
 import router from "../../router/index.js";
+  import { useRouter } from 'vue-router'
 
 let userStore = useUserStore()
 const error = ref('')
@@ -97,6 +98,7 @@ const addressChanging = ref(false)
 const preAddr = ref('')
 const email = ref('')
 const address = ref('')
+
 const logout = ()=>{
   removeToken()
       removeUserName()
@@ -175,12 +177,20 @@ const ensureAddr = async () => {
     address.value=res["address"]
   });
 }
-const changePhone = () => {
-  //跳转到手机号修改页面
-  window.location.href = '/user/phone';
+
+const changepwd = () => {
+  router.push({
+    path: '/user/pwd/',
+    query: {
+      email: email.value  // 将当前邮箱作为查询参数传递
+    }
+  })
 }
+
 const changeEmail = () => {
   //跳转到邮箱修改页面
+  //传递消息
+
   window.location.href = '/user/email';
 }
 

@@ -13,7 +13,7 @@
   class="friend-list"
   :modal="false"
   draggable
-  style="width: 400px; height: 700px; background-color: #fff4de"
+  style="width: 400px; height: 700px;background-color: #fffded"
   v-model="chating"
 >
   <!-- 顶部用户信息（固定高度） -->
@@ -24,8 +24,8 @@
 
   <!-- 消息标题（固定高度） -->
   <div style="display: flex;flex-direction: row">
-  <div style="cursor: pointer;font-size: 20px; margin: 20px 0 10px 10px" @click="toFollower">我关注的</div>
-  <div style="cursor: pointer;font-size: 20px; margin: 20px 0 10px 20px" @click="toFollowee">关注我的</div>
+  <div style="cursor: pointer;font-size: 20px; margin: 20px 0 10px 10px; " @click="toFollower" :style="infollower ? 'color : #ffa78a' : ''">我关注的</div>
+  <div style="cursor: pointer;font-size: 20px; margin: 20px 0 10px 20px" @click="toFollowee" :style="infollowee ? 'color : #ffa78a' : ''">关注我的</div>
     <div style="cursor: pointer;font-size: 20px; margin: 20px 0 10px 20px" @click="toSystem">系统通知</div>
     </div>
   <hr>
@@ -74,6 +74,8 @@ const followee = ref([]);//关注我的
 const  chatList = ref([]);
 const Chater = ref();
 const System = ref(false);
+const infollower=ref(false)
+const infollowee=ref(false);
 const getFollower = async () => {
   await getAllFollows(getToken()).then(ref => {
     follower.value = ref.map(item =>item.followee)
@@ -101,9 +103,13 @@ const chat= async ()=>{
   }
 }
 const toFollower=()=>{
+  infollower.value=true
+  infollowee.value=false
   chatList.value = follower.value
 }
 const toFollowee=()=>{
+    infollower.value=false
+  infollowee.value=true
   chatList.value = followee.value
 }
 const toSystem=()=>{

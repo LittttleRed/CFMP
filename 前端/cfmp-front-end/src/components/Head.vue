@@ -6,15 +6,17 @@
       <h1 class="title" @click="toHomePage">
         校园跳蚤市场
       </h1>
+
     </div>
-<Search v-if="showSearch===true" style="border-radius: 40px" ></Search>
+<Search v-if="showSearch===true" style="border-radius: 40px;" ></Search>
   <div class="right">
 
     <el-col :span="12">
       <div class="demo-basic--circle" style="padding-right: 50px;padding-left: 10px" @click="toUserHome">
         <div class="block">
-          <el-avatar :size="65" :src=headImg v-if="headImg"/>
-          <el-avatar :size="65"  v-else  style="cursor: pointer"  src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"></el-avatar>
+          <el-avatar :size="65" :src=headImg v-if="headImg!=null"/>
+          <el-avatar :size="65"  v-else-if="getPrivileges()==1"  style="cursor: pointer"  src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"></el-avatar>
+          <el-avatar :size="65"  v-else style="cursor: pointer"  src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"></el-avatar>
         </div>
       </div>
     </el-col>
@@ -35,7 +37,7 @@
   import {reactive, ref, watch} from "vue";
   import Search from "./home/search.vue";
   import {storeToRefs} from "pinia";
-  import {getHeadImg, getUserName} from "../utils/user-utils.js";
+  import {getHeadImg, getPrivileges, getUserName} from "../utils/user-utils.js";
   const userInfoStore = useUserStore();
   let userName = getUserName()
   let headImg = getHeadImg()
@@ -45,12 +47,16 @@
   }
   let toUserHome = () => {
     console.log("toUserHome")
+    if(getPrivileges()==0)
     window.location.href = "/user"
   }
   let toHomePage = () => {
     console.log("toHomePage")
-
-    window.location.href = "/"
+    if(getPrivileges()==1){
+      window.location.href = "/root"
+    }else {
+      window.location.href = "/"
+    }
   }
   defineProps({
     showSearch: {
@@ -79,9 +85,10 @@ const initUserInfo = () => {
   width: 300px;
 }
  .left {
-   margin-left: 15%;
+   margin-left: 5%;
    display: flex;
    flex-direction: row;
+
   }
   .right {
     display: flex;
@@ -89,7 +96,9 @@ const initUserInfo = () => {
     flex-direction: row-reverse;
   }
   .title{
-    font-size: 40px;
+    font-size: 3vh;
     cursor: pointer;
+    margin-right: 50px;
+    width: 150px;
   }
 </style>

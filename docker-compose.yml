@@ -1,0 +1,28 @@
+services:
+  backend:
+    build:
+      context: ./后端/cfmp
+      dockerfile: Dockerfile
+    container_name: cfmp-backend
+    restart: always
+    volumes:
+      - ./后端/cfmp:/app
+    ports:
+      - "8000:8000"
+    networks:
+      - cfmp_network
+
+  frontend:
+    build:
+      context: ./前端/cfmp-front-end
+      dockerfile: Dockerfile
+    container_name: cfmp-frontend
+    restart: always
+    ports:
+      - "80:80"
+    networks:
+      - cfmp_network
+
+networks:
+  cfmp_network:
+    driver: bridge

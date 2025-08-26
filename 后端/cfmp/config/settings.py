@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -26,7 +25,7 @@ SECRET_KEY = "django-insecure-juz)%(1i+d0am6xr=i2he*e0%0e65$6fvatqycjp+2z_c@%bv$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'backend', 'backend:8000', '*']
 
 ASGI_APPLICATION = 'config.asgi.application'  # 指定ASGI入口
 # Application definition
@@ -74,8 +73,11 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'config.authentication.JWTAuthentication',  # JWT认证
     ],'DEFAULT_FILE_STORAGE':
-        'minio_storage.storage.MinioStaticStorage'
-
+        'minio_storage.storage.MinioStaticStorage',
+    'EXCEPTION_HANDLER': 'config.exceptions.custom_exception_handler',
+    'DEFAULT_THROTTLE_RATES': {
+        'email': '1/minute',
+    }
 }
 
 MIDDLEWARE = [
@@ -165,10 +167,11 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 EMAIL_HOST = "smtp.qq.com"     # 服务器
-EMAIL_PORT = 25                 # 一般情况下都为25
+EMAIL_PORT = 465                # 一般情况下都为25
 EMAIL_HOST_USER = "3417934680@qq.com"     # 账号
 EMAIL_HOST_PASSWORD = "wvqhwfbidkhydabf"     # （上面保存的授权码）
-EMAIL_USE_TLS = True       # 一般都为False
+EMAIL_USE_SSL = True  # 启用 SSL 加密
+EMAIL_USE_TLS = False  # 禁用 TLSr
 EMAIL_FROM = "qq账号@qq.com"      # 邮箱来自
 email_title = '邮箱激活'
 

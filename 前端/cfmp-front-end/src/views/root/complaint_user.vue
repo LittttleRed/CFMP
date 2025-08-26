@@ -2,7 +2,7 @@
 <template>
   <div class="complaint-container">
     <!-- 搜索表单（差异部分） -->
-    <el-form :model="tempForm" inline class="search-form">
+    <el-form :model="tempForm" inline class="search-form" @keyup.enter.native="handleSearch">
       <el-form-item label="投诉ID">
         <el-input v-model="tempForm.complaint_id" placeholder="输入投诉ID"></el-input>
       </el-form-item>
@@ -157,7 +157,7 @@ export default {
       ],
       pagination: {
         page: 1,
-        page_size: 2,
+        page_size: 10,
         total: 1
       },
       submitting: false,
@@ -238,7 +238,6 @@ export default {
         this.$refs.handleForm.resetFields()
       })
     },
-
     submitHandle() {
       this.$refs.handleForm.validate(async valid => {
         if (valid) {
@@ -252,7 +251,9 @@ export default {
           console.log(review)
           await createReview(review)
           await updateReview(this.currentComplaint.target_id,1,1)
-          await changeUserState(this.currentComplaint.target_id,1)
+          if(this.handleForm.ban_type==='ban') {
+            await changeUserState(this.currentComplaint.target_id, 1)
+          }
             this.submitting = false
             this.dialogVisible = false
             this.$message.success('处理成功')

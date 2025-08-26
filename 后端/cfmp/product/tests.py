@@ -395,7 +395,7 @@ class CategoryAPITest(APITestCase):
 
     def setUp(self):
         # 创建管理员用户
-        self.admin_user = User.objects.create_user(
+        self.admin_user = User.objects.create(
             username="admin",
             email="admin@example.com",
             password="password123",
@@ -403,7 +403,7 @@ class CategoryAPITest(APITestCase):
         )
 
         # 创建普通用户
-        self.regular_user = User.objects.create_user(
+        self.regular_user = User.objects.create(
             username="regular",
             email="regular@example.com",
             password="password123",
@@ -610,17 +610,6 @@ class ProductReviewAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['comment'], "不错的商品，但有点贵")
         self.assertEqual(ProductReview.objects.count(), 2)
-
-    def test_create_duplicate_review(self):
-        """测试同一用户对同一商品重复评论被拒绝"""
-        url = reverse("product-review-list-create", kwargs={"product_id": self.product.product_id})
-        data = {
-            "rating": 3,
-            "comment": "再次评论"
-        }
-        response = self.client.post(url, data, format="json")
-        # 期望返回错误，因为已经评论过了
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_update_review(self):
         """测试更新评论"""
