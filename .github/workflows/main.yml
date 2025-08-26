@@ -1,4 +1,4 @@
-name: Django_deploy
+name: CFMP_deploy
 
 on:
   push:
@@ -9,5 +9,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: pull and reload on Aliyun
-        run: sshpass -p ${{secrets.ECS_PASSWORD}} ssh -o StrictHostKeyChecking=no root@${{secrets.ECS_IP}} "cd ~/academic; python kill.py; git pull --force; git checkout master; python run.py;"
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Deploy to Aliyun
+        run: |
+          sshpass -p ${{secrets.ECS_PASSWORD}} ssh -o StrictHostKeyChecking=no root@${{secrets.ECS_IP}} "
+            if [ ! -d ~/CFMP ]; then
+              git clone https://github.com/LittttleRed/CFMP.git ~/CFMP
+            fi &&
+            cd ~/CFMP &&
+            git pull origin master &&
+            docker-compose down || true &&
+            docker-compose build &&
+            docker-compose up -d
+          "
