@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from product.serializers import ProductSerializer
 from . import models
 class ComplaintSerializer(serializers.ModelSerializer):
     class Meta:
