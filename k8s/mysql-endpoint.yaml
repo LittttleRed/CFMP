@@ -1,0 +1,11 @@
+# mysql-endpoint.yaml
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: mysql-service
+subsets:
+  - addresses:
+      - ip: 123.57.145.79
+    ports:
+      - name: mysql
+        port: 3306

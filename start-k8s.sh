@@ -19,6 +19,14 @@ cd 前端/cfmp-front-end && docker build -t frontend . && cd ../..
 echo "部署应用..."
 minikube kubectl -- delete -f k8s/ --ignore-not-found=true
 sleep 3
+
+# 先部署数据库服务
+minikube kubectl -- create -f k8s/mysql-service.yaml
+minikube kubectl -- create -f k8s/mysql-endpoint.yaml
+
+# 等待数据库服务就绪
+sleep 5
+
 minikube kubectl -- create -f k8s/
 
 # 等待启动
