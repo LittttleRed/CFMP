@@ -116,7 +116,7 @@ TEMPLATES = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'HOST': os.environ.get('DB_HOST', '123.57.145.79'),
+        'HOST': os.environ.get('DB_HOST', 'mysql-service'),
         'PORT': os.environ.get('DB_PORT', '3306'),
         'NAME': os.environ.get('DB_NAME', 'cfmp_db'),
         'USER': os.environ.get('DB_USER', 'root'),
