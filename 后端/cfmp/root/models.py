@@ -1,9 +1,11 @@
 from django.db import models
 from user.models import User
-from order.models import  Order
 
+# root数据表：complaint, complaint_review, transaction
 class Complaint(models.Model):
     complaint_id = models.BigAutoField(primary_key=True)
+    # FIX:
+    # 外键耦合
     complainer_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column='complainer_id')
     target_type = models.SmallIntegerField()
     target_id = models.IntegerField()
@@ -18,6 +20,8 @@ class ComplaintReview(models.Model):
     review_id = models.BigAutoField(primary_key=True)
     target_id = models.IntegerField(default=0)
     target_type = models.SmallIntegerField(default=0)
+    # FIX:
+    # 外键耦合
     reviewer_id = models.ForeignKey(User, on_delete=models.CASCADE,db_column='reviewer_id')
     created_at = models.DateTimeField(auto_now_add=True)
     result = models.CharField(max_length=100)

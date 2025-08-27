@@ -1,10 +1,24 @@
 from django.db import models
 from minio_storage import MinioMediaStorage
 from user.models import User
+# Product数据表：Product, ProductMedia, Category, ProductReview, Collection
 
 
-
+# NOTE:
+# 关键表：多次被外键引用需要添加UUID，以便于跨服务通信
 class Product(models.Model):
+    """Product
+
+    Attributes:
+        product_id: primary_key(not nessary)
+        user: model
+        title: CharField
+        description: TextField
+        price: DecimalField
+        status:  default=0 (0 = 上架, 1 = 下架)
+        created_at: DateTimeField(not nessary)
+        categories: model(related_name="products")
+    """
     ON_SALE = 0
     OFF_SALE = 1
     SALED = 2
@@ -19,20 +33,10 @@ class Product(models.Model):
         (0, '包邮'),
         (1, '自提'),
     ]
-    """Product
-
-    Attributes:
-        product_id: primary_key(not nessary)
-        user: model
-        title: CharField
-        description: TextField
-        price: DecimalField
-        status:  default=0 (0 = 上架, 1 = 下架)
-        created_at: DateTimeField(not nessary)
-        categories: model(related_name="products")
-    """
 
     product_id = models.BigAutoField(primary_key=True)
+    # FIX:
+    # 高耦合，改成事件通知
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, db_column='user')
     title = models.CharField(max_length=100)
     description = models.TextField()
@@ -143,6 +147,8 @@ class Collection(models.Model):
     """
 
     collection = models.ForeignKey(Product, on_delete=models.CASCADE)
+    # FIX:
+    # 高耦合，需要使用UUID发送事件以便于User app接收
     collecter = models.ForeignKey(User, on_delete=models.CASCADE)
     create_at = models.DateTimeField(auto_now_add=True)
 

@@ -1,9 +1,13 @@
-from django.core.validators import FileExtensionValidator
 from django.db import models
-from django_minio_backend import MinioBackend
 from minio_storage import MinioMediaStorage
 
+# User数据表：user, captcha, chatlog, follow, messages
+# NOTE:
+# 无外键引用的情况
 
+
+# NOTE:
+# 关键表：多次被外键引用需要添加UUID，以便于跨服务通信
 class User(models.Model):
     BANNED = 1
     NORMAL = 0

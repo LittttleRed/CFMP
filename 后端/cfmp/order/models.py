@@ -1,7 +1,6 @@
 from django.db import models
 from user.models import User
 from product.models import Product
-from django.utils import timezone
 
 # 订单状态常量
 ORDER_STATUS_CHOICES = (
@@ -35,7 +34,11 @@ NOTIFICATION_TYPE_CHOICES = (
 
 class Order(models.Model):
     order_id = models.AutoField(primary_key=True)
+    # FIX:
+    # 高耦合，直接存放User的UUID以通信User服务
     buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="orders")
+    # FIX:
+    # 高耦合，需要根据OrderItem中间表找到Product的UUID,发出请求给Product模块
     products = models.ManyToManyField(Product, through='OrderItem')
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.SmallIntegerField(choices=ORDER_STATUS_CHOICES, default=0)
@@ -56,6 +59,8 @@ class Order(models.Model):
         db_table = "order"
         ordering = ['-created_at']
 
+# FIX:
+# 不应该使用外键，直接存放Product的UUID以通信Product服务
 class OrderItem(models.Model):
     """订单商品项"""
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='order_items')
@@ -73,6 +78,8 @@ class Payment(models.Model):
     """支付记录"""
     payment_id = models.AutoField(primary_key=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='payments')
+    # FIX:
+    # 高耦合，直接存放User的UUID以通信User服务
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     payment_method = models.SmallIntegerField(choices=PAYMENT_METHOD_CHOICES)
@@ -95,6 +102,8 @@ class Payment(models.Model):
 class Notification(models.Model):
     """通知"""
     id = models.AutoField(primary_key=True)
+    # FIX:
+    # 高耦合
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     type = models.SmallIntegerField(choices=NOTIFICATION_TYPE_CHOICES)
     title = models.CharField(max_length=100)
