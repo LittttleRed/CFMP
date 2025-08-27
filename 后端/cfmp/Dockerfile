@@ -6,10 +6,10 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y --no-install-recommends gnupg2 ca-certificates \
-    && gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 871920D1991BC93C \
-    && gpg --batch --export 871920D1991BC93C > /etc/apt/trusted.gpg.d/noble-security.gpg \
-    && apt-get clean
+
+#COPY noble-security.gpg /etc/apt/trusted.gpg.d/
+RUN rm -rf /etc/apt/sources.list.d/* && \
+    rm -f /etc/apt/sources.list
 
 ADD sources.list /etc/apt/
 
@@ -38,6 +38,7 @@ WORKDIR /app
 # 拷贝 requirements.txt 并安装依赖
 COPY requirements.txt .
 
+RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
 # 升级 pip 和安装构建工具
 RUN python -m pip install --upgrade pip setuptools wheel
 

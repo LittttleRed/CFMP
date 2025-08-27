@@ -23,7 +23,7 @@ spec:
         io.kompose.service: backend
     spec:
       containers:
-        - image: backend
+        - image: backend:latest
           imagePullPolicy: Never
           name: cfmp-backend
           ports:
