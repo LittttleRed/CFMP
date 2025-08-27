@@ -1,0 +1,3 @@
+[submodule "后端/ProductService"]
+	path = 后端/ProductService
+	url = https://github.com/lei-jia-xing/CFMP-Product.git
