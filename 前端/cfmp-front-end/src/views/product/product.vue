@@ -93,7 +93,7 @@
         v-if="getToken()"
       >
         <div class="user-info">
-          <el-avatar :src="comment.user.avatar" />
+          <el-avatar :src="comment.user?.avatar" />
           <span class="username">{{ comment.user.username }}</span>
           <el-rate
             v-model="comment.rating"
@@ -330,7 +330,34 @@ const submitComment = async () => {
   }
 }
 
-
+// 删除评论方法
+const deleteComment = async (commentId) => {
+  try {
+    // 这里应该调用API删除评论
+    // await deleteReviewAPI(commentId)
+    
+    // 从本地列表中移除评论
+    const index = productData.comments.findIndex(comment => comment.id === commentId)
+    if (index !== -1) {
+      productData.comments.splice(index, 1)
+      ElMessage.success('评论删除成功')
+    }
+  } catch (error) {
+    ElMessage.error('评论删除失败')
+    console.error(error)
+  }
+}
+const handleDeleteComment = (commentId) => {
+  ElMessageBox.confirm('确定要删除此评论吗？', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    deleteComment(commentId)
+  }).catch(() => {
+    ElMessage.info('已取消删除')
+  })
+}
 // 立即购买 - 直接跳转到支付页面
 const handleBuyNow = () => {
   // 检查是否登录

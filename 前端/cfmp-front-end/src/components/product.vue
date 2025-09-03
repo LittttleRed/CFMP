@@ -43,8 +43,8 @@ const route = useRoute()
 defineProps({
   title: String,
   price: String,
-  product_id: Number,
-  user_id: Number,
+  product_id: [String, Number],
+  user_id: [String, Number],
   username: String,
   avatar: String,
   media: String,
