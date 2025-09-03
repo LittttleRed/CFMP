@@ -55,7 +55,8 @@ const getAllProducts = async () => {
       console.log('请求自己的商品列表:', res)
 
       if(isMounted.value) {
-        productList.value = res?.results || []
+        productList.value = res.results || []
+        console.log('商品列表:', productList.value)
         isMyHome.value = true
       }
     } else {
@@ -115,7 +116,7 @@ onUnmounted(() => {
         :sm="12"
         :xs="24"
       >
-        <Product v-if="product && product.user"
+        <Product v-if="product && product.user_info"
                     :title="product.title"
                     :price="product.price"
                     :avatar="product.user_info.avatar || ''"
