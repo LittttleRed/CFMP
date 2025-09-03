@@ -293,7 +293,7 @@ const cancelOrder = async () => {
     })
 
     const res = await cancelOrderApi(orderDetail.order_id, '用户主动取消')
-    if (res.code === 200) {
+    if (res.code === 200 || res.code === '200') {
       ElMessage.success('订单已取消')
       orderDetail.status = 3
     } else {
@@ -317,7 +317,7 @@ const confirmReceived = async () => {
     })
 
     const res = await completeOrder(orderDetail.order_id)
-    if (res.code === 200) {
+    if (res.code === 200 || res.code === '200') {
       ElMessage.success('已确认收货，订单完成')
       orderDetail.status = 2
       orderDetail.updated_at = new Date().toISOString()
@@ -336,7 +336,7 @@ const confirmReceived = async () => {
 const checkPaymentStatus = async () => {
   try {
     const res = await queryPayment(orderDetail.order_id)
-    if (res.code === 200) {
+    if (res.code === 200 || res.code === '200') {
       if (res.data.status === 'success') {
         ElMessage.success('支付成功！')
         showPaymentDialog.value = false
