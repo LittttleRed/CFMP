@@ -15,6 +15,13 @@ http.interceptors.request.use(config => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+
+  // 添加用户UUID请求头 - 根据后端微服务架构添加
+  const userId = localStorage.getItem('user_id')
+  if (userId) {
+    config.headers['UUID'] = userId         // 保持兼容性
+  }
+
   return config
 })
 
