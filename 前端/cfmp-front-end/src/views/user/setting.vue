@@ -148,15 +148,20 @@ const changeAvatar = async (event) => {
     if (res && res.avatar) {
       avatar.value = res.avatar;
       setHeadImg(res.avatar)
+      userStore.avatar = res.avatar;
     } else if (res && res.data && res.data.avatar) {
       // 如果响应数据在data字段中
       avatar.value = res.data.avatar;
       setHeadImg(res.data.avatar)
+      userStore.avatar = res.data.avatar;
     } else {
       // 如果没有avatar字段，使用原始值
       error.value = '头像更新失败，请重试';
       showinfo() // 恢复原始信息
     }
+    
+    // 更新头像后刷新页面
+    window.location.reload();
   } catch (err) {
     // 如果更新失败，恢复原来的头像
     console.error("头像更新失败:", err)
