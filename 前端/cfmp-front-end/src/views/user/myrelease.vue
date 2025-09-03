@@ -43,16 +43,29 @@ const getAllProducts = async () => {
     // 获取当前状态码
     const status = statusMap[activeTab.value]
 
+    console.log('=== 获取商品列表请求参数 ===')
+    console.log('activeTab:', activeTab.value)
+    console.log('status:', status)
+    console.log('token:', getToken())
+    console.log('当前用户ID:', getUserId())
+    console.log('URL查询用户ID:', route.query.user_id)
+
     if(route.query.user_id === getUserId() || route.query.user_id === undefined) {
       const res = await getAllLaunches(getToken(), getUserId(), status)
+      console.log('请求自己的商品列表:', res)
+
       if(isMounted.value) {
-        productList.value = res || []
+        productList.value = res?.results || []
         isMyHome.value = true
       }
     } else {
+      console.log('请求其他用户的商品列表, 用户ID:', route.query.user_id)
       const res = await getAllLaunches(getToken(), route.query.user_id, status)
+      console.log('完整响应:', res)
+
+
       if(isMounted.value) {
-        productList.value = res || []
+        productList.value = res?.results || []
       }
     }
   } catch (error) {
