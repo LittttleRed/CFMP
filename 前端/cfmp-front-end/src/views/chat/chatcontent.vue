@@ -190,16 +190,29 @@ onBeforeUnmount(() => {
 onMounted(async () => {
   await getAllHistory()  // 确保先加载历史消息
   console.log('start')
-  ws.value = new WebSocket('ws://localhost:8000/ws/chat/' + "?token=" + getToken())
+  // 创建WebSocket连接，通过查询参数传递用户UUID
+  const currentUserUuid = getUserId(); // 获取当前用户UUID
+  ws.value = new WebSocket(`ws://localhost:8000/ws/chat/?uuid=${currentUserUuid}`)
+  
+  // 设置连接打开时的回调
   ws.value.onopen = () => {
+    console.log('WebSocket连接已建立')
     wsConnected.value = true
   }
+  
+  // 设置连接关闭时的回调
   ws.value.onclose = () => {
+    console.log('WebSocket连接已关闭')
     wsConnected.value = false
   }
-  ws.value.onerror = () => {
+  
+  // 设置错误处理
+  ws.value.onerror = (error) => {
+    console.error('WebSocket连接错误:', error)
     wsConnected.value = false
   }
+  
+  // 设置消息接收处理
   ws.value.onmessage = (event) => {
     try {
       const data = JSON.parse(event.data)
