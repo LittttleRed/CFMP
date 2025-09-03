@@ -1,12 +1,16 @@
 <script setup>
  import Product from '../../components/product.vue'
- import {reactive, ref} from "vue";
+ import {reactive, ref, onUnmounted, nextTick} from "vue";
  import {getAllLaunches} from "../../api/user/index.js";
  import {getToken, getUserId} from "../../utils/user-utils.js";
  import {useRoute, useRouter} from "vue-router";
+
 let seller = reactive({name: 'seller',})
 let title = ref("title")
 let productList = ref([])
+let isLoading = ref(false)
+let isMounted = ref(true)
+
  productList.value = [
 
  ]
@@ -31,27 +35,64 @@ const isMyHome = ref(false)
  const router = useRouter()
  const route = useRoute()
 const getAllProducts = async () => {
-  if(!getToken()) return
+  if(!getToken() || !isMounted.value) return
 
-  // 获取当前状态码
-  const status = statusMap[activeTab.value]
+  isLoading.value = true
 
-  if(route.query.user_id === getUserId() || route.query.user_id === undefined) {
-    const res = await getAllLaunches(getToken(), getUserId(), status)
-    productList.value = res
-    isMyHome.value = true
-  } else {
-    const res = await getAllLaunches(getToken(), route.query.user_id, status)
-    productList.value = res
+  try {
+    // 获取当前状态码
+    const status = statusMap[activeTab.value]
+
+    console.log('=== 获取商品列表请求参数 ===')
+    console.log('activeTab:', activeTab.value)
+    console.log('status:', status)
+    console.log('token:', getToken())
+    console.log('当前用户ID:', getUserId())
+    console.log('URL查询用户ID:', route.query.user_id)
+
+    if(route.query.user_id === getUserId() || route.query.user_id === undefined) {
+      const res = await getAllLaunches(getToken(), getUserId(), status)
+      console.log('请求自己的商品列表:', res)
+
+      if(isMounted.value) {
+        productList.value = res?.results || []
+        isMyHome.value = true
+      }
+    } else {
+      console.log('请求其他用户的商品列表, 用户ID:', route.query.user_id)
+      const res = await getAllLaunches(getToken(), route.query.user_id, status)
+      console.log('完整响应:', res)
+
+
+      if(isMounted.value) {
+        productList.value = res?.results || []
+      }
+    }
+  } catch (error) {
+    console.error('获取商品列表失败:', error)
+    if(isMounted.value) {
+      productList.value = []
+    }
+  } finally {
+    if(isMounted.value) {
+      isLoading.value = false
+    }
   }
 }
+
 getAllProducts()
+
 const handleTabChange=(name)=>{
+  if(!isMounted.value) return
   productList.value=[]
   activeTab.value=name
   console.log(name)
   getAllProducts()
 }
+
+onUnmounted(() => {
+  isMounted.value = false
+})
 </script>
 
 <template>
@@ -63,24 +104,25 @@ const handleTabChange=(name)=>{
             <el-tab-pane label="未审核" name="on-sure" v-if="isMyHome"></el-tab-pane>
             <el-tab-pane label="被封禁" name="on-fail" v-if="isMyHome"></el-tab-pane>
           </el-tabs>
-    <div class="product-list" >
-      <h2 v-if="productList.length===0" style="margin: auto">暂无</h2>
+    <div class="product-list" v-loading="isLoading">
+      <h2 v-if="productList.length===0 && !isLoading" style="margin: auto">暂无</h2>
     <el-row :gutter="10" v-if="getToken()">  <!-- 控制列间距 -->
       <el-col
         v-for="(product, index) in productList"
-        :key="index"
+        :key="product.product_id || index"
         :lg="4"
         :md="8"
         :sm="12"
         :xs="24"
       >
-        <Product :title="product.title"
+        <Product v-if="product && product.user"
+                    :title="product.title"
                     :price="product.price"
-                    :avatar="product.user.avatar"
-                    :username="product.user.username"
-                    :user_id="product.user.user_id"
+                    :avatar="product.user?.avatar || ''"
+                    :username="product.user?.username || ''"
+                    :user_id="product.user?.user_id || ''"
                     :product_id="product.product_id"
-                    :media="product.media[0]?product.media[0]['media']:''"
+                    :media="product.media && product.media[0] ? product.media[0]['media'] : ''"
                     :status="product.status"></Product>
       </el-col>
     </el-row>

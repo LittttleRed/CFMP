@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from product import ProductSerializer
+from product.serializers import ProductSerializer
+from product.models import Product
 from . import models
 class ComplaintSerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,4 +27,9 @@ class UserSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Order
+        fields = '__all__'
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
         fields = '__all__'

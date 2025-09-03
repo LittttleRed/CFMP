@@ -115,8 +115,9 @@ export const getAllLaunches=(token,id,status)=>{
             'Authorization':'Bearer '+token
         },
         params: {   // 修改这里，使用params传递查询参数
-status: status
-}
+            user_id: id,  // 添加用户ID参数
+            status: status
+        }
     })
 }
 export const createComplaint=(token,data)=>{
