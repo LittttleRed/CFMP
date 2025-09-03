@@ -35,7 +35,7 @@ export const cancelOrder = (orderId, reason = '') => {
 export const completeOrder = (orderId) => {
     return http({
         url: `orders/${orderId}/complete/`,
-        method: 'patch'
+        method: 'post'
     })
 }
 
@@ -55,9 +55,9 @@ export const createPayment = (data) => {
     })
 }
 
-export const queryPayment = (orderId) => {
+export const queryPayment = (orderUuid) => {
     return http({
-        url: `payment/${orderId}/`,
+        url: `payment/${orderUuid}/`,
         method: 'get'
     })
 }
@@ -70,9 +70,9 @@ export const getPaymentRecords = (params = {}) => {
     })
 }
 
-export const cancelPayment = (paymentId) => {
+export const cancelPayment = (paymentUuid) => {
     return http({
-        url: `payment/${paymentId}/cancel/`,
+        url: `payment/${paymentUuid}/cancel/`,
         method: 'post'
     })
 }
@@ -86,13 +86,14 @@ export const refundOrder = (orderUuid, data) => {
 }
 
 // 模拟支付完成的API
-export const simulatePaymentSuccess = (orderUuid, paymentMethod = 'alipay', paymentId) => {
+export const simulatePaymentSuccess = (orderUuid, paymentMethod = 'alipay', paymentId, paymentUuid = null) => {
     return http({
         url: `payment/callback/${paymentMethod}/`,
         method: 'post',
         data: {
             order_uuid: orderUuid,  // 订单UUID（字符串）
-            payment_id: paymentId,    // 支付记录ID
+            payment_id: paymentId,    // 支付记录ID（数字）
+            payment_uuid: paymentUuid || paymentId,  // 支付记录UUID（如果有的话）
             status: 2,  // 支付状态：2表示成功（success）
             total_amount: 0,  // 实际金额会在后端查询
             sign: 'simulated_signature'
