@@ -371,7 +371,7 @@ const confirmCancel = async () => {
   try {
     const response = await cancelOrder(selectedOrder.value.order_id, cancelReason.value)
 
-    if (response.code === 200) {
+    if (response.code === 200 || response.code === '200') {
       ElMessage.success('订单已取消')
       cancelDialogVisible.value = false
       loadOrderList() // 重新加载列表
@@ -400,7 +400,7 @@ const confirmReceived = async (orderId) => {
 
     const response = await completeOrder(orderId)
 
-    if (response.code === 200) {
+    if (response.code === 200 || response.code === '200') {
       ElMessage.success('确认收货成功')
       loadOrderList() // 重新加载列表
     } else {
