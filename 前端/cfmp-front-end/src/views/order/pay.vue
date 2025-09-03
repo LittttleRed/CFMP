@@ -214,16 +214,19 @@ const submitOrder = async () => {
     console.log(orderRes)
 
     let orderId
+    let orderUuid
 
-    if (orderRes.code === 200) {
+    if (orderRes.code === 200 || orderRes.code === '200') {
       // 订单创建成功
       orderId = orderRes.data.order_id
-      console.log('新订单创建成功:', orderId)
+      orderUuid = orderRes.data.order_uuid
+      console.log('新订单创建成功:', orderId, 'UUID:', orderUuid)
       ElMessage.success('订单创建成功，正在跳转到支付页面...')
-    } else if (orderRes.code === 409) {
+    } else if (orderRes.code === 409 || orderRes.code === '409') {
       // 存在重复订单，使用现有订单
       orderId = orderRes.data.existing_order_id
-      console.log('使用现有订单:', orderId)
+      orderUuid = orderRes.data.existing_order_uuid || orderRes.data.order_uuid
+      console.log('使用现有订单:', orderId, 'UUID:', orderUuid)
 
       if (orderRes.data.redirect_to_payment) {
         ElMessage({
@@ -239,7 +242,7 @@ const submitOrder = async () => {
 
     // 创建支付请求
     const paymentParams = {
-      order_uuid: orderId,
+      order_uuid: orderUuid,
       payment_method: paymentMethod.value === 0 ? 'alipay' : 'wechat_pay',
       amount: totalAmount.value.toString(),
       payment_subject: `订单支付 - ${productInfo.title}`
@@ -249,8 +252,13 @@ const submitOrder = async () => {
     console.log(paymentRes)
 
     // 根据后端返回格式调整判断逻辑
-    if (paymentRes.code === '200' || paymentRes.success) {
-      ElMessage.success('支付链接创建成功，正在跳转...')
+    if (paymentRes.code === '200' || paymentRes.code === 200 || paymentRes.success) {
+      // 先显示支付相关的成功消息
+      if (paymentRes.message === '订单创建成功') {
+        ElMessage.success('订单创建成功，正在跳转到支付页面...')
+      } else {
+        ElMessage.success('支付链接创建成功，正在跳转...')
+      }
 
       // 跳转到支付结果页面
       setTimeout(() => {
@@ -258,8 +266,8 @@ const submitOrder = async () => {
           name: 'OrderPayment',
           query: {
             order_id: orderId,
-            payment_id: paymentRes.data.payment_id,
-            payment_url: paymentRes.data.payment_url
+            payment_id: paymentRes.data?.payment_id,
+            payment_url: paymentRes.data?.payment_url
           }
         })
       }, 1000) // 延迟1秒跳转，让用户看到成功提示

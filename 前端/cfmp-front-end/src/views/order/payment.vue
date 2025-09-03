@@ -248,26 +248,40 @@ const payNow = async () => {
     }
 
     const res = await createPayment(paymentParams)
-    if (res.code === 200) {
+    console.log('支付接口响应:', res)
+
+    // 检查响应码，200表示成功
+    if (res.code === '200' || res.code === 200) {
+      // 优先显示成功消息
+      if (res.message === '订单创建成功' || res.message.includes('创建成功')) {
+        ElMessage.success(res.message)
+      }
+
       // 检查是否有支付数据
-      if (res.data.payment_data) {
+      if (res.data && res.data.payment_data) {
         // 显示支付二维码
         paymentQrCode.value = res.data.payment_data.qrcode || res.data.payment_data.url
         paymentMethodText.value = orderDetail.payment_method === 0 ? '支付宝' : '微信'
         showPaymentDialog.value = true
-
-        // 如果是重复支付请求，提示用户
+      } else if (res.data && (res.data.qrcode || res.data.url)) {
+        // 兼容直接返回支付数据的情况
+        paymentQrCode.value = res.data.qrcode || res.data.url
+        paymentMethodText.value = orderDetail.payment_method === 0 ? '支付宝' : '微信'
+        showPaymentDialog.value = true
+      } else {
+        // 如果没有支付数据，可能是订单已存在，提示用户
         if (res.message && res.message.includes('已有未支付')) {
           ElMessage.info('检测到已有未完成的支付请求，将继续使用')
+        } else {
+          ElMessage.warning('支付准备就绪，请选择其他支付方式或联系客服')
         }
-      } else {
-        ElMessage.error('支付数据获取失败')
       }
     } else {
+      // 处理错误情况
       ElMessage.error(res.message || '创建支付失败')
     }
   } catch (error) {
-    ElMessage.error('创建支付失败')
+    ElMessage.error('创建支付失败，请稍后重试')
     console.error('支付错误:', error)
   }
 }
@@ -282,7 +296,7 @@ const cancelOrder = async () => {
     })
 
     const res = await cancelOrderApi(orderDetail.order_id, '用户主动取消')
-    if (res.code === 200) {
+    if (res.code === 200 || res.code === '200') {
       ElMessage.success('订单已取消')
       orderDetail.status = 3
     } else {
@@ -306,7 +320,7 @@ const confirmReceived = async () => {
     })
 
     const res = await completeOrder(orderDetail.order_id)
-    if (res.code === 200) {
+    if (res.code === 200 || res.code === '200') {
       ElMessage.success('已确认收货，订单完成')
       orderDetail.status = 2
       orderDetail.updated_at = new Date().toISOString()
@@ -325,7 +339,7 @@ const confirmReceived = async () => {
 const checkPaymentStatus = async () => {
   try {
     const res = await queryPayment(orderDetail.order_id)
-    if (res.code === 200) {
+    if (res.code === 200 || res.code === '200') {
       if (res.data.status === 'success') {
         ElMessage.success('支付成功！')
         showPaymentDialog.value = false
