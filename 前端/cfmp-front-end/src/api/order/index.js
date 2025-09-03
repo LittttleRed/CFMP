@@ -93,8 +93,7 @@ export const simulatePaymentSuccess = (orderUuid, paymentMethod = 'alipay', paym
         data: {
             order_uuid: orderUuid,  // 订单UUID（字符串）
             payment_id: paymentId,    // 支付记录ID
-            transaction_id: Date.now().toString(),
-            status: 'success',
+            status: 2,  // 支付状态：2表示成功（success）
             total_amount: 0,  // 实际金额会在后端查询
             sign: 'simulated_signature'
         }
