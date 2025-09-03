@@ -252,6 +252,9 @@ const payNow = async () => {
     const res = await createPayment(paymentParams)
     console.log('支付接口响应:', res)
 
+    // 设置支付方式文本
+    paymentMethodText.value = orderDetail.payment_method === 0 ? '支付宝' : '微信'
+
     // 检查响应码，200表示成功
     if (res.code === '200' || res.code === 200) {
       // 优先显示成功消息
@@ -263,27 +266,34 @@ const payNow = async () => {
       if (res.data && res.data.payment_data) {
         // 显示支付二维码
         paymentQrCode.value = res.data.payment_data.qrcode || res.data.payment_data.url
-        paymentMethodText.value = orderDetail.payment_method === 0 ? '支付宝' : '微信'
-        showPaymentDialog.value = true
       } else if (res.data && (res.data.qrcode || res.data.url)) {
         // 兼容直接返回支付数据的情况
         paymentQrCode.value = res.data.qrcode || res.data.url
-        paymentMethodText.value = orderDetail.payment_method === 0 ? '支付宝' : '微信'
-        showPaymentDialog.value = true
       } else {
-        // 如果没有支付数据，可能是订单已存在，提示用户
+        // 如果没有支付数据，使用默认占位符
+        paymentQrCode.value = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPuaJq+eggeeggTwvdGV4dD48L3N2Zz4='
+
         if (res.message && res.message.includes('已有未支付')) {
           ElMessage.info('检测到已有未完成的支付请求，将继续使用')
         } else {
-          ElMessage.warning('支付准备就绪，请选择其他支付方式或联系客服')
+          ElMessage.info('支付准备就绪，请在弹窗中选择支付方式或使用模拟支付')
         }
       }
+
+      // 无论如何都打开支付弹窗，因为模拟支付按钮在弹窗中
+      showPaymentDialog.value = true
     } else {
-      // 处理错误情况
-      ElMessage.error(res.message || '创建支付失败')
+      // 即使出错也打开弹窗，让用户可以使用模拟支付
+      paymentQrCode.value = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPuaJq+eggeeggTwvdGV4dD48L3N2Zz4='
+      showPaymentDialog.value = true
+      ElMessage.warning(res.message || '创建支付失败，您可以使用模拟支付功能')
     }
   } catch (error) {
-    ElMessage.error('创建支付失败，请稍后重试')
+    // 即使发生错误也打开弹窗，让用户可以使用模拟支付
+    paymentMethodText.value = orderDetail.payment_method === 0 ? '支付宝' : '微信'
+    paymentQrCode.value = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPuaJq+eggeeggTwvdGV4dD48L3N2Zz4='
+    showPaymentDialog.value = true
+    ElMessage.warning('创建支付失败，您可以使用模拟支付功能')
     console.error('支付错误:', error)
   }
 }
