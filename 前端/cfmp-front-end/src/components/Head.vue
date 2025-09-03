@@ -49,6 +49,7 @@
   }
   let toUserHome = () => {
     console.log("toUserHome")
+
     if(getPrivileges()==0)
     window.location.href = "/user"
   }

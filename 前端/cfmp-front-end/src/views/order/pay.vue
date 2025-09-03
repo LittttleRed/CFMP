@@ -124,7 +124,7 @@ const paymentMethod = ref(0) // 默认支付宝
 
 // 从路由参数只获取商品ID，其他信息从API获取
 const productInfo = reactive({
-  product_id: parseInt(route.query.product_id),
+  product_id: route.query.product_id,
   quantity: 1, // 默认购买数量为1
   price: 0,
   seller_id: 0,
@@ -147,8 +147,7 @@ const addressForm = reactive({
 })
 const getMyAddress = async () => {
 await getMe(getToken()).then((response) => {
-  let user=response[0]
-  addressForm.shipping_address = user["address"]
+  addressForm.shipping_address = response["address"]
 })
 }
 getMyAddress()
@@ -165,8 +164,8 @@ const fetchProductInfo = async () => {
     productInfo.title = res.title
     productInfo.thumbnail = res.media && res.media.length > 0 ? res.media[0].media : ''
     productInfo.price = res.price // 使用后端返回的价格
-    productInfo.seller_id = res.user.user_id // 使用后端返回的卖家ID
-    productInfo.seller_name = res.user.username
+    productInfo.seller_id = res.user_info.user_id // 使用后端返回的卖家ID
+    productInfo.seller_name = res.user_info.username
 
     // 如果商品不存在或已下架，提示并返回
     if (!res || res.status === 'off_shelf') {
