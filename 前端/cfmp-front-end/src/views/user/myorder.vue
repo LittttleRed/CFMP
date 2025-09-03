@@ -134,7 +134,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import {createRouter as $router, useRouter} from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getOrderSoldList } from '../../api/order/index.js'
@@ -200,12 +200,29 @@ const loadOrderList = async () => {
     }
 
     const response = await getOrderSoldList(params)
-    orderList.value = response.results || []
+    console.log('API响应:', response)
+    orderList.value = response.results.data || []
     total.value = response.count || 0
-    console.log(orderList)
+
+    // 添加调试信息，查看订单数据结构
+    if (orderList.value.length > 0) {
+      console.log('第一个订单的完整数据:', JSON.stringify(orderList.value[0], null, 2))
+      if (orderList.value[0].items && orderList.value[0].items.length > 0) {
+        console.log('第一个商品项数据:', JSON.stringify(orderList.value[0].items[0], null, 2))
+      }
+    }
+
+    // 如果列表为空且不是首页，可能是页码太大，自动回到第一页
+    if (orderList.value.length === 0 && currentPage.value > 1) {
+      currentPage.value = 1
+      await loadOrderList()
+      return
+    }
   } catch (error) {
     console.error('加载订单失败:', error)
     ElMessage.error('加载订单失败，请稍后再试')
+    orderList.value = [] // 出错时清空列表
+    total.value = 0
   } finally {
     loading.value = false
   }
@@ -256,13 +273,40 @@ const handleImageError = (event) => {
   event.target.src = 'data:image/svg+xml;base64,...' // 替换默认图片
 }
 
+// 初始化订单页面
+const initOrderPage = () => {
+  // 首先重置所有状态，避免之前的状态影响
+  orderList.value = []
+  total.value = 0
+  currentPage.value = 1
+
+  // 从URL参数中获取初始标签，如果没有则默认为'all'
+  const urlParams = new URLSearchParams(window.location.search)
+  const tabParam = urlParams.get('tab')
+
+  // 验证标签是否有效
+  const validTabs = ['all', 'pending_payment', 'paid', 'completed', 'cancelled']
+  if (tabParam && validTabs.includes(tabParam)) {
+    activeTab.value = tabParam
+  } else {
+    activeTab.value = 'all'
+  }
+
+  console.log('初始化我的订单页面，设置选中标签为:', activeTab.value)
+
+  // 使用Vue的nextTick确保DOM已更新后再加载数据
+  nextTick(() => {
+    console.log('DOM更新完成，开始加载订单列表')
+    loadOrderList()
+  })
+}
+
 onMounted(() => {
-  loadOrderList()
+  initOrderPage()
 })
 </script>
 
 <style scoped>
-/* 可复用 mybought.vue 的样式 */
 ner {
   max-width: 1200px;
   margin: 0 auto;
