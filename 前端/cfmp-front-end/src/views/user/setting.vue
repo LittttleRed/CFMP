@@ -157,10 +157,24 @@ const ensureName = async () => {
   nameChanging.value = false
   let token  = getToken()
   console.log(userStore.username)
-  await changeUser(token, {username: userStore.username}).then(res => {
-    setUserName(res["username"])
-  });
-  //
+  try {
+    const res = await changeUser(token, {username: userStore.username})
+    // 确保从响应中正确获取用户名
+    if (res && res.username) {
+      userStore.username = res.username
+      setUserName(res.username)
+    } else if (res && res.data && res.data.username) {
+      // 如果响应数据在data字段中
+      userStore.username = res.data.username
+      setUserName(res.data.username)
+    }
+  } catch (error) {
+    // 如果更新失败，恢复原来的用户名
+    userStore.username = previousName.value
+    setUserName(previousName.value)
+    console.error("用户名更新失败:", error)
+    // 可以添加错误提示
+  }
 }
 const changeAddr=()=>{
   addressChanging.value=true
