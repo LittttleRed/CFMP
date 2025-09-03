@@ -88,13 +88,13 @@
       <!-- 评论列表 -->
       <div
         v-for="comment in productData.comments"
-        :key="comment.id"
+        :key="comment.review_id"
         class="comment-item"
         v-if="getToken()"
       >
         <div class="user-info">
-          <el-avatar :src="comment.user?.avatar" />
-          <span class="username">{{ comment.user.username }}</span>
+          <el-avatar :src="comment.user_info?.avatar" />
+          <span class="username">{{ comment.user_info.username }}</span>
           <el-rate
             v-model="comment.rating"
             disabled
@@ -103,7 +103,7 @@
           />
         </div>
         <div class="comment-content">{{ comment.comment }}</div>
-        <el-button type="danger" v-if="comment.user.user_id==getUserId()||getPrivileges()==1" style="margin: 5px auto" @click="deleteComment(comment.id)">删除</el-button>
+        <el-button type="danger" v-if="comment.user_info.user_id==getUserId()||getPrivileges()==1" style="margin: 5px auto" @click="handleDeleteComment(comment.review_id)">删除</el-button>
         <el-divider />      </div>
       <div class="comment-item" v-else></div>
     </el-card>
@@ -156,14 +156,14 @@ import { ShoppingCart } from '@element-plus/icons-vue'
 import {useRoute} from "vue-router";
 import {
   addCollection, addReview,
-  checkCollection,
+  checkCollection, deleteReview,
   getProduct,
   getProductReviews,
   removeCollection
 } from "../../api/product/index.js";
 import {getHeadImg, getPrivileges, getToken, getUserId, getUserName} from "../../utils/user-utils.js";
 import Head from "../../components/Head.vue";
-import {ElMessage} from "element-plus";
+import {ElMessage, ElMessageBox} from "element-plus";
 import router from "../../router/index.js";
 import {createComplaint, getAllFollows} from "../../api/user/index.js";
 const route = useRoute()
@@ -259,15 +259,7 @@ const productData = reactive({
     username: 'username',
     avatar: ''
   },
-  comments: [
-    {
-      avatar: 'https://example.com/avatar1.jpg',
-      rating: 4.5,
-      content: '手机性能非常强大，运行流畅',
-      user:{}
-    },
-    // 更多评论...
-  ]
+  comments: []
 })
 
 // 交互状态
@@ -308,17 +300,8 @@ const submitComment = async () => {
     // 模拟提交成功
     ElMessage.success('评价发布成功')
 
-    // 更新本地评论列表
-    productData.comments.unshift({
-      id: Date.now(),
-      rating: newCommentRating.value,
-      comment: newCommentContent.value,
-      user: {
-        user_id: getUserId(),
-        username: getUserName(),
-        avatar: getHeadImg()
-      }
-    })
+    // 重新获取评论列表以确保数据同步
+    await getcomments()
 
     // 重置表单
     showCommentDialog.value = false
@@ -333,11 +316,11 @@ const submitComment = async () => {
 // 删除评论方法
 const deleteComment = async (commentId) => {
   try {
-    // 这里应该调用API删除评论
-    // await deleteReviewAPI(commentId)
-    
+    // 调用API删除评论，需要传递产品ID和评论ID
+    await deleteReview(productData.product_id, commentId, getToken())
+
     // 从本地列表中移除评论
-    const index = productData.comments.findIndex(comment => comment.id === commentId)
+    const index = productData.comments.findIndex(comment => comment.review_id === commentId)
     if (index !== -1) {
       productData.comments.splice(index, 1)
       ElMessage.success('评论删除成功')
@@ -377,9 +360,6 @@ const handleBuyNow = () => {
 </script>
 
 <style scoped>
-.user{
-
-}
 .product-container {
   max-width: 1200px;
   margin: 20px auto;

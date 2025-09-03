@@ -124,3 +124,12 @@ export const addReview=(id,data,token)=>{
         }
     })
 }
+export const deleteReview=(productId, reviewId, token)=>{
+    return http({
+        url:'/product/'+productId+'/reviews/'+reviewId+'/',
+        method:'delete',
+        headers:{
+            'Authorization':'Bearer '+token,
+        }
+    })
+}
