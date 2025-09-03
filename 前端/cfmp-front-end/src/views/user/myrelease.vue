@@ -67,11 +67,12 @@ const getAllProducts = async () => {
           avatar: getHeadImg()
         };
         
-        productList.value = (res?.results || []).map(product => ({
+        productList.value = (res.results || []).map(product => ({
           ...product,
           user: product.user || currentUserInfo
         }));
         
+        console.log('商品列表:', productList.value)
         isMyHome.value = true
       }
     } else {
@@ -131,17 +132,15 @@ onUnmounted(() => {
         :sm="12"
         :xs="24"
       >
-        <Product 
-          v-if="product"
-          :title="product.title || ''"
-          :price="product.price || 0"
-          :avatar="product.user?.avatar || ''"
-          :username="product.user?.username || ''"
-          :user_id="product.user?.user_id || ''"
-          :product_id="product.product_id || ''"
-          :media="product.media && product.media[0] ? product.media[0].media : null"
-          :status="product.status">
-        </Product>
+        <Product v-if="product && product.user_info"
+                    :title="product.title"
+                    :price="product.price"
+                    :avatar="product.user_info.avatar || ''"
+                    :username="product.user_info.username || ''"
+                    :user_id="product.user_info.user_id || ''"
+                    :product_id="product.product_id"
+                    :media="product.media && product.media[0] ? product.media[0]['media'] : ''"
+                    :status="product.status"></Product>
       </el-col>
     </el-row>
       <div v-else>
