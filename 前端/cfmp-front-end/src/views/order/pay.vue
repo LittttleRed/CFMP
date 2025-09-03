@@ -194,14 +194,22 @@ const submitOrder = async () => {
     const orderData = {
       products: [{
         product_uuid: productInfo.product_id,
-        price: productInfo.price,
-        quantity: productInfo.quantity
+        price: productInfo.price.toString(), // 确保价格是字符串格式
+        quantity: parseInt(productInfo.quantity)
       }],
       total_amount: totalAmount.value,
       payment_method: paymentMethod.value,
       seller_uuid: productInfo.seller_id,
-      ...addressForm
+      shipping_name: addressForm.shipping_name,
+      shipping_phone: addressForm.shipping_phone,
+      shipping_address: addressForm.shipping_address,
+      shipping_postal_code: addressForm.shipping_postal_code || ''
     }
+    
+    console.log('准备发送的订单数据:', orderData)
+    console.log('用户ID:', localStorage.getItem('user_id'))
+    console.log('用户Token:', localStorage.getItem('vue_admin_template_token'))
+    
     const orderRes = await createOrder(orderData)
     console.log(orderRes)
 
@@ -227,28 +235,51 @@ const submitOrder = async () => {
     // 创建支付请求
     const paymentParams = {
       order_uuid: orderId,
-      total_amount: totalAmount.value,
       payment_method: paymentMethod.value === 0 ? 'alipay' : 'wechat_pay',
-      payment_subject: `购买商品: ${productInfo.title}`
+      amount: totalAmount.value.toString(),
+      payment_subject: `订单支付 - ${productInfo.title}`
     }
 
     const paymentRes = await createPayment(paymentParams)
-      console.log(paymentRes)
-    if (paymentRes.code === 200) {
+    console.log(paymentRes)
+    
+    // 根据后端返回格式调整判断逻辑
+    if (paymentRes.code === '200' || paymentRes.success) {
       // 跳转到支付结果页面
       router.push({
         name: 'OrderPayment',
         query: {
           order_id: orderId,
-          payment_id: paymentRes.data.payment_id
+          payment_id: paymentRes.data.payment_id,
+          payment_url: paymentRes.data.payment_url
         }
       })
     } else {
-      ElMessage.error(paymentRes.message || '创建支付失败')
+      ElMessage.error(paymentRes.message || paymentRes.error || '创建支付失败')
     }
   } catch (error) {
-    ElMessage.error('提交订单失败，请重试')
-    console.error(error)
+    console.error('提交订单错误:', error)
+    
+    // 更详细的错误处理
+    if (error.response) {
+      // 服务器返回了错误状态码
+      if (error.response.status === 500) {
+        ElMessage.error('服务器内部错误，请稍后重试')
+      } else if (error.response.status === 401) {
+        ElMessage.error('用户身份验证失败，请重新登录')
+        // 可以在这里跳转到登录页面
+      } else if (error.response.status === 400) {
+        ElMessage.error('请求参数错误，请检查填写信息')
+      } else {
+        ElMessage.error(`请求失败 (${error.response.status})`)
+      }
+    } else if (error.request) {
+      // 请求已发出但没有收到响应
+      ElMessage.error('网络连接失败，请检查网络设置')
+    } else {
+      // 其他错误
+      ElMessage.error('提交订单失败，请重试')
+    }
   } finally {
     submitting.value = false
   }
