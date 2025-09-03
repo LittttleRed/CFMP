@@ -338,7 +338,11 @@ const handleDeleteComment = (commentId) => {
   }).then(() => {
     deleteComment(commentId)
   }).catch(() => {
-    ElMessage.info('已取消删除')
+    ElMessage({
+      message: '已取消删除',
+      type: 'success',
+      duration: 2000
+    })
   })
 }
 // 立即购买 - 直接跳转到支付页面

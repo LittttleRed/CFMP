@@ -73,7 +73,15 @@ export const getPaymentRecords = (params = {}) => {
 export const cancelPayment = (paymentId) => {
     return http({
         url: `payment/${paymentId}/cancel/`,
-        method: 'patch'
+        method: 'post'
+    })
+}
+
+export const refundOrder = (orderUuid, data) => {
+    return http({
+        url: `payment/${orderUuid}/refund/`,
+        method: 'post',
+        data: data
     })
 }
 
