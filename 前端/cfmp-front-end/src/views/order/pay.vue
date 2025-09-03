@@ -205,11 +205,11 @@ const submitOrder = async () => {
       shipping_address: addressForm.shipping_address,
       shipping_postal_code: addressForm.shipping_postal_code || ''
     }
-    
+
     console.log('准备发送的订单数据:', orderData)
     console.log('用户ID:', localStorage.getItem('user_id'))
     console.log('用户Token:', localStorage.getItem('vue_admin_template_token'))
-    
+
     const orderRes = await createOrder(orderData)
     console.log(orderRes)
 
@@ -219,13 +219,18 @@ const submitOrder = async () => {
       // 订单创建成功
       orderId = orderRes.data.order_id
       console.log('新订单创建成功:', orderId)
+      ElMessage.success('订单创建成功，正在跳转到支付页面...')
     } else if (orderRes.code === 409) {
       // 存在重复订单，使用现有订单
       orderId = orderRes.data.existing_order_id
       console.log('使用现有订单:', orderId)
 
       if (orderRes.data.redirect_to_payment) {
-        ElMessage.info('检测到该商品已有未完成订单，将使用现有订单进行支付')
+        ElMessage({
+          message: '检测到该商品已有未完成订单，将使用现有订单进行支付',
+          type: 'warning',
+          duration: 3000
+        })
       }
     } else {
       ElMessage.error(orderRes.message || '创建订单失败')
@@ -242,24 +247,28 @@ const submitOrder = async () => {
 
     const paymentRes = await createPayment(paymentParams)
     console.log(paymentRes)
-    
+
     // 根据后端返回格式调整判断逻辑
     if (paymentRes.code === '200' || paymentRes.success) {
+      ElMessage.success('支付链接创建成功，正在跳转...')
+
       // 跳转到支付结果页面
-      router.push({
-        name: 'OrderPayment',
-        query: {
-          order_id: orderId,
-          payment_id: paymentRes.data.payment_id,
-          payment_url: paymentRes.data.payment_url
-        }
-      })
+      setTimeout(() => {
+        router.push({
+          name: 'OrderPayment',
+          query: {
+            order_id: orderId,
+            payment_id: paymentRes.data.payment_id,
+            payment_url: paymentRes.data.payment_url
+          }
+        })
+      }, 1000) // 延迟1秒跳转，让用户看到成功提示
     } else {
       ElMessage.error(paymentRes.message || paymentRes.error || '创建支付失败')
     }
   } catch (error) {
     console.error('提交订单错误:', error)
-    
+
     // 更详细的错误处理
     if (error.response) {
       // 服务器返回了错误状态码
