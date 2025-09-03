@@ -370,12 +370,17 @@ const confirmCancel = async () => {
   cancelLoading.value = true
   try {
     const response = await cancelOrder(selectedOrder.value.order_id, cancelReason.value)
+    console.log('取消订单响应:', response)
+    console.log('响应状态码类型:', typeof response.code)
+    console.log('响应状态码值:', response.code)
 
-    if (response.code === 200 || response.code === '200') {
+    // 支持多种可能的成功状态码格式
+    if (response.code === 200 || response.code === '200' || response.status === 200 || response.status === '200') {
       ElMessage.success('订单已取消')
       cancelDialogVisible.value = false
       loadOrderList() // 重新加载列表
     } else {
+      console.log('取消订单失败 - 状态码:', response.code, '消息:', response.message)
       ElMessage.error(response.message || '取消订单失败')
     }
   } catch (error) {
