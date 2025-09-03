@@ -60,8 +60,8 @@
       <div class="seller-section">
         <h3>卖家信息</h3>
         <div class="seller-info">
-          <span class="label">卖家账号：</span>
-          <span class="value">{{ orderDetail.buyer_info?.username || '未知' }}</span>
+          <span class="label">卖家ID：</span>
+          <span class="value">{{ orderDetail.seller_uuid || orderDetail.seller_id || '未知' }}</span>
         </div>
       </div>
 
