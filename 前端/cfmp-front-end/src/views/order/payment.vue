@@ -171,6 +171,8 @@ const paymentMethodText = ref('支付宝')
 // 订单详情数据
 const orderDetail = reactive({
   order_id: null,
+  uuid: null,
+  order_uuid: null,
   status: 0,
   total_amount: 0,
   created_at: null,
@@ -241,8 +243,8 @@ const fetchOrderDetail = async () => {
 const payNow = async () => {
   try {
     const paymentParams = {
-      order_id: orderDetail.order_id,
-      total_amount: orderDetail.total_amount,
+      order_uuid: orderDetail.uuid || orderDetail.order_uuid,
+      amount: orderDetail.total_amount,
       payment_method: orderDetail.payment_method === 0 ? 'alipay' : 'wechat_pay',
       payment_subject: `订单支付: ${orderDetail.order_id}`
     }
@@ -367,16 +369,65 @@ const simulatePayment = async () => {
       type: 'info'
     }).then(async () => {
       const paymentMethod = orderDetail.payment_method === 0 ? 'alipay' : 'wechat_pay'
-      console.log(orderDetail.order_id)
-      const res = await simulatePaymentSuccess(orderDetail.order_id, paymentMethod)
+      console.log('订单详情:', orderDetail)
+      console.log('订单ID:', orderDetail.order_id)
 
-      if (res.status === 'success') {
-        ElMessage.success('模拟支付成功！')
-        // 更新订单状态
-        orderDetail.status = 1
-        orderDetail.payment_time = new Date().toISOString()
-      } else {
-        ElMessage.error('模拟支付失败：' + (res.message || '未知错误'))
+      // 获取正确的订单UUID和订单ID
+      const orderUuid = orderDetail.uuid || orderDetail.order_uuid
+      const orderId = orderDetail.order_id
+      console.log('使用的UUID:', orderUuid)
+      console.log('使用的订单ID:', orderId)
+      console.log('订单详情中的所有UUID相关字段:', {
+        uuid: orderDetail.uuid,
+        order_uuid: orderDetail.order_uuid,
+        seller_uuid: orderDetail.seller_uuid
+      })
+
+      // 第一步：创建支付记录
+      console.log('第一步：创建支付记录')
+      try {
+        const paymentParams = {
+          order_uuid: orderUuid,
+          order_id: orderId,  // 同时发送订单ID，让后端选择使用
+          amount: parseFloat(orderDetail.total_amount),
+          payment_method: paymentMethod,
+          payment_subject: `订单支付: ${orderDetail.order_id}`
+        }
+
+        console.log('创建支付请求参数:', paymentParams)
+        const paymentRes = await createPayment(paymentParams)
+        console.log('支付记录创建响应:', paymentRes)
+
+        if (paymentRes.code !== 200 && paymentRes.code !== '200') {
+          ElMessage.error('创建支付记录失败：' + (paymentRes.message || '未知错误'))
+          return
+        }
+
+        // 从支付记录响应中获取支付ID
+        const paymentId = paymentRes.data?.payment_id || paymentRes.data?.id || orderId
+        console.log('支付记录ID:', paymentId)
+
+        // 第二步：模拟支付回调
+        console.log('第二步：模拟支付回调')
+        const res = await simulatePaymentSuccess(orderUuid, paymentMethod, paymentId)
+        console.log('支付回调响应:', res)
+
+        if (res.success || res.status === 'success' || res.code === 200) {
+          ElMessage.success('模拟支付成功！')
+          // 更新订单状态
+          orderDetail.status = 1
+          orderDetail.payment_time = new Date().toISOString()
+        } else {
+          ElMessage.error('模拟支付失败：' + (res.message || res.error || '未知错误'))
+        }
+      } catch (paymentError) {
+        console.error('创建支付记录失败:', paymentError)
+        console.error('错误详情:', paymentError.response?.data)
+        const errorMessage = paymentError.response?.data?.message ||
+                           paymentError.response?.data?.error ||
+                           paymentError.message || '未知错误'
+        ElMessage.error('创建支付记录失败：' + errorMessage)
+        return
       }
     }).catch(() => {
       // 用户取消操作

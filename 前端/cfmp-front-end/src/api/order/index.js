@@ -86,14 +86,14 @@ export const refundOrder = (orderUuid, data) => {
 }
 
 // 模拟支付完成的API
-export const simulatePaymentSuccess = (orderId, paymentMethod = 'alipay') => {
+export const simulatePaymentSuccess = (orderUuid, paymentMethod = 'alipay', paymentId) => {
     return http({
         url: `payment/callback/${paymentMethod}/`,
         method: 'post',
-        params: {
-            order_id: orderId,
-            payment_id: orderId,  // 简化处理，实际可能不同
-            transaction_id: Date.now(),
+        data: {
+            order_uuid: orderUuid,  // 订单UUID（字符串）
+            payment_id: paymentId,    // 支付记录ID
+            transaction_id: Date.now().toString(),
             status: 'success',
             total_amount: 0,  // 实际金额会在后端查询
             sign: 'simulated_signature'
