@@ -25,6 +25,7 @@
       class="edit-btn"
       style="display: none"
     />
+        <div v-if="error" class="error-message">{{ error }}</div>
       </div>
 
       <!-- 信息区域 -->
@@ -139,11 +140,31 @@ const changeAvatar = async (event) => {
   error.value = '';
   avatar.value = URL.createObjectURL(file);
   let token = getToken()
-  updateAvatar(token, file).then(res => {
-    avatar.value = res["avatar"];
-    setHeadImg(res["avatar"])
-  });
-}
+  
+  try {
+    const res = await updateAvatar(token, file)
+    console.log("头像更新响应:", res)
+    // 确保从响应中正确获取头像值
+    if (res && res.avatar) {
+      avatar.value = res.avatar;
+      setHeadImg(res.avatar)
+    } else if (res && res.data && res.data.avatar) {
+      // 如果响应数据在data字段中
+      avatar.value = res.data.avatar;
+      setHeadImg(res.data.avatar)
+    } else {
+      // 如果没有avatar字段，使用原始值
+      error.value = '头像更新失败，请重试';
+      showinfo() // 恢复原始信息
+    }
+  } catch (err) {
+    // 如果更新失败，恢复原来的头像
+    console.error("头像更新失败:", err)
+    error.value = '头像更新失败: ' + (err.message || '未知错误');
+    // 恢复原始头像
+    showinfo()
+  }
+};
 const changeName = () => {
     nameChanging.value=true
     previousName.value=userStore.username
@@ -278,6 +299,13 @@ onMounted(()=>{
 
 .edit-btn {
   width: 120px;
+}
+
+.error-message {
+  color: #ff4444;
+  font-size: 14px;
+  margin-top: 10px;
+  text-align: center;
 }
 
 /* 响应式布局 */
