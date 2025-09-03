@@ -183,13 +183,12 @@ const initProduct=async (id) => {
     productData.description  = res.description
     productData.media = res.media.map(item =>item.media)
     productData.main_image = productData.media[0]
-    productData.user = res.user
+    productData.user = res.user_info
     console.log(res.user)
-    if(res.user.user_id===getUserId()){
+    if(res.user_info.user_id===getUserId()){
       isMyProduct.value = true
     }
     console.log(productData)
-
   })
 }
 if(route.query.myfollow==='true'){

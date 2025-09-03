@@ -67,12 +67,12 @@
       >
            <Product :title="product.title"
                     :price="product.price"
-                    :avatar="product.user.avatar"
-                    :username="product.user.username"
-                    :user_id="product.user.user_id"
+                    :avatar="product.user_info.avatar"
+                    :username="product.user_info.username"
+                    :user_id="product.user_info.user_id"
                     :product_id="product.product_id"
                     :media="product.media[0]?product.media[0]['media']:''"
-                    :myfollow="myFollow.indexOf(product.user.user_id)!==-1"
+                    :myfollow="myFollow.indexOf(product.user_info.user_id)!==-1"
                     :functions="product.function"
                     :visit_count="product.visit_count"
                     :status="product.status">
@@ -189,7 +189,7 @@ const updateProductList = async () => {
   let data = {
     page: page.value,
     page_size: page_size,
-    status: 0
+    status: 3
   };
 
   if (sort_type.value === 'hot') {
@@ -202,6 +202,7 @@ const updateProductList = async () => {
 
   try {
     const res = await getProducts(data);
+    console.log(res)
     if (res && res.results && res.results.length > 0) {
       console.log(res.results)
 
@@ -211,7 +212,9 @@ const updateProductList = async () => {
       } else {
         isMax.value = false;
       }
-      res.results=res.results.filter(item => item.user.status === 0)
+
+      res.results=res.results.filter(item => item.user_info.status === 0)
+      console.log(res.results)
       productList.value = [...productList.value, ...res.results];
     } else {
       isMax.value = true; // 没有更多数据了

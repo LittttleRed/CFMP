@@ -27,7 +27,7 @@ export const getOrderDetail = (orderId) => {
 export const cancelOrder = (orderId, reason = '') => {
     return http({
         url: `orders/${orderId}/cancel/`,
-        method: 'patch',
+        method: 'post',
         data: { reason }
     })
 }

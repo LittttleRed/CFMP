@@ -17,11 +17,12 @@ router.beforeEach(async (to, from, next) => {
       next();
     }
   } else {
+
     if (getToken()) {
         const user = await getMe(getToken()).then(
             res =>{
-                console.log(res[0].status)
-                if(res[0].status==1){
+                console.log(res[0])
+                if(res.status===1){
                     removeToken()
                     next('/login');
                 }

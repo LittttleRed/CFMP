@@ -109,7 +109,7 @@ export const changeUser=(token,data)=>{
 }
 export const getAllLaunches=(token,id,status)=>{
     return http({
-        url:'/v1/user/me/products/'+id+'/',
+        url:'/product/publish/',
         method:'get',
         headers:{
             'Authorization':'Bearer '+token

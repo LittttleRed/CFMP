@@ -194,12 +194,13 @@ const submitOrder = async () => {
     // 创建订单
     const orderData = {
       products: [{
-        product_id: productInfo.product_id,
+        product_uuid: productInfo.product_id,
         price: productInfo.price,
         quantity: productInfo.quantity
       }],
       total_amount: totalAmount.value,
       payment_method: paymentMethod.value,
+      seller_uuid: productInfo.seller_id,
       ...addressForm
     }
     const orderRes = await createOrder(orderData)
@@ -226,7 +227,7 @@ const submitOrder = async () => {
 
     // 创建支付请求
     const paymentParams = {
-      order_id: orderId,
+      order_uuid: orderId,
       total_amount: totalAmount.value,
       payment_method: paymentMethod.value === 0 ? 'alipay' : 'wechat_pay',
       payment_subject: `购买商品: ${productInfo.title}`

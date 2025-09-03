@@ -223,13 +223,11 @@ const fetchOrderDetail = async () => {
     }
 
     const res = await getOrderDetail(orderId)
-    console.log()
-    if (res.code === 200) {
+    console.log(res)
+
       Object.assign(orderDetail, res.data)
       console.log(orderDetail)
-    } else {
-      ElMessage.error(res.message || '获取订单详情失败')
-    }
+
   } catch (error) {
     ElMessage.error('获取订单详情失败')
     console.error(error)

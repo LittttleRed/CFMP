@@ -23,13 +23,13 @@ export default defineConfig(
           open: !isDocker, // 在Docker环境中不自动打开浏览器
           proxy: {
             "/api": {
-              target: isDocker ? "http://backend:8000" : "http://127.0.0.1:8000",
+              target: "http://101.200.231.225:9191",
               changeOrigin: true, // 表示开启代理, 允许跨域请求数据
               secure: false, // 如果是https接口，需要配置这个参数
               agent: new http.Agent(),
             },
               "/minio":{
-                target: "http://59.110.23.64:9000",
+                target: "http://101.200.231.225:9100",
                   changeOrigin: true,
                   secure: false,
                   agent: new http.Agent(),

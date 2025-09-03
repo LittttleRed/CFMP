@@ -294,7 +294,7 @@ const loadOrderList = async () => {
     const response = await getOrderList(params)
       // 处理响应数据
     console.log('API响应:', response)    // 更新订单列表和总数
-    orderList.value = response.results || []
+    orderList.value = response.results.data || []
     total.value = response.count || 0
 
     // 添加调试信息，查看订单数据结构

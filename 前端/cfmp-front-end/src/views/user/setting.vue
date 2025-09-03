@@ -109,7 +109,7 @@ const logout = ()=>{
 const showinfo=async () => {
   let token = getToken()
   await getMe(token).then((response) => {
-    let user=response[0]
+    let user=response
     console.log(user)
     userStore.username = user["username"]
     email.value = user["email"]

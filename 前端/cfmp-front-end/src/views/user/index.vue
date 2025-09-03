@@ -106,10 +106,11 @@ const complaint=async ()=>{
 const getMySelf=async ()=>{
 let token = getToken()
 await getMe(token).then((response) => {
-  let user=response[0]
+  let user=response
   console.log(user["avatar"])
   username.value=user["username"]
-  avatar.value=user["avatar"]
+  // avatar.value = user["avatar"].replace('http://101.200.231.225:9100/', '/minio/')
+  console.log(avatar.value)
 })
 }
 if(isMyHome.value===true){

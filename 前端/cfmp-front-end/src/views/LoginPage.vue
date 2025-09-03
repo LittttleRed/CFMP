@@ -104,7 +104,7 @@ import { ref, reactive } from 'vue'
 import type { FormInstance } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { getLogin } from '../api/user'
-import {getToken, setHeadImg, setPrivileges, setStaff, setToken, setUserId, setUserName} from "../utils/user-utils";
+import {getToken, setHeadImg, setPrivileges, setToken, setUserId, setUserName} from "../utils/user-utils";
 
 import { ParticlesComponent } from 'particles.vue3';
 import { loadSlim } from 'tsparticles-slim'
