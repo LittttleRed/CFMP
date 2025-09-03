@@ -1,6 +1,6 @@
 <template>
 <h1>我的收藏</h1>
-  <div class="product-list">
+  <div class="product-list" v-loading="loading">
     <el-row :gutter="10">  <!-- 控制列间距 -->
       <el-col
         v-for="(product, index) in productList"
@@ -21,7 +21,7 @@
         </Product>
       </el-col>
     </el-row>
-    <div v-if="productList.length===0" style="margin: auto">暂无收藏</div>
+    <div v-if="!loading && productList.length===0" style="margin: auto">暂无收藏</div>
   </div>
 </template>
 <script setup>
@@ -30,13 +30,17 @@ import {getToken} from "../../utils/user-utils.js";
 import {getMyCollections} from "../../api/product/index.js";
 import {ref} from "vue";
 const productList=ref([]);
+const loading = ref(true);
 const getCollections=async()=>{
   try {
+    loading.value = true;
     const res=await getMyCollections(getToken());
     console.log(res.results);
     productList.value.push(...res.results.map(item => item.collection))
   } catch (error) {
     console.error("获取收藏列表失败:", error);
+  } finally {
+    loading.value = false;
   }
 }
 getCollections()
