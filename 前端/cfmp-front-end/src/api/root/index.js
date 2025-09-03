@@ -29,7 +29,7 @@ export const changeUserState=(id,status)=>{
 export const getAllComplaints=(target_type,params)=>{
     return http(
         {
-            url:'root/complaint/',
+            url:'complaints/',
             method:'get',
             params:{
                 target_type:target_type,
@@ -40,20 +40,20 @@ export const getAllComplaints=(target_type,params)=>{
 }
 export const getComplaintByID=(id)=>{
     return http({
-        url:'root/complaint/'+id+'/',
+        url:'complaints/'+id+'/',
         method:'get',
     })
 }
 export const createReview=(data)=>{
     return http({
-        url:'root/review/',
+        url:'reviews/',
         method:'post',
         data:data
     })
 }
 export const updateReview=(id,type,status)=>{
     return http({
-        url:'root/complaint/branch/'+type+'/'+id+'/',
+        url:'complaints/branch/'+type+'/'+id+'/',
         method:'patch',
         data:{
             status:status

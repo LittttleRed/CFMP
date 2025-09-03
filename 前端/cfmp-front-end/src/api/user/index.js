@@ -121,7 +121,7 @@ status: status
 }
 export const createComplaint=(token,data)=>{
     return http({
-        url:'/v1/user/complaint/',
+        url:'/complaints/create/',
         method:'post',
         headers:{
             'Authorization':'Bearer '+token
