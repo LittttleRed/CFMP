@@ -173,9 +173,22 @@ const rejectAddr = () => {
 const ensureAddr = async () => {
   addressChanging.value = false
   let token  = getToken()
-  await changeUser(token, {address: address.value}).then(res => {
-    address.value=res["address"]
-  });
+  try {
+    const res = await changeUser(token, {address: address.value})
+    // 确保从响应中正确获取地址值
+    if (res && res.address) {
+      address.value = res.address
+    } else if (res && res.data && res.data.address) {
+      // 如果响应数据在data字段中
+      address.value = res.data.address
+    }
+    // 显示成功消息或其他处理
+  } catch (error) {
+    // 如果更新失败，恢复原来的地址值
+    address.value = preAddr.value
+    console.error("地址更新失败:", error)
+    // 可以添加错误提示
+  }
 }
 
 const changepwd = () => {
