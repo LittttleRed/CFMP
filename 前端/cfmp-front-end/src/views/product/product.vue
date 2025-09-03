@@ -93,8 +93,8 @@
         v-if="getToken()"
       >
         <div class="user-info">
-          <el-avatar :src="comment.user?.avatar" />
-          <span class="username">{{ comment.user.username }}</span>
+          <el-avatar :src="comment.user_info.avatar" />
+          <span class="username">{{ comment.user_info.username }}</span>
           <el-rate
             v-model="comment.rating"
             disabled
@@ -103,7 +103,7 @@
           />
         </div>
         <div class="comment-content">{{ comment.comment }}</div>
-        <el-button type="danger" v-if="comment.user.user_id==getUserId()||getPrivileges()==1" style="margin: 5px auto" @click="deleteComment(comment.id)">删除</el-button>
+        <el-button type="danger" v-if="comment.user_info.user_id==getUserId()||getPrivileges()==1" style="margin: 5px auto" @click="deleteComment(comment.id)">删除</el-button>
         <el-divider />      </div>
       <div class="comment-item" v-else></div>
     </el-card>
@@ -183,6 +183,8 @@ const initProduct=async (id) => {
     productData.description  = res.description
     productData.media = res.media.map(item =>item.media)
     productData.main_image = productData.media[0]
+    console.log("图片")
+    console.log(productData.main_image)
     productData.user = res.user_info
     console.log(res.user)
     if(res.user_info.user_id===getUserId()){
@@ -264,7 +266,7 @@ const productData = reactive({
       avatar: 'https://example.com/avatar1.jpg',
       rating: 4.5,
       content: '手机性能非常强大，运行流畅',
-      user:{}
+      user_info:{}
     },
     // 更多评论...
   ]
@@ -279,8 +281,9 @@ const newCommentContent = ref('')
 const getcomments=async () => {
   await getProductReviews(product_id).then(
       res => {
+        console.log(res.results)
         productData.comments=res.results
-        console.log(productData.comments)
+        console.log("productData.comments")
       }
   )
 }

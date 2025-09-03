@@ -79,15 +79,19 @@ const unfollow = async () => {
   })
 }
 const getOtherUser=async ()=>{
+  console.log("getOtherUser")
+  console.log(route.query.user_id)
 let response = await getUserById(route.query.user_id).then(
     (response) => {
       username.value=response["username"]
+      console.log("response")
+      console.log(response)
       if(response["avatar"]!==null){
       avatar.value=response["avatar"]
       }
     }
 ).catch((error)=>{
-
+console.log("error")
 })
 }
 const complaint=async ()=>{
@@ -107,9 +111,10 @@ const getMySelf=async ()=>{
 let token = getToken()
 await getMe(token).then((response) => {
   let user=response
+  console.log("avatar")
   console.log(user["avatar"])
   username.value=user["username"]
-  // avatar.value = user["avatar"].replace('http://101.200.231.225:9100/', '/minio/')
+  avatar.value = user["avatar"]
   console.log(avatar.value)
 })
 }

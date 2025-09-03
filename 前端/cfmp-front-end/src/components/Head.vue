@@ -41,6 +41,8 @@
   const userInfoStore = useUserStore();
   let userName = getUserName()
   let headImg = getHeadImg()
+
+  console.log(headImg)
   let toLogin = () => {
     console.log("toLogin")
     window.location.href = "/login"
