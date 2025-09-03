@@ -2,7 +2,7 @@
  import Product from '../../components/product.vue'
  import {reactive, ref, onUnmounted, nextTick} from "vue";
  import {getAllLaunches} from "../../api/user/index.js";
- import {getToken, getUserId} from "../../utils/user-utils.js";
+ import {getToken, getUserId, getUserName, getHeadImg} from "../../utils/user-utils.js";
  import {useRoute, useRouter} from "vue-router";
 
 let seller = reactive({name: 'seller',})
@@ -42,30 +42,46 @@ const getAllProducts = async () => {
   try {
     // 获取当前状态码
     const status = statusMap[activeTab.value]
+    // 获取当前用户ID
+    const currentUserId = getUserId()
+    // 获取路由中的用户ID（如果存在）
+    const queryUserId = route.query.user_id
 
     console.log('=== 获取商品列表请求参数 ===')
     console.log('activeTab:', activeTab.value)
     console.log('status:', status)
     console.log('token:', getToken())
-    console.log('当前用户ID:', getUserId())
-    console.log('URL查询用户ID:', route.query.user_id)
+    console.log('当前用户ID:', currentUserId)
+    console.log('URL查询用户ID:', queryUserId)
 
-    if(route.query.user_id === getUserId() || route.query.user_id === undefined) {
-      const res = await getAllLaunches(getToken(), getUserId(), status)
+    // 判断是请求自己的商品还是其他用户的商品
+    if(!queryUserId || queryUserId === currentUserId) {
+      const res = await getAllLaunches(getToken(), currentUserId, status)
       console.log('请求自己的商品列表:', res)
 
       if(isMounted.value) {
-        productList.value = res?.results || []
+        // 为每个商品添加当前用户作为发布者信息
+        const currentUserInfo = {
+          user_id: getUserId(),
+          username: getUserName(),
+          avatar: getHeadImg()
+        };
+        
+        productList.value = (res?.results || []).map(product => ({
+          ...product,
+          user: product.user || currentUserInfo
+        }));
+        
         isMyHome.value = true
       }
     } else {
-      console.log('请求其他用户的商品列表, 用户ID:', route.query.user_id)
-      const res = await getAllLaunches(getToken(), route.query.user_id, status)
+      console.log('请求其他用户的商品列表, 用户ID:', queryUserId)
+      const res = await getAllLaunches(getToken(), queryUserId, status)
       console.log('完整响应:', res)
-
 
       if(isMounted.value) {
         productList.value = res?.results || []
+        isMyHome.value = false
       }
     }
   } catch (error) {
@@ -115,15 +131,17 @@ onUnmounted(() => {
         :sm="12"
         :xs="24"
       >
-        <Product v-if="product && product.user"
-                    :title="product.title"
-                    :price="product.price"
-                    :avatar="product.user_info.avatar || ''"
-                    :username="product.user_info.username || ''"
-                    :user_id="product.user_info.user_id || ''"
-                    :product_id="product.product_id"
-                    :media="product.media && product.media[0] ? product.media[0]['media'] : ''"
-                    :status="product.status"></Product>
+        <Product 
+          v-if="product"
+          :title="product.title || ''"
+          :price="product.price || 0"
+          :avatar="product.user?.avatar || ''"
+          :username="product.user?.username || ''"
+          :user_id="product.user?.user_id || ''"
+          :product_id="product.product_id || ''"
+          :media="product.media && product.media[0] ? product.media[0].media : null"
+          :status="product.status">
+        </Product>
       </el-col>
     </el-row>
       <div v-else>
