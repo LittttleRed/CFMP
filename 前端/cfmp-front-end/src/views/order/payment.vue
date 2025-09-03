@@ -96,7 +96,7 @@
 
         <!-- 根据订单状态显示不同按钮 -->
         <el-button
-          v-if="orderDetail.status === 0"
+          v-if="orderDetail.status === 0 && getUserId()!==orderDetail.seller_uuid"
           type="primary"
           @click="payNow"
         >
@@ -104,7 +104,7 @@
         </el-button>
 
         <el-button
-          v-if="orderDetail.status === 0"
+          v-if="orderDetail.status === 0 && getUserId()!==orderDetail.seller_uuid"
           type="success"
           @click="simulatePayment"
         >
@@ -112,7 +112,7 @@
         </el-button>
 
         <el-button
-          v-if="orderDetail.status === 0"
+          v-if="orderDetail.status === 0 && getUserId()!==orderDetail.seller_uuid"
           type="danger"
           @click="cancelOrder"
         >
@@ -137,7 +137,7 @@
         </div>
         <p class="payment-tip">请使用{{ paymentMethodText }}扫码支付</p>
         <p class="amount-tip">支付金额：¥{{ orderDetail.total_amount }}</p>
-        <div class="dialog-actions">
+        <div class="dialog-actions" >
           <el-button @click="showPaymentDialog = false">取消</el-button>
           <el-button type="success" @click="simulatePayment">模拟支付完成</el-button>
           <el-button type="primary" @click="checkPaymentStatus">查看支付状态</el-button>
@@ -151,7 +151,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getToken } from '../../utils/user-utils.ts'
+import {getToken, getUserId} from '../../utils/user-utils.ts'
 import {
   getOrderDetail,
   cancelOrder as cancelOrderApi,
@@ -182,7 +182,8 @@ const orderDetail = reactive({
   shipping_phone: '',
   shipping_address: '',
   shipping_postal_code: '',
-  payment_method: 0
+  payment_method: 0 ,
+  seller_uuid: ''
 })
 
 // 获取订单状态文本
@@ -227,7 +228,9 @@ const fetchOrderDetail = async () => {
 
       Object.assign(orderDetail, res.data)
       console.log(orderDetail)
-
+    console.log(orderDetail.seller_uuid)
+    console.log(getUserId())
+  console.log(getUserId()!==orderDetail.seller_uuid)
   } catch (error) {
     ElMessage.error('获取订单详情失败')
     console.error(error)

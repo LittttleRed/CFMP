@@ -370,12 +370,28 @@ const confirmCancel = async () => {
   cancelLoading.value = true
   try {
     const response = await cancelOrder(selectedOrder.value.order_id, cancelReason.value)
+    console.log('取消订单响应:', response)
+    console.log('响应状态码类型:', typeof response.code)
+    console.log('响应状态码值:', response.code)
 
-    if (response.code === 200 || response.code === '200') {
-      ElMessage.success('订单已取消')
+    // 检查成功条件：有明确的成功状态码 或者 消息表明操作成功
+    const isSuccess =
+      response.code === 200 ||
+      response.code === '200' ||
+      response.status === 200 ||
+      response.status === '200' ||
+      (response.message && (
+        response.message.includes('订单已取消') ||
+        response.message.includes('取消成功') ||
+        response.message.includes('成功')
+      ))
+
+    if (isSuccess) {
+      ElMessage.success(response.message || '订单已取消')
       cancelDialogVisible.value = false
       loadOrderList() // 重新加载列表
     } else {
+      console.log('取消订单失败 - 状态码:', response.code, '消息:', response.message)
       ElMessage.error(response.message || '取消订单失败')
     }
   } catch (error) {
@@ -400,8 +416,21 @@ const confirmReceived = async (orderId) => {
 
     const response = await completeOrder(orderId)
 
-    if (response.code === 200 || response.code === '200') {
-      ElMessage.success('确认收货成功')
+    // 检查成功条件：有明确的成功状态码 或者 消息表明操作成功
+    const isSuccess =
+      response.code === 200 ||
+      response.code === '200' ||
+      response.status === 200 ||
+      response.status === '200' ||
+      (response.message && (
+        response.message.includes('确认收货成功') ||
+        response.message.includes('收货成功') ||
+        response.message.includes('订单完成') ||
+        response.message.includes('成功')
+      ))
+
+    if (isSuccess) {
+      ElMessage.success(response.message || '确认收货成功')
       loadOrderList() // 重新加载列表
     } else {
       ElMessage.error(response.message || '确认收货失败')
