@@ -233,24 +233,36 @@ getUser()
 
 const sendMessage = () => {
   if (!inputMessage.value.trim()) return
-  // 先本地显示
+  
+  // 保存消息内容用于发送
+  const messageToSend = inputMessage.value.trim()
+  
+  // 立即清空输入框
+  inputMessage.value = ''
+  
+  // 调整文本框高度到初始状态
+  nextTick(() => {
+    adjustTextareaHeight()
+  })
+  
+  // 本地显示消息
   messages.value.push({
-    content: inputMessage.value,
+    content: messageToSend,
     time: new Date(),
     isSelf: true
   })
+  
   // 通过WebSocket发送
   console.log(ws.value, ws.value.readyState)
   if (ws.value && ws.value.readyState === 1) {
-      ws.value.send(JSON.stringify({
+    ws.value.send(JSON.stringify({
       receiver_id: targetUserId,
-      content: inputMessage.value
+      content: messageToSend
     }))
   }
-  inputMessage.value = ''
+  
   nextTick(() => {
     scrollToBottom()
-    adjustTextareaHeight()
   })
 }
 
@@ -258,8 +270,6 @@ const newLine = () => {
   inputMessage.value += '\n'
   adjustTextareaHeight()
 }
-
-
 
 const scrollToBottom = () => {
   const container = messagesContainer.value
@@ -272,7 +282,10 @@ const adjustTextareaHeight = () => {
   const ta = textarea.value
   if (ta) {
     ta.style.height = 'auto'
-    ta.style.height = ta.scrollHeight + 'px'
+    // 只有当有内容时才根据scrollHeight调整高度，否则保持默认高度
+    if (inputMessage.value) {
+      ta.style.height = ta.scrollHeight + 'px'
+    }
   }
 }
 
