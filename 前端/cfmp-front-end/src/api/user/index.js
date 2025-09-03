@@ -168,7 +168,7 @@ export const getAllFollowees=(token)=>{
 }
 export const getHistory=(token,id,pageconfig)=>{
     return http({
-        url:'/v1/user/chat/'+id+'/',
+        url:'/v1/user/'+id+'/chat/',
         method:'get',
         headers:{
             'Authorization':'Bearer '+token

@@ -39,7 +39,7 @@
           v-for="item in chatList"
           :key="item.user_id"
           style="margin-bottom: 10px"
-          @click="Chater = item.user_id"
+          @click="openChat(item.user_id)"
         >
           <div class="user">
             <el-avatar :size="50" :src="item.avatar" shape="square"></el-avatar>
@@ -52,7 +52,7 @@
 </el-dialog>
 
   <el-dialog class="chat" draggable v-model="Chater" style="height: 900px;width: 900px">
-      <chat-content v-if="Chater" :user-id="Chater" style="margin-bottom: 0"></chat-content>
+      <chat-content v-if="Chater" :user-id="currentChatUserId" style="margin-bottom: 0"></chat-content>
   </el-dialog>
   <el-dialog class="chat" draggable v-model="System" style="height: 900px;width: 900px;--el-dialog-border-radius: 20px">
      <Systemchat  v-if="System" style="margin-bottom: 0"></Systemchat>
@@ -72,7 +72,8 @@ const chating = ref(false);
 const follower = ref([]);//我关注的
 const followee = ref([]);//关注我的
 const  chatList = ref([]);
-const Chater = ref();
+const Chater = ref(false);  // 修改为布尔值
+const currentChatUserId = ref(''); // 新增用于存储当前聊天用户ID
 const System = ref(false);
 const infollower=ref(false)
 const infollowee=ref(false);
@@ -118,6 +119,12 @@ const toSystem=()=>{
 const buildWenSocket = () => {
 
 }
+
+const openChat = (userId) => {
+  currentChatUserId.value = userId;
+  Chater.value = true;
+}
+
 const toHomePage = () => {
    window.location.href = "/user"
 };
