@@ -20,9 +20,9 @@ import Head from "../../components/Head.vue";
 import LeftBar from "../../components/root/LeftBar.vue";
 import user from "./user.vue"
 import {getPrivileges} from "@/utils/user-utils.js";
-// if(getPrivileges()==0){
-//   window.location.href = "/"
-// }
+if(getPrivileges()==0){
+  window.location.href = "/"
+}
 </script>
 
 <style scoped>
