@@ -90,13 +90,13 @@
       </div>
 
       <!-- 操作按钮 -->
-      <div class="action-buttons">
+      <div class="action-buttons" v-loading="isLoading">
         <el-button @click="goBack">返回</el-button>
         <el-button @click="goToMyOrders">我的订单</el-button>
 
         <!-- 根据订单状态显示不同按钮 -->
         <el-button
-          v-if="orderDetail.status === 0 && getUserId()!==orderDetail.seller_uuid"
+          v-if="!isLoading && orderDetail.status === 0 && getUserId()!==orderDetail.seller_uuid"
           type="primary"
           @click="payNow"
         >
@@ -104,7 +104,7 @@
         </el-button>
 
         <el-button
-          v-if="orderDetail.status === 0 && getUserId()!==orderDetail.seller_uuid"
+          v-if="!isLoading && orderDetail.status === 0 && getUserId()!==orderDetail.seller_uuid"
           type="success"
           @click="simulatePayment"
         >
@@ -112,7 +112,7 @@
         </el-button>
 
         <el-button
-          v-if="orderDetail.status === 0 && getUserId()!==orderDetail.seller_uuid"
+          v-if="!isLoading && orderDetail.status === 0 && getUserId()!==orderDetail.seller_uuid"
           type="danger"
           @click="cancelOrder"
         >
@@ -167,6 +167,7 @@ const router = useRouter()
 const showPaymentDialog = ref(false)
 const paymentQrCode = ref('')
 const paymentMethodText = ref('支付宝')
+const isLoading = ref(true)  // 添加加载状态
 
 // 订单详情数据
 const orderDetail = reactive({
@@ -236,6 +237,8 @@ const fetchOrderDetail = async () => {
   } catch (error) {
     ElMessage.error('获取订单详情失败')
     console.error(error)
+  } finally {
+    isLoading.value = false  // 数据加载完成，设置加载状态为false
   }
 }
 
