@@ -2,7 +2,7 @@ import http from "../../utils/request.js";
 
 export const getAllUser=(params)=>{
     return http({
-        url:'root/user/',
+        url:'v1/user/',
         method:'get',
          params:params,
         headers: {
@@ -76,7 +76,7 @@ import request from "@/utils/request";
 // 获取所有商品
 export function getAllProducts(params) {
   return request({
-    url: "/root/products/",
+    url: "/product/",
     method: "get",
     params
   });

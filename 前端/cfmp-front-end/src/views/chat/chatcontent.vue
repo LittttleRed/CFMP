@@ -192,7 +192,7 @@ onMounted(async () => {
   console.log('start')
   // 创建WebSocket连接，通过查询参数传递用户UUID
   const currentUserUuid = getUserId(); // 获取当前用户UUID
-  ws.value = new WebSocket(`ws://localhost:8000/ws/chat/?uuid=${currentUserUuid}`)
+  ws.value = new WebSocket(`ws://101.200.231.225:30009/ws/chat/?uuid=${currentUserUuid}`)
   
   // 设置连接打开时的回调
   ws.value.onopen = () => {
