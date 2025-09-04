@@ -104,6 +104,22 @@
         </el-button>
       </div>
     </el-card>
+
+    <!-- 支付二维码弹窗 -->
+    <el-dialog v-model="showPaymentDialog" title="扫码支付" width="400px" center>
+      <div class="payment-dialog">
+        <div class="qrcode-container">
+          <el-image :src="paymentQrCode" class="qrcode" />
+        </div>
+        <p class="payment-tip">请使用{{ paymentMethodText }}扫码支付</p>
+        <p class="amount-tip">支付金额：¥{{ totalAmount.toFixed(2) }}</p>
+        <div class="dialog-actions">
+          <el-button @click="showPaymentDialog = false">取消</el-button>
+          <el-button type="success" @click="simulatePayment">模拟支付完成</el-button>
+          <el-button type="primary" @click="checkPaymentStatus">查看支付状态</el-button>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -113,7 +129,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getToken, getUserId } from '../../utils/user-utils.ts'
 import { getProduct } from '../../api/product/index.js'
-import { createOrder, createPayment } from '../../api/order/index.js'
+import { createOrder, createPayment, queryPayment, simulatePaymentSuccess } from '../../api/order/index.js'
 import {getMe} from "@/api/user/index.js";
 
 const route = useRoute()
@@ -121,6 +137,11 @@ const router = useRouter()
 
 const submitting = ref(false)
 const paymentMethod = ref(0) // 默认支付宝
+
+// 支付弹窗相关
+const showPaymentDialog = ref(false)
+const paymentQrCode = ref('')
+const paymentMethodText = ref('支付宝')
 
 // 从路由参数只获取商品ID，其他信息从API获取
 const productInfo = reactive({
@@ -251,54 +272,142 @@ const submitOrder = async () => {
     const paymentRes = await createPayment(paymentParams)
     console.log(paymentRes)
 
+    // 设置支付方式文本
+    paymentMethodText.value = paymentMethod.value === 0 ? '支付宝' : '微信'
+
     // 根据后端返回格式调整判断逻辑
     if (paymentRes.code === '200' || paymentRes.code === 200 || paymentRes.success) {
       // 先显示支付相关的成功消息
       if (paymentRes.message === '订单创建成功') {
-        ElMessage.success('订单创建成功，正在跳转到支付页面...')
+        ElMessage.success('订单创建成功，请完成支付')
       } else {
-        ElMessage.success('支付链接创建成功，正在跳转...')
+        ElMessage.success('支付链接创建成功，请完成支付')
       }
 
-      // 跳转到支付结果页面
-      setTimeout(() => {
-        router.push({
-          name: 'OrderPayment',
-          query: {
-            order_id: orderId,
-            payment_id: paymentRes.data?.payment_id,
-            payment_url: paymentRes.data?.payment_url
-          }
-        })
-      }, 1000) // 延迟1秒跳转，让用户看到成功提示
+      // 检查是否有支付数据
+      if (paymentRes.data && paymentRes.data.payment_data) {
+        // 显示支付二维码
+        paymentQrCode.value = paymentRes.data.payment_data.qrcode || paymentRes.data.payment_data.url
+      } else if (paymentRes.data && (paymentRes.data.qrcode || paymentRes.data.url)) {
+        // 兼容直接返回支付数据的情况
+        paymentQrCode.value = paymentRes.data.qrcode || paymentRes.data.url
+      } else {
+        // 如果没有支付数据，使用默认占位符
+        paymentQrCode.value = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPuaJq+eggeeggTwvdGV4dD48L3N2Zz4='
+        ElMessage.info('支付准备就绪，请在弹窗中选择支付方式或使用模拟支付')
+      }
+
+      // 显示支付弹窗，而不是跳转
+      showPaymentDialog.value = true
+
+      // 更新订单数据
+      orderData.order_id = orderId
     } else {
-      ElMessage.error(paymentRes.message || paymentRes.error || '创建支付失败')
+      // 即使出错也打开弹窗，让用户可以使用模拟支付
+      paymentQrCode.value = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPuaJq+eggeeggTwvdGV4dD48L3N2Zz4='
+      showPaymentDialog.value = true
+      orderData.order_id = orderId
+      ElMessage.warning(paymentRes.message || paymentRes.error || '创建支付失败，您可以使用模拟支付功能')
     }
   } catch (error) {
     console.error('提交订单错误:', error)
+
+    // 即使发生错误也显示弹窗，让用户可以使用模拟支付
+    paymentMethodText.value = paymentMethod.value === 0 ? '支付宝' : '微信'
+    paymentQrCode.value = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPuaJq+eggeeggTwvdGV4dD48L3N2Zz4='
+    showPaymentDialog.value = true
 
     // 更详细的错误处理
     if (error.response) {
       // 服务器返回了错误状态码
       if (error.response.status === 500) {
-        ElMessage.error('服务器内部错误，请稍后重试')
+        ElMessage.error('服务器内部错误，您可以使用模拟支付功能')
       } else if (error.response.status === 401) {
         ElMessage.error('用户身份验证失败，请重新登录')
         // 可以在这里跳转到登录页面
       } else if (error.response.status === 400) {
-        ElMessage.error('请求参数错误，请检查填写信息')
+        ElMessage.error('请求参数错误，您可以使用模拟支付功能')
       } else {
-        ElMessage.error(`请求失败 (${error.response.status})`)
+        ElMessage.error(`请求失败 (${error.response.status})，您可以使用模拟支付功能`)
       }
     } else if (error.request) {
       // 请求已发出但没有收到响应
-      ElMessage.error('网络连接失败，请检查网络设置')
+      ElMessage.error('网络连接失败，您可以使用模拟支付功能')
     } else {
       // 其他错误
-      ElMessage.error('提交订单失败，请重试')
+      ElMessage.error('提交订单失败，您可以使用模拟支付功能')
     }
   } finally {
     submitting.value = false
+  }
+}
+
+// 模拟支付完成
+const simulatePayment = async () => {
+  try {
+    await ElMessageBox.confirm('确定要模拟完成支付吗？这将把订单状态更新为已支付', '模拟支付', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'info'
+    })
+
+    const paymentMethodName = paymentMethod.value === 0 ? 'alipay' : 'wechat_pay'
+
+    // 使用订单ID作为支付ID进行模拟支付
+    const res = await simulatePaymentSuccess(orderData.order_id, paymentMethodName, orderData.order_id)
+    console.log('模拟支付响应:', res)
+
+    if (res.success || res.status === 'success' || res.code === 200) {
+      ElMessage.success('模拟支付成功！')
+      showPaymentDialog.value = false
+
+      // 跳转到订单详情页面查看结果
+      setTimeout(() => {
+        router.push({
+          name: 'OrderPayment',
+          query: {
+            order_id: orderData.order_id
+          }
+        })
+      }, 1000)
+    } else {
+      ElMessage.error('模拟支付失败：' + (res.message || res.error || '未知错误'))
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('模拟支付过程发生错误')
+      console.error('模拟支付错误:', error)
+    }
+  }
+}
+
+// 检查支付状态
+const checkPaymentStatus = async () => {
+  try {
+    const res = await queryPayment(orderData.order_id)
+    if (res.code === 200 || res.code === '200') {
+      if (res.data.status === 'success') {
+        ElMessage.success('支付成功！')
+        showPaymentDialog.value = false
+
+        // 跳转到订单详情页面
+        setTimeout(() => {
+          router.push({
+            name: 'OrderPayment',
+            query: {
+              order_id: orderData.order_id
+            }
+          })
+        }, 1000)
+      } else if (res.data.status === 'failed') {
+        ElMessage.error('支付失败，请重试')
+      } else {
+        ElMessage.info('支付状态查询中，请稍后再试')
+      }
+    }
+  } catch (error) {
+    ElMessage.error('查询支付状态失败')
+    console.error(error)
   }
 }
 
@@ -469,5 +578,39 @@ onMounted(() => {
   background: #f5f5f5;
   color: #999;
   font-size: 12px;
+}
+
+.payment-dialog {
+  text-align: center;
+}
+
+.qrcode-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.qrcode {
+  width: 200px;
+  height: 200px;
+}
+
+.payment-tip {
+  font-size: 16px;
+  color: #606266;
+  margin-bottom: 10px;
+}
+
+.amount-tip {
+  font-size: 18px;
+  color: #e6a23c;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
 }
 </style>

@@ -66,9 +66,9 @@
 
                   <!-- 商品信息 -->
                   <div class="product-info">
-                    <div v-if="order.items && order.items.length > 0">
+                    <div v-if="order.products && order.products.length > 0">
                       <div
-                        v-for="item in order.items"
+                        v-for="item in order.products"
                         :key="item.product_id"
                         class="product-item"
                       >

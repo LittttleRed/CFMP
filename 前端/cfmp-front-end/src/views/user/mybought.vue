@@ -61,9 +61,9 @@
                   </div>
                 </div>                <div class="order-content">
                   <div class="product-info">
-                    <div v-if="order.items && order.items.length > 0">
+                    <div v-if="order.products && order.products.length > 0">
                       <div
-                        v-for="item in order.items"
+                        v-for="item in order.products"
                         :key="item.product_id"
                         class="product-item"
                       >                        <div class="product-image">
@@ -300,8 +300,8 @@ const loadOrderList = async () => {
     // 添加调试信息，查看订单数据结构
     if (orderList.value.length > 0) {
       console.log('第一个订单的完整数据:', JSON.stringify(orderList.value[0], null, 2))
-      if (orderList.value[0].items && orderList.value[0].items.length > 0) {
-        console.log('第一个商品项数据:', JSON.stringify(orderList.value[0].items[0], null, 2))
+      if (orderList.value[0].products && orderList.value[0].products.length > 0) {
+        console.log('第一个商品项数据:', JSON.stringify(orderList.value[0].products[0], null, 2))
       }
     }
 
