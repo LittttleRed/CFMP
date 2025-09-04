@@ -20,22 +20,18 @@ k3s ctr images import images.tar
 rm images.tar
 # 部署应用
 echo "部署应用..."
-k3s kubectl -- delete -f k8s/ --ignore-not-found=true
+k3s kubectl delete -f k8s/ --ignore-not-found=true
 sleep 3
-
-# 先部署数据库服务
-k3s kubectl -- create -f k8s/mysql-service.yaml
-k3s kubectl -- create -f k8s/mysql-endpoint.yaml
 
 # 等待数据库服务就绪
 sleep 5
 
-k3s kubectl -- create -f k8s/
+k3s kubectl  apply -f k8s/
 
 # 等待启动
 echo "等待应用启动..."
-k3s kubectl -- wait --for=condition=ready pod -l io.kompose.service=backend --timeout=300s
-k3s kubectl -- wait --for=condition=ready pod -l io.kompose.service=frontend --timeout=300s
+k3s kubectl  wait --for=condition=ready pod -l io.kompose.service=backend --timeout=300s
+k3s kubectl  wait --for=condition=ready pod -l io.kompose.service=frontend --timeout=300s
 
 # 暴露服务
 
