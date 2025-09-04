@@ -12,5 +12,8 @@ spec:
     - name: "8000"
       port: 8000
       targetPort: 8000
+      protocol: TCP
+      nodePort: 30180
+  type: NodePort
   selector:
     io.kompose.service: backend
