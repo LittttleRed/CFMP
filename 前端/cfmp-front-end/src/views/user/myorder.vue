@@ -271,7 +271,9 @@ const formatDate = (dateString) => {
 
 // 图片错误处理
 const handleImageError = (event) => {
-  event.target.src = 'data:image/svg+xml;base64,...' // 替换默认图片
+  // 设置默认图片，使用本地资源
+  event.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxNTAiIGhlaWdodD0iMTUwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik03NSA0NEM2Ny4yNjggNDQgNjEgNTAuMjY4IDYxIDU4UzY3LjI2OCA3MiA3NSA3MlM4OSA2NS43MzIgODkgNThTODIuNzMyIDQ0IDc1IDQ0WiIgZmlsbD0iI0NDQ0NDQyIvPgo8cGF0aCBkPSJNMTI1IDEwNkg5MC4yNzMyIDc1IDU5LjcyNjggMjVWMTA2SDE1VjEyNUgxMjVWMTA2WiIgZmlsbD0iI0NDQ0NDQyIvPgo8dGV4dCB4PSI3NSIgeT0iODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTk5OTkiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiI+5pqC5peg5Zu+54mHPC90ZXh0Pgo8L3N2Zz4K'
+  console.log('商品图片加载失败，使用默认图片')
 }
 
 // 初始化订单页面
@@ -308,7 +310,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-ner {
+.mysold-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
