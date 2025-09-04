@@ -415,6 +415,9 @@ const confirmReceived = async (orderId) => {
     )
 
     const response = await completeOrder(orderId)
+    console.log('确认收货API响应:', response)
+    console.log('响应码类型:', typeof response.code, '值:', response.code)
+    console.log('响应消息:', response.message)
 
     // 检查成功条件：有明确的成功状态码 或者 消息表明操作成功
     const isSuccess =
@@ -426,13 +429,18 @@ const confirmReceived = async (orderId) => {
         response.message.includes('确认收货成功') ||
         response.message.includes('收货成功') ||
         response.message.includes('订单完成') ||
+        response.message.includes('订单已完成') ||
         response.message.includes('成功')
       ))
 
+    console.log('判断为成功:', isSuccess)
+
     if (isSuccess) {
+      console.log('显示成功消息')
       ElMessage.success(response.message || '确认收货成功')
       loadOrderList() // 重新加载列表
     } else {
+      console.log('显示错误消息')
       ElMessage.error(response.message || '确认收货失败')
     }
   } catch (error) {
