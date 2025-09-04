@@ -138,6 +138,7 @@ import { ref, onMounted, nextTick } from 'vue'
 import {createRouter as $router, useRouter} from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getOrderSoldList } from '../../api/order/index.js'
+import { createImageErrorHandler } from '../../utils/imageErrorHandler.js'
 
 const router = useRouter()
 
@@ -269,10 +270,8 @@ const formatDate = (dateString) => {
   })
 }
 
-// 图片错误处理
-const handleImageError = (event) => {
-  event.target.src = 'data:image/svg+xml;base64,...' // 替换默认图片
-}
+// 图片错误处理 - 使用工具函数
+const handleImageError = createImageErrorHandler()
 
 // 初始化订单页面
 const initOrderPage = () => {

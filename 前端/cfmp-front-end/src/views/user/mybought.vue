@@ -194,6 +194,7 @@ import { ref, reactive, onMounted, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getOrderList, cancelOrder, completeOrder } from '../../api/order/index.js'
+import { createImageErrorHandler } from '../../utils/imageErrorHandler.js'
 
 const router = useRouter()
 
@@ -462,11 +463,10 @@ const formatDate = (dateString) => {
   })
 }
 
-const handleImageError = (event) => {
-  // 设置默认图片，使用本地资源
-  event.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxNTAiIGhlaWdodD0iMTUwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik03NSA0NEM2Ny4yNjggNDQgNjEgNTAuMjY4IDYxIDU4UzY3LjI2OCA3MiA3NSA3MlM4OSA2NS43MzIgODkgNThTODIuNzMyIDQ0IDc1IDQ0WiIgZmlsbD0iI0NDQ0NDQyIvPgo8cGF0aCBkPSJNMTI1IDEwNkg5MC4yNzMyIDc1IDU5LjcyNjggMjVWMTA2SDE1VjEyNUgxMjVWMTA2WiIgZmlsbD0iI0NDQ0NDQyIvPgo8dGV4dCB4PSI3NSIgeT0iODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTk5OTkiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiI+5pqC5peg5Zu+54mHPC90ZXh0Pgo8L3N2Zz4K'
-  console.log('商品图片加载失败，使用默认图片')
-}
+const handleImageError = createImageErrorHandler(
+  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxNTAiIGhlaWdodD0iMTUwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik03NSA0NEM2Ny4yNjggNDQgNjEgNTAuMjY4IDYxIDU4UzY3LjI2OCA3MiA3NSA3MlM4OSA2NS43MzIgODkgNThTODIuNzMyIDQ0IDc1IDQ0WiIgZmlsbD0iI0NDQ0NDQyIvPgo8cGF0aCBkPSJNMTI1IDEwNkg5MC4yNzMyIDc1IDU5LjcyNjggMjVWMTA2SDE1VjEyNUgxMjVWMTA2WiIgZmlsbD0iI0NDQ0NDQyIvPgo8dGV4dCB4PSI3NSIgeT0iODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTk5OTkiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiI+5pqC5peg5Zu+54mHPC90ZXh0Pgo8L3N2Zz4K',
+  true // 启用日志记录
+)
 
 // 初始化函数 - 确保标签状态是正确的
 const initOrderPage = () => {
