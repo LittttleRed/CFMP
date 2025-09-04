@@ -12,11 +12,8 @@ echo "🚀 启动 CFMP Kubernetes 应用..."
 echo "构建后端镜像..."
 cd 后端/cfmp && docker build -t backend . && cd ../..
 
-echo "构建前端镜像..."
-cd 前端/cfmp-front-end && docker build -t frontend . && cd ../..
 
-
-docker save backend frontend > images.tar
+docker save backend > images.tar
 
 k3s ctr images import images.tar
 rm images.tar
